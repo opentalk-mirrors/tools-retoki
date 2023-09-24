@@ -14,7 +14,7 @@ pub struct Releases {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Component {
     pub name: String,
-    pub repository: String,
+    pub gitlab_url: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
