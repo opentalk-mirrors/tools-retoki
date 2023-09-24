@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
+# SPDX-License-Identifier: EUPL-1.2
+
 ---
 
 lint:fmt:
@@ -15,3 +18,14 @@ lint:clippy:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
   script:
     - cargo clippy -- --deny warnings
+
+lint:licensing:
+  needs: []
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  stage: lint
+  image:
+    name: fsfe/reuse:latest
+    entrypoint: ['']
+  script:
+    - reuse lint
