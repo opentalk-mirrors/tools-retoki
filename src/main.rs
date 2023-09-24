@@ -63,14 +63,14 @@ fn generate<R: AsRef<Path>, T: AsRef<Path>>(release_file: R, target_dir: T) -> R
         let template_data = template::Readme::from_data_releases(&raw_data)?;
         let rendered = tera.render("README.md", &Context::from_serialize(&template_data)?)?;
         let relative_path = "README.md";
-        let full_path = target_dir.join(&relative_path);
+        let full_path = target_dir.join(relative_path);
         println!("Writing file {full_path:?}");
         let mut file =
             File::create(&full_path).context(format!("Couldn't create file {:?}", full_path))?;
         write!(file, "{}", rendered)?;
     }
 
-    for (_, serie) in &raw_data.series {
+    for serie in raw_data.series.values() {
         for version in serie.releases.keys() {
             let template_data =
                 template::ReleasePage::from_data_release(&raw_data, version.clone())?;

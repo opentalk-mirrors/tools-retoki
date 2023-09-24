@@ -130,9 +130,7 @@ impl ReleaseSeries {
         components: &BTreeMap<String, data::Component>,
     ) -> Result<Self> {
         let markdown_anchor = format!("{} ({})", version, release_series.codename)
-            .replace('(', "")
-            .replace(')', "")
-            .replace('.', "")
+            .replace(['(', ')', '.'], "")
             .replace(' ', "-")
             .to_lowercase();
         Ok(Self {
@@ -143,7 +141,7 @@ impl ReleaseSeries {
                 .iter()
                 .rev()
                 .map(|(version, release)| {
-                    Release::from_data_release(version.clone(), release, &components)
+                    Release::from_data_release(version.clone(), release, components)
                 })
                 .collect::<Result<_, anyhow::Error>>()?,
             markdown_anchor,

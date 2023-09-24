@@ -1,0 +1,17 @@
+---
+
+lint:fmt:
+  image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.71.0-bookworm
+  needs: []
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  script:
+    - cargo fmt --check
+
+lint:clippy:
+  image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.71.0-bookworm
+  needs: []
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  script:
+    - cargo clippy -- --deny warnings
