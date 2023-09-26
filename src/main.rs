@@ -80,19 +80,20 @@ fn generate<R: AsRef<Path>, T: AsRef<Path>>(release_file: R, target_dir: T) -> R
             .collect::<Vec<_>>();
 
         for entry in versions_with_padding.windows(3) {
-            let previous = entry[0];
+            let previous = entry[0].map(|(v, r)| (v.clone(), r));
             let version = entry[1].unwrap().0;
-            let next = entry[2];
+            let next = entry[2].map(|(v, r)| (v.clone(), r));
 
             let end_date = next
+                .as_ref()
                 .map(|(_, release)| release.date)
                 .unwrap_or(series.end_of_life);
 
             let template_data = template::ReleasePage::from_data_release(
                 &raw_data,
                 version.clone(),
-                previous.map(|(v, _)| v.clone()),
-                next.map(|(v, _)| v.clone()),
+                previous,
+                next,
                 end_date,
             )?;
             let rendered = tera.render("release.md", &Context::from_serialize(&template_data)?)?;

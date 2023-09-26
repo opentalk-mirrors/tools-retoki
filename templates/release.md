@@ -17,6 +17,18 @@
 | **{{ component.identifier }}** | [{{ component.version }}]({{ component.gitlab_url }}/-/releases/v{{ component.version }}) |
 {% endfor %}
 
+{% for component in components -%}
+{% if component.identifier in component_releases -%}
+---
+
+{% for component_release in component_releases[component.identifier] | reverse -%}
+## {{ component.identifier }} {{ component_release.version }}
+
+{{ component_release.changelog }}
+{% endfor -%}
+{% endif -%}
+{% endfor -%}
+
 ---
 
 Generation of this document was supported by [retoki](https://git.opentalk.dev/w.silbermayr/retoki).

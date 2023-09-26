@@ -18,6 +18,14 @@ pub struct Releases {
 pub struct Component {
     pub name: String,
     pub gitlab_url: String,
+
+    #[serde(default)]
+    pub releases: BTreeMap<Version, ComponentRelease>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ComponentRelease {
+    pub changelog: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -31,4 +39,36 @@ pub struct ReleaseSeries {
 pub struct Release {
     pub date: Date,
     pub components: BTreeMap<String, Version>,
+}
+
+impl Component {
+    pub fn get_releases(
+        &self,
+        after: Option<Version>,
+        until: Version,
+    ) -> BTreeMap<Version, ComponentRelease> {
+        if let Some(after) = after {
+            self.releases
+                .iter()
+                .filter_map(|(v, r)| {
+                    if *v > after && *v <= until {
+                        Some((v.clone(), r.clone()))
+                    } else {
+                        None
+                    }
+                })
+                .collect::<BTreeMap<Version, ComponentRelease>>()
+        } else {
+            self.releases
+                .iter()
+                .filter_map(|(v, r)| {
+                    if *v <= until {
+                        Some((v.clone(), r.clone()))
+                    } else {
+                        None
+                    }
+                })
+                .collect::<BTreeMap<Version, ComponentRelease>>()
+        }
+    }
 }

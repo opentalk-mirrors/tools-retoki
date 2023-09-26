@@ -74,8 +74,8 @@ impl ReleasePage {
     pub fn from_data_release(
         data: &data::Releases,
         version: Version,
-        previous: Option<Version>,
-        next: Option<Version>,
+        previous: Option<(Version, &data::Release)>,
+        next: Option<(Version, &data::Release)>,
         end_date: Date,
     ) -> Result<Self> {
         let series_number = format!("{}.{}", version.major, version.minor);
@@ -161,12 +161,12 @@ impl ReleaseSeries {
             releases: releases_with_padding
                 .windows(3)
                 .map(|window| {
-                    let previous = window[0].map(|v| v.0.clone());
+                    let previous = window[0].map(|(v, r)| (v.clone(), r));
                     let (version, release) = window[1].unwrap();
-                    let next = window[2].map(|v| v.0.clone());
+                    let next = window[2].map(|(v, r)| (v.clone(), r));
                     let end_date = next
                         .as_ref()
-                        .map(|v| {
+                        .map(|(v, _)| {
                             release_series
                                 .releases
                                 .get(v)
@@ -198,21 +198,49 @@ pub struct Release {
     pub end_date: Date,
     pub components: Vec<ReleaseComponent>,
     pub components_by_identifier: BTreeMap<String, ReleaseComponent>,
+    pub component_releases: BTreeMap<String, Vec<ComponentRelease>>,
 }
 
 impl Release {
     fn from_data_release(
         version: Version,
-        previous: Option<Version>,
-        next: Option<Version>,
+        previous: Option<(Version, &data::Release)>,
+        next: Option<(Version, &data::Release)>,
         end_date: Date,
         release: &data::Release,
         components: &BTreeMap<String, data::Component>,
     ) -> Result<Self> {
+        let mut component_releases = BTreeMap::new();
+
+        for (component_name, component_version) in &release.components {
+            let previous = previous
+                .iter()
+                .flat_map(|(_, release)| release.components.get(component_name))
+                .next();
+
+            if let Some(component) = components.get(component_name) {
+                let releases = component
+                    .get_releases(previous.cloned(), component_version.clone())
+                    .into_iter()
+                    .map(|(version, release)| {
+                        ComponentRelease::from_data_component_release(
+                            version,
+                            component.gitlab_url.clone(),
+                            &release,
+                        )
+                    })
+                    .collect::<Vec<_>>();
+
+                if !releases.is_empty() {
+                    component_releases.insert(component_name.clone(), releases);
+                }
+            }
+        }
+
         Ok(Self {
             version,
-            previous,
-            next,
+            previous: previous.map(|(v, _)| v.clone()),
+            next: next.map(|(v, _)| v.clone()),
             date: release.date,
             end_date,
             components: release
@@ -246,6 +274,7 @@ impl Release {
                     ))
                 })
                 .collect::<Result<_, anyhow::Error>>()?,
+            component_releases,
         })
     }
 }
@@ -263,6 +292,27 @@ impl ReleaseComponent {
             identifier,
             version,
             gitlab_url,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ComponentRelease {
+    pub version: Version,
+    pub gitlab_url: String,
+    pub changelog: String,
+}
+
+impl ComponentRelease {
+    fn from_data_component_release(
+        version: Version,
+        gitlab_url: String,
+        component_release: &data::ComponentRelease,
+    ) -> Self {
+        Self {
+            version,
+            gitlab_url,
+            changelog: component_release.changelog.clone(),
         }
     }
 }
