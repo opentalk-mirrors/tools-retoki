@@ -23,10 +23,10 @@ struct Cli {
 
 #[derive(Clone, Debug, PartialEq, Eq, Subcommand)]
 enum Command {
-    /// Generate the release information from a `releases.json` file.
+    /// Generate the release information from a `releases.yml` file.
     Generate {
-        /// The JSON file containing the structured release information.
-        #[clap(long, default_value = "releases.json")]
+        /// The YAML file containing the structured release information.
+        #[clap(long, default_value = "releases.yml")]
         release_file: PathBuf,
 
         /// The target directory for the release information.
@@ -55,7 +55,7 @@ fn generate<R: AsRef<Path>, T: AsRef<Path>>(release_file: R, target_dir: T) -> R
         "Couldn't open release file {:?}",
         release_file.as_ref()
     ))?;
-    let raw_data: data::Releases = serde_json::from_reader(file)?;
+    let raw_data: data::Releases = serde_yaml::from_reader(file)?;
 
     let target_dir = target_dir.as_ref().canonicalize()?;
     let releases_dir = target_dir.join("releases").canonicalize()?;
