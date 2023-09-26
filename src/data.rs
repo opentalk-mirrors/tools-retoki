@@ -23,6 +23,7 @@ pub struct Component {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReleaseSeries {
     pub codename: String,
+    pub end_of_life: Date,
     pub releases: BTreeMap<Version, Release>,
 }
 

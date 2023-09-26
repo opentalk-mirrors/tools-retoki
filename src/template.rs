@@ -34,7 +34,6 @@ impl Readme {
             series: releases
                 .series
                 .iter()
-                .rev()
                 .map(|(version, series)| {
                     ReleaseSeries::from_data_release_series(
                         version.clone(),
@@ -72,7 +71,13 @@ pub struct ReleasePage {
 }
 
 impl ReleasePage {
-    pub fn from_data_release(data: &data::Releases, version: Version) -> Result<Self> {
+    pub fn from_data_release(
+        data: &data::Releases,
+        version: Version,
+        previous: Option<Version>,
+        next: Option<Version>,
+        end_date: Date,
+    ) -> Result<Self> {
         let series_number = format!("{}.{}", version.major, version.minor);
 
         let series = data
@@ -92,7 +97,14 @@ impl ReleasePage {
                 series,
                 &data.components,
             )?,
-            release: Release::from_data_release(version, release, &data.components)?,
+            release: Release::from_data_release(
+                version,
+                previous,
+                next,
+                end_date,
+                release,
+                &data.components,
+            )?,
             space: " ".to_string(),
         })
     }
@@ -122,6 +134,7 @@ impl Component {
 pub struct ReleaseSeries {
     pub version: String,
     pub codename: String,
+    pub end_of_life: Date,
     pub releases: Vec<Release>,
     pub markdown_anchor: String,
 }
@@ -136,15 +149,39 @@ impl ReleaseSeries {
             .replace(['(', ')', '.'], "")
             .replace(' ', "-")
             .to_lowercase();
+        let releases_with_padding = std::iter::once(None)
+            .chain(release_series.releases.iter().map(Some))
+            .chain(std::iter::once(None))
+            .collect::<Vec<_>>();
+
         Ok(Self {
             version: version.clone(),
             codename: release_series.codename.clone(),
-            releases: release_series
-                .releases
-                .iter()
-                .rev()
-                .map(|(version, release)| {
-                    Release::from_data_release(version.clone(), release, components)
+            end_of_life: release_series.end_of_life,
+            releases: releases_with_padding
+                .windows(3)
+                .map(|window| {
+                    let previous = window[0].map(|v| v.0.clone());
+                    let (version, release) = window[1].unwrap();
+                    let next = window[2].map(|v| v.0.clone());
+                    let end_date = next
+                        .as_ref()
+                        .map(|v| {
+                            release_series
+                                .releases
+                                .get(v)
+                                .unwrap_or_else(|| panic!("version {v} not found"))
+                                .date
+                        })
+                        .unwrap_or(release_series.end_of_life);
+                    Release::from_data_release(
+                        version.clone(),
+                        previous,
+                        next,
+                        end_date,
+                        release,
+                        components,
+                    )
                 })
                 .collect::<Result<_, anyhow::Error>>()?,
             markdown_anchor,
@@ -155,7 +192,10 @@ impl ReleaseSeries {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Release {
     pub version: Version,
+    pub previous: Option<Version>,
+    pub next: Option<Version>,
     pub date: Date,
+    pub end_date: Date,
     pub components: Vec<ReleaseComponent>,
     pub components_by_identifier: BTreeMap<String, ReleaseComponent>,
 }
@@ -163,12 +203,18 @@ pub struct Release {
 impl Release {
     fn from_data_release(
         version: Version,
+        previous: Option<Version>,
+        next: Option<Version>,
+        end_date: Date,
         release: &data::Release,
         components: &BTreeMap<String, data::Component>,
     ) -> Result<Self> {
         Ok(Self {
             version,
+            previous,
+            next,
             date: release.date,
+            end_date,
             components: release
                 .components
                 .iter()

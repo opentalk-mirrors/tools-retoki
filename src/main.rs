@@ -73,10 +73,28 @@ fn generate<R: AsRef<Path>, T: AsRef<Path>>(release_file: R, target_dir: T) -> R
         write!(file, "{}", rendered)?;
     }
 
-    for serie in raw_data.series.values() {
-        for version in serie.releases.keys() {
-            let template_data =
-                template::ReleasePage::from_data_release(&raw_data, version.clone())?;
+    for series in raw_data.series.values() {
+        let versions_with_padding = std::iter::once(None)
+            .chain(series.releases.iter().map(Some))
+            .chain(std::iter::once(None))
+            .collect::<Vec<_>>();
+
+        for entry in versions_with_padding.windows(3) {
+            let previous = entry[0];
+            let version = entry[1].unwrap().0;
+            let next = entry[2];
+
+            let end_date = next
+                .map(|(_, release)| release.date)
+                .unwrap_or(series.end_of_life);
+
+            let template_data = template::ReleasePage::from_data_release(
+                &raw_data,
+                version.clone(),
+                previous.map(|(v, _)| v.clone()),
+                next.map(|(v, _)| v.clone()),
+                end_date,
+            )?;
             let rendered = tera.render("release.md", &Context::from_serialize(&template_data)?)?;
             let relative_path = releases_dir.join(&format!("{version}.md"));
             let full_path = target_dir.join(&relative_path);
