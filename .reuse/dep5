@@ -1,5 +1,5 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Source: https://git.opentalk.dev/w.silbermayr/retoki
+Source: https://git.opentalk.dev/opentalk/tools/retoki
 Upstream-Name: retoki
 Upstream-Contact: OpenTalk GmbH <mail@opentalk.eu>
 

@@ -31,4 +31,4 @@
 
 ---
 
-Generation of this document was supported by [retoki](https://git.opentalk.dev/w.silbermayr/retoki).
+Generation of this document was supported by [retoki](https://git.opentalk.dev/opentalk/tools/retoki).
