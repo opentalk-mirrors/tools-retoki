@@ -90,6 +90,7 @@ package:container:
     - if: $CI_PIPELINE_SOURCE == "pipeline"
       when: never
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG != null
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: ['']
@@ -99,10 +100,5 @@ package:container:
       echo
       "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD} | base64)\"}}}" >
       /kaniko/.docker/config.json
-    - >
-      /kaniko/executor
-      --registry-mirror=mirror.gcr.io
-      --context $CI_PROJECT_DIR
-      --dockerfile $CI_PROJECT_DIR/ci/Dockerfile
-      --destination $CI_REGISTRY_IMAGE:dev
-      --force
+    - /kaniko/executor --registry-mirror=mirror.gcr.io --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/ci/Dockerfile --destination $CI_REGISTRY_IMAGE:dev --force
+    - if [ "$CI_COMMIT_TAG" != "" ]; then /kaniko/executor --registry-mirror=mirror.gcr.io --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/ci/Dockerfile --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG --force; fi
