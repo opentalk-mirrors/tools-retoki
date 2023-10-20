@@ -9,6 +9,13 @@
 - Next release: [**{{ next }}**]({{ next }}.md)
 {%- endif %}
 
+{%- if release_notes %}
+
+## Release notes
+
+{{ release_notes -}}
+{%- endif %}
+
 ## Component versions
 
 | Component | Version |

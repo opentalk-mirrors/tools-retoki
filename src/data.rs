@@ -51,6 +51,7 @@ pub struct ReleaseSeries {
 pub struct Release {
     pub date: Date,
     pub components: BTreeMap<ComponentIdentifier, Version>,
+    pub release_notes: Option<String>,
 }
 
 impl Component {

@@ -198,6 +198,7 @@ pub struct Release {
     pub next: Option<Version>,
     pub date: Date,
     pub end_date: Date,
+    pub release_notes: Option<String>,
     pub components: Vec<ReleaseComponent>,
     pub components_by_identifier: BTreeMap<ComponentIdentifier, ReleaseComponent>,
     pub component_releases: BTreeMap<ComponentIdentifier, Vec<ComponentRelease>>,
@@ -245,6 +246,7 @@ impl Release {
             next: next.map(|(v, _)| v.clone()),
             date: release.date,
             end_date,
+            release_notes: release.release_notes.clone(),
             components: release
                 .components
                 .iter()
