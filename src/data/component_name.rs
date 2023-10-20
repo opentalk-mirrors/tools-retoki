@@ -4,6 +4,14 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(
-    Debug, Clone, PartialEq, Eq, Serialize, Deserialize, derive_more::From, derive_more::Into,
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    derive_more::From,
+    derive_more::Into,
+    derive_more::Display,
 )]
 pub struct ComponentName(String);

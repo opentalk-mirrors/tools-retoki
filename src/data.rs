@@ -7,7 +7,7 @@ mod product_name;
 mod series_codename;
 mod series_number;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use semver::Version;
 use serde::{Deserialize, Serialize};
@@ -83,5 +83,24 @@ impl Component {
                 })
                 .collect::<BTreeMap<Version, ComponentRelease>>()
         }
+    }
+}
+
+impl Releases {
+    pub fn get_product_releases_for_component_version(
+        &self,
+        component: &ComponentIdentifier,
+        component_version: &Version,
+    ) -> BTreeSet<Version> {
+        let mut product_versions = BTreeSet::new();
+        for series in &self.series {
+            for (product_version, release) in &series.1.releases {
+                if matches!(release.components.get(component), Some(v) if v == component_version) {
+                    product_versions.insert(product_version.clone());
+                }
+            }
+        }
+
+        product_versions
     }
 }

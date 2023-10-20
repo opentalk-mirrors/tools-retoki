@@ -50,6 +50,7 @@ fn generate<R: AsRef<Path>, T: AsRef<Path>>(release_file: R, target_dir: T) -> R
     let mut tera = Tera::default();
     tera.add_raw_template("README.md", include_str!("../templates/README.md"))?;
     tera.add_raw_template("release.md", include_str!("../templates/release.md"))?;
+    tera.add_raw_template("component.md", include_str!("../templates/component.md"))?;
 
     let file = File::open(&release_file).context(format!(
         "Couldn't open release file {:?}",
@@ -59,6 +60,8 @@ fn generate<R: AsRef<Path>, T: AsRef<Path>>(release_file: R, target_dir: T) -> R
 
     let target_dir = target_dir.as_ref().canonicalize()?;
     let releases_dir = target_dir.join("releases").canonicalize()?;
+    let components_dir = target_dir.join("components").canonicalize()?;
+
     std::fs::create_dir_all(&releases_dir)
         .context(format!("Couldn't create releases dir {:?}", releases_dir))?;
 
@@ -104,6 +107,23 @@ fn generate<R: AsRef<Path>, T: AsRef<Path>>(release_file: R, target_dir: T) -> R
                 .context(format!("Couldn't create file {:?}", full_path))?;
             write!(file, "{}", rendered)?;
         }
+    }
+
+    for component in &raw_data.components {
+        let template_data = template::ComponentPage::from_data_component(
+            component.0,
+            component.1,
+            &raw_data.product_name,
+            &raw_data,
+        )?;
+
+        let rendered = tera.render("component.md", &Context::from_serialize(&template_data)?)?;
+        let relative_path = components_dir.join(&format!("{}.md", component.0));
+        let full_path = target_dir.join(&relative_path);
+        println!("Writing file {full_path:?}");
+        let mut file =
+            File::create(&full_path).context(format!("Couldn't create file: {:?}", full_path))?;
+        write!(file, "{}", rendered)?;
     }
 
     Ok(())

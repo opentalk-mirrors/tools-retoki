@@ -21,7 +21,7 @@
 | Component | Version |
 | --------- | ------- |
 {% for component in components -%}
-| **{{ component.identifier }}** | [{{ component.version }}]({{ component.gitlab_url }}/-/releases/v{{ component.version }}) |
+| [**{{ component.identifier }}**](../components/{{ component.identifier }}.md) | [{{ component.version }}]({{ component.gitlab_url }}/-/releases/v{{ component.version }}) |
 {% endfor %}
 
 {% for component in components -%}

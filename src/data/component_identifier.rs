@@ -14,5 +14,6 @@ use serde::{Deserialize, Serialize};
     Ord,
     derive_more::From,
     derive_more::Into,
+    derive_more::Display,
 )]
 pub struct ComponentIdentifier(String);
