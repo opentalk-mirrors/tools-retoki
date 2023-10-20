@@ -8,11 +8,13 @@ use semver::Version;
 use serde::{Deserialize, Serialize};
 use time::Date;
 
-use crate::data;
+use crate::data::{
+    self, ComponentIdentifier, ComponentName, ProductName, SeriesCodename, SeriesNumber,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Readme {
-    pub product_name: String,
+    pub product_name: ProductName,
     pub series: Vec<ReleaseSeries>,
     pub components: Vec<Component>,
 
@@ -57,7 +59,7 @@ impl Readme {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReleasePage {
-    pub product_name: String,
+    pub product_name: ProductName,
 
     #[serde(flatten)]
     pub release: Release,
@@ -78,7 +80,7 @@ impl ReleasePage {
         next: Option<(Version, &data::Release)>,
         end_date: Date,
     ) -> Result<Self> {
-        let series_number = format!("{}.{}", version.major, version.minor);
+        let series_number = SeriesNumber::from(&version);
 
         let series = data
             .series
@@ -115,13 +117,13 @@ pub struct EmptyReleaseComponent {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Component {
-    pub identifier: String,
-    pub name: String,
+    pub identifier: ComponentIdentifier,
+    pub name: ComponentName,
     pub gitlab_url: String,
 }
 
 impl Component {
-    fn from_data_component(identifier: String, component: &data::Component) -> Self {
+    fn from_data_component(identifier: ComponentIdentifier, component: &data::Component) -> Self {
         Self {
             identifier,
             name: component.name.clone(),
@@ -132,8 +134,8 @@ impl Component {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReleaseSeries {
-    pub version: String,
-    pub codename: String,
+    pub version: SeriesNumber,
+    pub codename: SeriesCodename,
     pub end_of_life: Date,
     pub releases: Vec<Release>,
     pub markdown_anchor: String,
@@ -141,9 +143,9 @@ pub struct ReleaseSeries {
 
 impl ReleaseSeries {
     fn from_data_release_series(
-        version: String,
+        version: SeriesNumber,
         release_series: &data::ReleaseSeries,
-        components: &BTreeMap<String, data::Component>,
+        components: &BTreeMap<ComponentIdentifier, data::Component>,
     ) -> Result<Self> {
         let markdown_anchor = format!("{} ({})", version, release_series.codename)
             .replace(['(', ')', '.'], "")
@@ -197,8 +199,8 @@ pub struct Release {
     pub date: Date,
     pub end_date: Date,
     pub components: Vec<ReleaseComponent>,
-    pub components_by_identifier: BTreeMap<String, ReleaseComponent>,
-    pub component_releases: BTreeMap<String, Vec<ComponentRelease>>,
+    pub components_by_identifier: BTreeMap<ComponentIdentifier, ReleaseComponent>,
+    pub component_releases: BTreeMap<ComponentIdentifier, Vec<ComponentRelease>>,
 }
 
 impl Release {
@@ -208,17 +210,17 @@ impl Release {
         next: Option<(Version, &data::Release)>,
         end_date: Date,
         release: &data::Release,
-        components: &BTreeMap<String, data::Component>,
+        components: &BTreeMap<ComponentIdentifier, data::Component>,
     ) -> Result<Self> {
         let mut component_releases = BTreeMap::new();
 
-        for (component_name, component_version) in &release.components {
+        for (component_identifier, component_version) in &release.components {
             let previous = previous
                 .iter()
-                .flat_map(|(_, release)| release.components.get(component_name))
+                .flat_map(|(_, release)| release.components.get(component_identifier))
                 .next();
 
-            if let Some(component) = components.get(component_name) {
+            if let Some(component) = components.get(component_identifier) {
                 let releases = component
                     .get_releases(previous.cloned(), component_version.clone())
                     .into_iter()
@@ -232,7 +234,7 @@ impl Release {
                     .collect::<Vec<_>>();
 
                 if !releases.is_empty() {
-                    component_releases.insert(component_name.clone(), releases);
+                    component_releases.insert(component_identifier.clone(), releases);
                 }
             }
         }
@@ -281,13 +283,17 @@ impl Release {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReleaseComponent {
-    pub identifier: String,
+    pub identifier: ComponentIdentifier,
     pub version: Version,
     pub gitlab_url: String,
 }
 
 impl ReleaseComponent {
-    fn from_data_component(identifier: String, version: Version, gitlab_url: String) -> Self {
+    fn from_data_component(
+        identifier: ComponentIdentifier,
+        version: Version,
+        gitlab_url: String,
+    ) -> Self {
         Self {
             identifier,
             version,
