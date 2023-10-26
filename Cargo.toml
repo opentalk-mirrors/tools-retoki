@@ -12,6 +12,7 @@ description = "release toolkit - tools for bundling product releases"
 [dependencies]
 anyhow = "1.0.75"
 clap = { version = "4.4.4", features = ["derive"] }
+derive_more = "0.99.17"
 semver = { version = "1.0.19", features = ["serde"] }
 serde = { version = "1.0.188", features = ["derive"] }
 serde_yaml = "0.9.25"
