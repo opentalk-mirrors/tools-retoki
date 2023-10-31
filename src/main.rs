@@ -7,6 +7,7 @@ use command::Command;
 
 mod command;
 mod data;
+mod output_format;
 mod template;
 
 #[derive(Clone, Debug, PartialEq, Eq, Parser)]
