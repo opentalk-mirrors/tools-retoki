@@ -5,6 +5,7 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::Subcommand;
+use semver::Version;
 use time::{Date, OffsetDateTime};
 
 use crate::output_format::OutputFormat;
@@ -13,6 +14,7 @@ use self::utils::parse_date;
 
 mod generate;
 mod list;
+mod show_release;
 mod utils;
 
 #[derive(Clone, Debug, PartialEq, Eq, Subcommand)]
@@ -43,6 +45,20 @@ pub enum Command {
         #[clap(long, value_parser = parse_date)]
         date: Option<Date>,
     },
+
+    /// Show details about a release
+    ShowRelease {
+        /// The series for which to print the information.
+        version: Version,
+
+        /// The YAML file containing the structured release information.
+        #[clap(long, default_value = "releases.yml")]
+        release_file: PathBuf,
+
+        /// The format in which to print the information
+        #[clap(long, default_value = "table")]
+        format: OutputFormat,
+    },
 }
 
 impl Command {
@@ -61,6 +77,11 @@ impl Command {
                 format,
                 date.unwrap_or_else(|| OffsetDateTime::now_utc().date()),
             ),
+            Command::ShowRelease {
+                version,
+                release_file,
+                format,
+            } => show_release::execute(&version, release_file, format),
         }
     }
 }

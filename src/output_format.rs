@@ -40,6 +40,24 @@ impl FromStr for OutputFormat {
 }
 
 impl OutputFormat {
+    pub fn output<D: Serialize + Tabled>(&self, data: &D) -> Result<()> {
+        match self {
+            OutputFormat::Table => {
+                let table = Table::new([data]).with(Style::markdown()).to_string();
+                println!("{table}");
+            }
+            OutputFormat::Json => {
+                serde_json::to_writer_pretty(std::io::stdout(), data)?;
+            }
+            OutputFormat::Jsonl => {
+                let mut stdout = std::io::stdout().lock();
+                serde_json::to_writer(&mut stdout, data)?;
+                writeln!(stdout)?;
+            }
+        }
+        Ok(())
+    }
+
     pub fn output_multiple<D: Serialize + Tabled>(&self, data: &[D]) -> Result<()> {
         match self {
             OutputFormat::Table => {
