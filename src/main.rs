@@ -46,6 +46,13 @@ fn main() -> Result<()> {
     }
 }
 
+fn create_and_canonicalize_dir<P: AsRef<Path>>(path: P) -> Result<PathBuf> {
+    let path = path.as_ref();
+    std::fs::create_dir_all(path).context(format!("Couldn't create dir {path:?}"))?;
+    path.canonicalize()
+        .with_context(|| format!("Couldn't canonicalize directory path {path:?}"))
+}
+
 fn generate<R: AsRef<Path>, T: AsRef<Path>>(release_file: R, target_dir: T) -> Result<()> {
     let mut tera = Tera::default();
     tera.add_raw_template("README.md", include_str!("../templates/README.md"))?;
@@ -58,12 +65,9 @@ fn generate<R: AsRef<Path>, T: AsRef<Path>>(release_file: R, target_dir: T) -> R
     ))?;
     let raw_data: data::Releases = serde_yaml::from_reader(file)?;
 
-    let target_dir = target_dir.as_ref().canonicalize()?;
-    let releases_dir = target_dir.join("releases").canonicalize()?;
-    let components_dir = target_dir.join("components").canonicalize()?;
-
-    std::fs::create_dir_all(&releases_dir)
-        .context(format!("Couldn't create releases dir {:?}", releases_dir))?;
+    let target_dir = create_and_canonicalize_dir(target_dir.as_ref())?;
+    let releases_dir = create_and_canonicalize_dir(target_dir.join("releases"))?;
+    let components_dir = create_and_canonicalize_dir(target_dir.join("components"))?;
 
     {
         let template_data = template::Readme::from_data_releases(&raw_data)?;
