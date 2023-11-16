@@ -12,7 +12,7 @@ lint:fmt:
     - cargo fmt --check
 
 lint:clippy:
-  image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.71.0-bookworm
+  image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.73.0-bookworm
   needs: []
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
@@ -30,7 +30,7 @@ lint:licensing:
     - reuse lint
 
 test:cargo_test:
-  image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.71.0-bookworm
+  image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.73.0-bookworm
   needs: []
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
@@ -49,7 +49,6 @@ test:cargo_test:
     - rustup component add rustfmt llvm-tools-preview
     # libxml2-utils contains the xmllint command used below
     - apt-get update && apt-get install -y libxml2-utils
-    - cargo install grcov
   script:
     - RUSTFLAGS="-C instrument-coverage -C link-arg=-fuse-ld=lld"
       LLVM_PROFILE_FILE="$(pwd)/target/coverage/raw/coverage-%p-%m.profraw"
@@ -69,7 +68,7 @@ test:cargo_test:
     - xmllint --xpath "$COVERAGE_XML_PATH" target/coverage/cobertura.xml
 
 build:
-  image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.71.0-bookworm
+  image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.73.0-bookworm
   needs: []
   rules:
     - if: $CI_PIPELINE_SOURCE == "pipeline"
@@ -81,7 +80,7 @@ build:
       - target/release/retoki
     expire_in: 1 week
   script:
-    - cargo build --release --locked --workspace
+    - cargo audit build --release --locked --workspace
 
 package:container:
   needs:
