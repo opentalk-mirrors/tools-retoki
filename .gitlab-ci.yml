@@ -71,8 +71,7 @@ build:
   image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.73.0-bookworm
   needs: []
   rules:
-    - if: $CI_PIPELINE_SOURCE == "pipeline"
-      when: never
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     - if: $CI_COMMIT_TAG != null
   artifacts:
@@ -80,7 +79,7 @@ build:
       - target/release/retoki
     expire_in: 1 week
   script:
-    - cargo audit build --release --locked --workspace
+    - cargo auditable build --release --locked --workspace
 
 package:container:
   needs:
