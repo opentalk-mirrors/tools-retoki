@@ -4,7 +4,7 @@
 ---
 
 lint:fmt:
-  image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.71.0-bookworm
+  image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.73.0-bookworm
   needs: []
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
