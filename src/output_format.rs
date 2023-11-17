@@ -4,11 +4,11 @@
 use std::{io::Write, str::FromStr};
 
 use anyhow::{bail, Result};
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use serde::Serialize;
 use tabled::{settings::Style, Table, Tabled};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Parser)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Parser, ValueEnum)]
 pub enum OutputFormat {
     /// Output the data in table format
     Table,
