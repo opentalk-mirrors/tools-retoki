@@ -8,12 +8,13 @@ use clap::Subcommand;
 use semver::Version;
 use time::{Date, OffsetDateTime};
 
-use crate::output_format::OutputFormat;
+use crate::{data::ComponentIdentifier, output_format::OutputFormat};
 
 use self::utils::parse_date;
 
 mod generate;
 mod list;
+mod show_component;
 mod show_release;
 mod utils;
 
@@ -59,6 +60,20 @@ pub enum Command {
         #[clap(long, default_value = "table")]
         format: OutputFormat,
     },
+
+    /// Show the details of a component
+    ShowComponent {
+        /// The identifier of the component.
+        identifier: ComponentIdentifier,
+
+        /// The YAML file containing the structured release information.
+        #[clap(long, default_value = "releases.yml")]
+        release_file: PathBuf,
+
+        /// The format in which to print the information.
+        #[clap(long, default_value = "table")]
+        format: OutputFormat,
+    },
 }
 
 impl Command {
@@ -82,6 +97,11 @@ impl Command {
                 release_file,
                 format,
             } => show_release::execute(&version, release_file, format),
+            Command::ShowComponent {
+                identifier,
+                release_file,
+                format,
+            } => show_component::execute(&identifier, release_file, format),
         }
     }
 }
