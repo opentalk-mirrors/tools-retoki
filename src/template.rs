@@ -82,6 +82,22 @@ impl ReleasePage {
     ) -> Result<Self> {
         let series_number = SeriesNumber::from(&version);
 
+        let changelog_base = previous
+            .as_ref()
+            .map(|(k, v)| (k.clone(), (*v).clone()))
+            .or_else(|| {
+                let previous_series = data.series.iter().rev().find(|(k, _)| **k < series_number);
+                let releases = previous_series
+                    .map(|s| s.1.releases.clone())
+                    .unwrap_or_default();
+                releases
+                    .iter()
+                    .rev()
+                    .find(|v| v.0.pre.is_empty())
+                    .or_else(|| releases.iter().next_back())
+                    .map(|(k, v)| (k.clone(), v.clone()))
+            });
+
         let series = data
             .series
             .get(&series_number)
@@ -101,6 +117,7 @@ impl ReleasePage {
             )?,
             release: Release::from_data_release(
                 version,
+                changelog_base,
                 previous,
                 next,
                 end_date,
@@ -219,6 +236,7 @@ impl ReleaseSeries {
                         .unwrap_or(release_series.end_of_life);
                     Release::from_data_release(
                         version.clone(),
+                        None,
                         previous,
                         next,
                         end_date,
@@ -248,6 +266,7 @@ pub struct Release {
 impl Release {
     fn from_data_release(
         version: Version,
+        changelog_base: Option<(Version, data::Release)>,
         previous: Option<(Version, &data::Release)>,
         next: Option<(Version, &data::Release)>,
         end_date: Date,
@@ -257,7 +276,7 @@ impl Release {
         let mut component_releases = BTreeMap::new();
 
         for (component_identifier, component_version) in &release.components {
-            let previous = previous
+            let previous = changelog_base
                 .iter()
                 .flat_map(|(_, release)| release.components.get(component_identifier))
                 .next();
