@@ -133,6 +133,7 @@ impl ReleasePage {
 pub struct ComponentPage {
     pub product_name: ProductName,
     pub component_name: ComponentName,
+    pub component_identifier: ComponentIdentifier,
     pub releases: Vec<ComponentRelease>,
 
     // TODO: this is an ugly workaround to get beautiful spaciing for tables,
@@ -147,10 +148,11 @@ impl ComponentPage {
         data: &data::Component,
         product_name: &ProductName,
         data_releases: &data::Releases,
-    ) -> Result<Self> {
-        Ok(Self {
+    ) -> Self {
+        Self {
             product_name: product_name.clone(),
             component_name: data.name.clone(),
+            component_identifier: component_identifier.clone(),
             releases: data
                 .releases
                 .iter()
@@ -159,14 +161,14 @@ impl ComponentPage {
                         .get_product_releases_for_component_version(component_identifier, version);
                     ComponentRelease::from_data_component_release(
                         version,
-                        data.gitlab_url.to_string(),
+                        data.gitlab_url.clone(),
                         release,
                         product_releases,
                     )
                 })
                 .collect(),
             space: " ".to_string(),
-        })
+        }
     }
 }
 
