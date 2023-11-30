@@ -81,7 +81,7 @@ pub fn execute<R: AsRef<Path>, T: AsRef<Path>>(release_file: R, target_dir: T) -
             component.1,
             &raw_data.product_name,
             &raw_data,
-        )?;
+        );
 
         let rendered = tera.render("component.md", &Context::from_serialize(&template_data)?)?;
         let relative_path = components_dir.join(&format!("{}.md", component.0));
