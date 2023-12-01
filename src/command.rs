@@ -1,107 +1,45 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use clap::Subcommand;
-use semver::Version;
-use time::{Date, OffsetDateTime};
 
-use crate::{data::ComponentIdentifier, output_format::OutputFormat};
+use self::{component::ComponentArgs, release::ReleaseArgs, series::SeriesArgs};
 
-use self::utils::parse_date;
-
+mod component;
 mod generate;
-mod list;
-mod show_component;
-mod show_release;
+mod release;
+mod series;
 mod utils;
 
 #[derive(Clone, Debug, PartialEq, Eq, Subcommand)]
 pub enum Command {
     /// Generate the release information from a `releases.yml` file.
     Generate {
-        /// The YAML file containing the structured release information.
-        #[clap(long, default_value = "releases.yml")]
-        release_file: PathBuf,
-
         /// The target directory for the release information.
         #[clap(long, default_value = ".")]
         target_dir: PathBuf,
     },
 
-    /// List the release series
-    /// The series are always ordered ascending by their number.
-    ListSeries {
-        /// The YAML file containing the structured release information.
-        #[clap(long, default_value = "releases.yml")]
-        release_file: PathBuf,
+    /// Perform actions releated a release
+    Release(ReleaseArgs),
 
-        /// The format in which to print the information
-        #[clap(long, default_value = "table")]
-        format: OutputFormat,
+    /// Perform actions releated a release series
+    Series(SeriesArgs),
 
-        /// The date that is used as the basis for calculating EOL values
-        #[clap(long, value_parser = parse_date)]
-        date: Option<Date>,
-    },
-
-    /// Show details about a release
-    ShowRelease {
-        /// The series for which to print the information.
-        version: Version,
-
-        /// The YAML file containing the structured release information.
-        #[clap(long, default_value = "releases.yml")]
-        release_file: PathBuf,
-
-        /// The format in which to print the information
-        #[clap(long, default_value = "table")]
-        format: OutputFormat,
-    },
-
-    /// Show the details of a component
-    ShowComponent {
-        /// The identifier of the component.
-        identifier: ComponentIdentifier,
-
-        /// The YAML file containing the structured release information.
-        #[clap(long, default_value = "releases.yml")]
-        release_file: PathBuf,
-
-        /// The format in which to print the information.
-        #[clap(long, default_value = "table")]
-        format: OutputFormat,
-    },
+    /// Perform actions releated a component
+    Component(ComponentArgs),
 }
 
 impl Command {
-    pub fn execute(self) -> Result<()> {
+    pub fn execute<R: AsRef<Path>>(self, release_file: R) -> Result<()> {
         match self {
-            Command::Generate {
-                release_file,
-                target_dir,
-            } => generate::execute(release_file, target_dir),
-            Command::ListSeries {
-                release_file,
-                format,
-                date,
-            } => list::execute(
-                release_file,
-                format,
-                date.unwrap_or_else(|| OffsetDateTime::now_utc().date()),
-            ),
-            Command::ShowRelease {
-                version,
-                release_file,
-                format,
-            } => show_release::execute(&version, release_file, format),
-            Command::ShowComponent {
-                identifier,
-                release_file,
-                format,
-            } => show_component::execute(&identifier, release_file, format),
+            Command::Generate { target_dir } => generate::execute(release_file, target_dir),
+            Command::Release(args) => args.execute(release_file),
+            Command::Component(args) => args.execute(release_file),
+            Command::Series(args) => args.execute(release_file),
         }
     }
 }
