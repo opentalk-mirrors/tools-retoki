@@ -1,0 +1,72 @@
+// SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
+// SPDX-License-Identifier: EUPL-1.2
+
+use std::collections::BTreeMap;
+
+use anyhow::Result;
+use serde::{Deserialize, Serialize};
+use time::Date;
+
+use crate::data::{self, ComponentIdentifier, SeriesCodename, SeriesNumber};
+
+use super::Release;
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ReleaseSeries {
+    pub version: SeriesNumber,
+    pub codename: SeriesCodename,
+    pub end_of_life: Date,
+    pub releases: Vec<Release>,
+    pub markdown_anchor: String,
+}
+
+impl ReleaseSeries {
+    pub fn from_data_release_series(
+        version: SeriesNumber,
+        release_series: &data::ReleaseSeries,
+        components: &BTreeMap<ComponentIdentifier, data::Component>,
+    ) -> Result<Self> {
+        let markdown_anchor = format!("{} ({})", version, release_series.codename)
+            .replace(['(', ')', '.'], "")
+            .replace(' ', "-")
+            .to_lowercase();
+        let releases_with_padding = std::iter::once(None)
+            .chain(release_series.releases.iter().map(Some))
+            .chain(std::iter::once(None))
+            .collect::<Vec<_>>();
+
+        Ok(Self {
+            version: version.clone(),
+            codename: release_series.codename.clone(),
+            end_of_life: release_series.end_of_life,
+            releases: releases_with_padding
+                .windows(3)
+                .map(|window| {
+                    let previous = window[0].map(|(v, r)| (v.clone(), r));
+                    let (version, release) = window[1].unwrap();
+                    let next = window[2].map(|(v, r)| (v.clone(), r));
+                    let end_date = next
+                        .as_ref()
+                        .map(|(v, _)| {
+                            release_series
+                                .releases
+                                .get(v)
+                                .unwrap_or_else(|| panic!("version {v} not found"))
+                                .date
+                        })
+                        .unwrap_or(release_series.end_of_life);
+                    Release::from_data_release(
+                        version.clone(),
+                        None,
+                        previous,
+                        next,
+                        end_date,
+                        release,
+                        components,
+                    )
+                })
+                .collect::<Result<_, anyhow::Error>>()?,
+            markdown_anchor,
+        })
+    }
+}
