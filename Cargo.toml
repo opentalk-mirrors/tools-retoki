@@ -17,6 +17,6 @@ semver = { version = "1.0.19", features = ["serde"] }
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = { version = "1.0.108" }
 serde_yaml = "0.9.25"
-tabled = "0.14.0"
+tabled = "0.15.0"
 tera = "1.19.1"
 time = { version = "0.3.31", features = ["serde", "macros", "serde-human-readable", "serde-well-known"] }
