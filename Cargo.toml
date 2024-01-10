@@ -13,7 +13,7 @@ description = "release toolkit - tools for bundling product releases"
 anyhow = "1.0.79"
 clap = { version = "4.4.14", features = ["derive"] }
 derive_more = "0.99.17"
-semver = { version = "1.0.20", features = ["serde"] }
+semver = { version = "1.0.21", features = ["serde"] }
 serde = { version = "1.0.193", features = ["derive"] }
 serde_json = { version = "1.0.108" }
 serde_yaml = "0.9.29"
