@@ -25,7 +25,7 @@ gantt
 
 # Component lookup table
 
-| Release | {% for component in components -%}{{ space }}[{{ component.identifier }}](components/{{ component.identifier }}.md){{ space }} | {%- endfor %} |
+| Release | {% for component in components -%}{{ space }}[{{ component.identifier }}](components/{{ component.identifier }}.md){{ space }}|{%- endfor %}
 | ------- |{% for component in components -%}{{ space }}----------{{ space }}|{%- endfor %}
 {% for serie in series | reverse -%}
 {%- for release in serie.releases | reverse -%}
