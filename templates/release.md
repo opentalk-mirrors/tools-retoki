@@ -30,8 +30,10 @@
 
 {% for component_release in component_releases[component.identifier] | reverse -%}
 ## {{ component.identifier }} v{{ component_release.version }}
+{%- if component_release.changelog %}
 
 {{ component_release.changelog }}
+{% endif -%}
 {% endfor -%}
 {% endif -%}
 {% endfor -%}
