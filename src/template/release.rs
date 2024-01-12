@@ -4,11 +4,12 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use anyhow::{Context as _, Result};
+use indexmap::IndexMap;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use time::Date;
 
-use crate::data::{self, ComponentIdentifier};
+use crate::data::{self, ComponentCategory, ComponentCategoryIdentifier, ComponentIdentifier};
 
 use super::{ComponentRelease, ReleaseComponent};
 
@@ -26,6 +27,7 @@ pub struct Release {
 }
 
 impl Release {
+    #[allow(clippy::too_many_arguments)]
     pub fn from_data_release(
         version: Version,
         changelog_base: Option<(Version, data::Release)>,
@@ -34,6 +36,7 @@ impl Release {
         end_date: Date,
         release: &data::Release,
         components: &BTreeMap<ComponentIdentifier, data::Component>,
+        component_categories: &IndexMap<ComponentCategoryIdentifier, ComponentCategory>,
     ) -> Result<Self> {
         let mut component_releases = BTreeMap::new();
 
@@ -70,20 +73,37 @@ impl Release {
             date: release.date,
             end_date,
             release_notes: release.release_notes.clone(),
-            components: release
-                .components
-                .iter()
-                .map(|(identifier, version)| {
+            components: {
+                let mut categorized = component_categories
+                    .keys()
+                    .map(|identifier| (identifier.clone(), Vec::new()))
+                    .collect::<IndexMap<ComponentCategoryIdentifier, Vec<ReleaseComponent>>>();
+                for (identifier, version) in &release.components {
                     let component = components
                         .get(identifier)
                         .context(format!("Couldn't find component {:?}", identifier))?;
-                    Ok(ReleaseComponent::from_data_component(
-                        identifier.clone(),
-                        version.clone(),
-                        component.gitlab_url.clone(),
-                    ))
-                })
-                .collect::<Result<_, anyhow::Error>>()?,
+                    let category =
+                        component_categories
+                            .get(&component.category)
+                            .context(format!(
+                                "Couldn't find component category {:?}",
+                                component.category
+                            ))?;
+                    categorized
+                        .entry(component.category.clone())
+                        .or_default()
+                        .push(ReleaseComponent::from_data_component(
+                            identifier.clone(),
+                            category.name.clone(),
+                            version.clone(),
+                            component.gitlab_url.clone(),
+                        ));
+                }
+                categorized
+                    .into_iter()
+                    .flat_map(|(_a, b)| b.into_iter())
+                    .collect::<Vec<ReleaseComponent>>()
+            },
             components_by_identifier: release
                 .components
                 .iter()
@@ -91,10 +111,18 @@ impl Release {
                     let component = components
                         .get(identifier)
                         .context(format!("Couldn't find component {:?}", identifier))?;
+                    let category =
+                        component_categories
+                            .get(&component.category)
+                            .context(format!(
+                                "Couldn't find component category {:?}",
+                                component.category
+                            ))?;
                     Ok((
                         identifier.clone(),
                         ReleaseComponent::from_data_component(
                             identifier.clone(),
+                            category.name.clone(),
                             version.clone(),
                             component.gitlab_url.clone(),
                         ),

@@ -37,6 +37,7 @@ impl Readme {
                         version.clone(),
                         series,
                         &releases.components,
+                        &releases.component_categories,
                     )
                 })
                 .collect::<Result<_, _>>()?,

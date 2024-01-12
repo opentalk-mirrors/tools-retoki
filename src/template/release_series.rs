@@ -4,10 +4,13 @@
 use std::collections::BTreeMap;
 
 use anyhow::Result;
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use time::Date;
 
-use crate::data::{self, ComponentIdentifier, SeriesCodename, SeriesNumber};
+use crate::data::{
+    self, ComponentCategoryIdentifier, ComponentIdentifier, SeriesCodename, SeriesNumber,
+};
 
 use super::Release;
 
@@ -25,6 +28,7 @@ impl ReleaseSeries {
         version: SeriesNumber,
         release_series: &data::ReleaseSeries,
         components: &BTreeMap<ComponentIdentifier, data::Component>,
+        component_categories: &IndexMap<ComponentCategoryIdentifier, data::ComponentCategory>,
     ) -> Result<Self> {
         let release_markdown_code = match &release_series.codename {
             Some(codename) => format!("{} ({})", version, codename),
@@ -67,6 +71,7 @@ impl ReleaseSeries {
                         end_date,
                         release,
                         components,
+                        component_categories,
                     )
                 })
                 .collect::<Result<_, anyhow::Error>>()?,

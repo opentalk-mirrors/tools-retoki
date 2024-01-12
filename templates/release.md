@@ -18,25 +18,23 @@
 
 ## Component versions
 
-| Component | Version |
-| --------- | ------- |
+| Category | Component | Version |
+| -------- | --------- | ------- |
 {% for component in components -%}
-| [**{{ component.identifier }}**](../components/{{ component.identifier }}.md) | [v{{ component.version }}]({{ component.gitlab_url }}/-/releases/v{{ component.version }}) |
-{% endfor %}
+| **{{ component.category }}** | [**{{ component.identifier }}**](../components/{{ component.identifier }}.md) | [v{{ component.version }}]({{ component.gitlab_url }}/-/releases/v{{ component.version }}) |
+{% endfor -%}
 
-{% for component in components -%}
-{% if component.identifier in component_releases -%}
+{% for component in components %}
+{%- if component.identifier in component_releases %}
 ---
-
-{% for component_release in component_releases[component.identifier] | reverse -%}
+{% for component_release in component_releases[component.identifier] | reverse %}
 ## {{ component.identifier }} v{{ component_release.version }}
-{%- if component_release.changelog %}
-
+{% if component_release.changelog %}
 {{ component_release.changelog }}
-{% endif -%}
+{%- endif -%}
 {% endfor -%}
 {% endif -%}
-{% endfor -%}
+{% endfor %}
 
 ---
 
