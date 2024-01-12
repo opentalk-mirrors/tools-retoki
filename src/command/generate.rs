@@ -22,7 +22,8 @@ pub fn execute<R: AsRef<Path>, T: AsRef<Path>>(release_file: R, target_dir: T) -
         "Couldn't open release file {:?}",
         release_file.as_ref()
     ))?;
-    let raw_data: data::Releases = serde_yaml::from_reader(file)?;
+    let raw_data: data::Releases =
+        serde_yaml::from_reader::<_, data::Releases>(file)?.without_obsolete_prereleases();
 
     let target_dir = create_and_canonicalize_dir(target_dir.as_ref())?;
     let releases_dir = create_and_canonicalize_dir(target_dir.join("releases"))?;
