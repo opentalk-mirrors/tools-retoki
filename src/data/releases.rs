@@ -3,16 +3,21 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use indexmap::IndexMap;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 
-use super::{Component, ComponentIdentifier, ProductName, ReleaseSeries, SeriesNumber};
+use super::{
+    Component, ComponentCategory, ComponentCategoryIdentifier, ComponentIdentifier, ProductName,
+    ReleaseSeries, SeriesNumber,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Releases {
     pub product_name: ProductName,
     pub components: BTreeMap<ComponentIdentifier, Component>,
     pub series: BTreeMap<SeriesNumber, ReleaseSeries>,
+    pub component_categories: IndexMap<ComponentCategoryIdentifier, ComponentCategory>,
 }
 
 impl Releases {

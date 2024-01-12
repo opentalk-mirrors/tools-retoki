@@ -10,11 +10,8 @@ use serde::{Deserialize, Serialize};
     Eq,
     Serialize,
     Deserialize,
-    PartialOrd,
-    Ord,
-    Hash,
     derive_more::From,
     derive_more::Into,
     derive_more::Display,
 )]
-pub struct ComponentIdentifier(String);
+pub struct ComponentCategoryName(String);

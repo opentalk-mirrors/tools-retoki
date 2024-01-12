@@ -67,6 +67,7 @@ impl ReleasePage {
                 series_number,
                 series,
                 &data.components,
+                &data.component_categories,
             )?,
             release: Release::from_data_release(
                 version,
@@ -76,6 +77,7 @@ impl ReleasePage {
                 end_date,
                 release,
                 &data.components,
+                &data.component_categories,
             )?,
             space: " ".to_string(),
         })

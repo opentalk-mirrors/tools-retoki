@@ -4,11 +4,12 @@
 use semver::Version;
 use serde::{Deserialize, Serialize};
 
-use crate::data::ComponentIdentifier;
+use crate::data::{ComponentCategoryName, ComponentIdentifier};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReleaseComponent {
     pub identifier: ComponentIdentifier,
+    pub category: ComponentCategoryName,
     pub version: Version,
     pub gitlab_url: String,
 }
@@ -16,11 +17,13 @@ pub struct ReleaseComponent {
 impl ReleaseComponent {
     pub fn from_data_component(
         identifier: ComponentIdentifier,
+        category: ComponentCategoryName,
         version: Version,
         gitlab_url: String,
     ) -> Self {
         Self {
             identifier,
+            category,
             version,
             gitlab_url,
         }
