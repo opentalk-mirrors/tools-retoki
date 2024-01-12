@@ -37,4 +37,20 @@ impl Releases {
 
         product_versions
     }
+
+    pub fn without_obsolete_prereleases(self) -> Self {
+        Self {
+            series: self
+                .series
+                .into_iter()
+                .map(|(number, series)| (number, series.without_obsolete_prereleases()))
+                .collect(),
+            components: self
+                .components
+                .into_iter()
+                .map(|(number, component)| (number, component.without_obsolete_prereleases()))
+                .collect(),
+            ..self
+        }
+    }
 }
