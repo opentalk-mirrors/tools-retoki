@@ -17,7 +17,7 @@ gantt
 ```
 
 {% for serie in series | reverse %}
-## {{ serie.version }} ({{ serie.codename }})
+## {{ serie.version }}{% if serie.codename %} ({{ serie.codename }}){% endif %}
 {% for release in serie.releases | reverse %}
 - [**v{{ release.version }}** ({{ release.date }})](releases/{{ release.version }}.md)
 {%- endfor %}

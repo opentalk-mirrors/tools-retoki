@@ -1,7 +1,7 @@
 # {{ product_name }} v{{ version }}
 
 - Release date: **{{ date }}**
-- Release series: [**{{ series.version }} ({{ series.codename }})**](../README.md#{{ series.markdown_anchor }})
+- Release series: [**{{ series.version }}{% if series.codename %} ({{ series.codename }}){% endif %}**](../README.md#{{ series.markdown_anchor }})
 {%- if previous %}
 - Previous release: [**v{{ previous }}**]({{ previous }}.md)
 {%- endif %}
@@ -30,8 +30,10 @@
 
 {% for component_release in component_releases[component.identifier] | reverse -%}
 ## {{ component.identifier }} v{{ component_release.version }}
+{%- if component_release.changelog %}
 
 {{ component_release.changelog }}
+{% endif -%}
 {% endfor -%}
 {% endif -%}
 {% endfor -%}

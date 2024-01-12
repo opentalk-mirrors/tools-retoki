@@ -12,7 +12,7 @@ use crate::data;
 pub struct ComponentRelease {
     pub version: Version,
     pub gitlab_url: String,
-    pub changelog: String,
+    pub changelog: Option<String>,
     pub product_versions: BTreeSet<Version>,
 }
 

@@ -12,9 +12,11 @@
 {%- endfor -%}
 )
 {%- endif %}
+{%- if release.changelog %}
 
 ## Changelog
 
 {{ release.changelog }}
+{%- endif %}
 
 {%- endfor -%}
