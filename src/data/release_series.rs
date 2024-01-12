@@ -11,7 +11,7 @@ use super::{Release, SeriesCodename};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReleaseSeries {
-    pub codename: SeriesCodename,
+    pub codename: Option<SeriesCodename>,
     pub end_of_life: Date,
     pub releases: BTreeMap<Version, Release>,
 }

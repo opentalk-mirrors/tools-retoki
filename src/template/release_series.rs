@@ -14,7 +14,7 @@ use super::Release;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReleaseSeries {
     pub version: SeriesNumber,
-    pub codename: SeriesCodename,
+    pub codename: Option<SeriesCodename>,
     pub end_of_life: Date,
     pub releases: Vec<Release>,
     pub markdown_anchor: String,
@@ -26,7 +26,11 @@ impl ReleaseSeries {
         release_series: &data::ReleaseSeries,
         components: &BTreeMap<ComponentIdentifier, data::Component>,
     ) -> Result<Self> {
-        let markdown_anchor = format!("{} ({})", version, release_series.codename)
+        let release_markdown_code = match &release_series.codename {
+            Some(codename) => format!("{} ({})", version, codename),
+            None => version.to_string(),
+        };
+        let markdown_anchor = release_markdown_code
             .replace(['(', ')', '.'], "")
             .replace(' ', "-")
             .to_lowercase();
