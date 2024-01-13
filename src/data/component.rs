@@ -3,6 +3,7 @@
 
 use std::collections::BTreeMap;
 
+use indexmap::IndexMap;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 
@@ -11,11 +12,11 @@ use super::{ComponentCategoryIdentifier, ComponentName, ComponentRelease};
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Component {
     pub name: ComponentName,
-    pub category: ComponentCategoryIdentifier,
     pub gitlab_url: String,
+    pub category: ComponentCategoryIdentifier,
 
     #[serde(default)]
-    pub releases: BTreeMap<Version, ComponentRelease>,
+    pub releases: IndexMap<Version, ComponentRelease>,
 }
 
 impl Component {

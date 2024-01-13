@@ -1,8 +1,6 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use std::collections::BTreeMap;
-
 use anyhow::Result;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
@@ -27,7 +25,7 @@ impl ReleaseSeries {
     pub fn from_data_release_series(
         version: SeriesNumber,
         release_series: &data::ReleaseSeries,
-        components: &BTreeMap<ComponentIdentifier, data::Component>,
+        components: &IndexMap<ComponentIdentifier, data::Component>,
         component_categories: &IndexMap<ComponentCategoryIdentifier, data::ComponentCategory>,
     ) -> Result<Self> {
         let release_markdown_code = match &release_series.codename {

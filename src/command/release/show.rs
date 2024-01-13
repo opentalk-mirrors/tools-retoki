@@ -1,10 +1,11 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use std::{collections::BTreeMap, fs::File, path::Path};
+use std::{fs::File, path::Path};
 
 use anyhow::{Context, Result};
 use clap::Args;
+use indexmap::IndexMap;
 use semver::Version;
 use serde::Serialize;
 use tabled::Tabled;
@@ -47,7 +48,7 @@ impl ShowArgs {
             version: &'a Version,
         }
 
-        fn display_components(components: &BTreeMap<ComponentIdentifier, Version>) -> String {
+        fn display_components(components: &IndexMap<ComponentIdentifier, Version>) -> String {
             components
                 .iter()
                 .map(|(identifier, version)| format!("{identifier}: {version}"))
@@ -69,7 +70,7 @@ impl ShowArgs {
             pub series: SeriesNumber,
 
             #[tabled(rename = "Components", display_with = "display_components")]
-            pub components: &'a BTreeMap<ComponentIdentifier, Version>,
+            pub components: &'a IndexMap<ComponentIdentifier, Version>,
         }
 
         let info = ReleaseInformation {

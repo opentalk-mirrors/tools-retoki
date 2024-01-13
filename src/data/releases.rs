@@ -15,8 +15,8 @@ use super::{
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Releases {
     pub product_name: ProductName,
-    pub components: BTreeMap<ComponentIdentifier, Component>,
     pub series: BTreeMap<SeriesNumber, ReleaseSeries>,
+    pub components: IndexMap<ComponentIdentifier, Component>,
     pub component_categories: IndexMap<ComponentCategoryIdentifier, ComponentCategory>,
 }
 

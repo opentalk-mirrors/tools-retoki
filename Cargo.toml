@@ -13,7 +13,9 @@ description = "release toolkit - tools for bundling product releases"
 anyhow = "1.0.79"
 clap = { version = "4.4.16", features = ["derive"] }
 derive_more = "0.99.17"
+gitlab = "0.1607.0"
 indexmap = { version = "2.1.0", features = ["serde"] }
+owo-colors = "4.0.0"
 semver = { version = "1.0.21", features = ["serde"] }
 serde = { version = "1.0.195", features = ["derive"] }
 serde_json = { version = "1.0.111" }
@@ -21,3 +23,4 @@ serde_yaml = "0.9.30"
 tabled = "0.15.0"
 tera = "1.19.1"
 time = { version = "0.3.31", features = ["serde", "macros", "serde-human-readable", "serde-well-known"] }
+url = "2.5.0"
