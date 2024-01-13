@@ -1,8 +1,7 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use std::collections::BTreeMap;
-
+use indexmap::IndexMap;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use time::Date;
@@ -11,9 +10,10 @@ use super::{Release, SeriesCodename};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReleaseSeries {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub codename: Option<SeriesCodename>,
     pub end_of_life: Date,
-    pub releases: BTreeMap<Version, Release>,
+    pub releases: IndexMap<Version, Release>,
 }
 
 impl ReleaseSeries {

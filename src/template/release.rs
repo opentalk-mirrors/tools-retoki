@@ -35,7 +35,7 @@ impl Release {
         next: Option<(Version, &data::Release)>,
         end_date: Date,
         release: &data::Release,
-        components: &BTreeMap<ComponentIdentifier, data::Component>,
+        components: &IndexMap<ComponentIdentifier, data::Component>,
         component_categories: &IndexMap<ComponentCategoryIdentifier, ComponentCategory>,
     ) -> Result<Self> {
         let mut component_releases = BTreeMap::new();
