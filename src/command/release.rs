@@ -7,6 +7,7 @@ use anyhow::Result;
 use clap::{Args, Subcommand};
 use semver::Version;
 
+mod fetch_changelogs;
 mod show;
 
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
@@ -28,12 +29,18 @@ impl ReleaseArgs {
 #[derive(Clone, Debug, PartialEq, Eq, Subcommand)]
 pub enum ReleaseCommand {
     Show(show::ShowArgs),
+
+    /// Fetch all changelog entries for the component releases of a product release
+    ///
+    /// Requires the GITLAB_TOKEN environment variable to be set
+    FetchChangelogs(fetch_changelogs::FetchChangelogsArgs),
 }
 
 impl ReleaseCommand {
     pub fn execute<R: AsRef<Path>>(self, release_file: R, version: &Version) -> Result<()> {
         match self {
             ReleaseCommand::Show(args) => args.execute(release_file, version),
+            ReleaseCommand::FetchChangelogs(args) => args.execute(release_file, version),
         }
     }
 }
