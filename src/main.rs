@@ -9,6 +9,7 @@ use command::Command;
 
 mod command;
 mod data;
+mod helper;
 mod output_format;
 mod template;
 
