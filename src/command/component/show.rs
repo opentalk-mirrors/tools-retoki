@@ -45,11 +45,19 @@ impl ShowArgs {
 
             #[tabled(rename = "GitLab URL")]
             pub gitlab_url: &'a String,
+
+            #[tabled(
+                rename = "Container base URL",
+                display_with = "crate::helper::tabled::display_option"
+            )]
+            #[serde(skip_serializing_if = "Option::is_none")]
+            pub container_base_url: &'a Option<String>,
         }
 
         let info = ComponentInformation {
             name: &component.name,
             gitlab_url: &component.gitlab_url,
+            container_base_url: &component.container_base_url,
         };
         format.output(&info)?;
 
