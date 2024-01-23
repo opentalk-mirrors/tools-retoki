@@ -53,6 +53,7 @@ impl Releases {
                 .series
                 .into_iter()
                 .map(|(number, series)| (number, series.with_releases_stripped(strip_releases)))
+                .filter(|(_number, series)| !series.releases.is_empty())
                 .collect(),
             components: self
                 .components
