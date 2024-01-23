@@ -27,20 +27,21 @@ impl ComponentPage {
         product_name: &ProductName,
         data_releases: &data::Releases,
     ) -> Self {
+        let mut releases = data.releases.clone();
+        releases.sort_keys();
         Self {
             product_name: product_name.clone(),
             component_name: data.name.clone(),
             component_identifier: component_identifier.clone(),
-            releases: data
-                .releases
-                .iter()
+            releases: releases
+                .into_iter()
                 .map(|(version, release)| {
                     let product_releases = data_releases
-                        .get_product_releases_for_component_version(component_identifier, version);
+                        .get_product_releases_for_component_version(component_identifier, &version);
                     ComponentRelease::from_data_component_release(
-                        version,
+                        &version,
                         data.gitlab_url.to_string(),
-                        release,
+                        &release,
                         product_releases,
                     )
                 })
