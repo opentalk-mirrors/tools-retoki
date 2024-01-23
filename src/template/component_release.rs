@@ -11,7 +11,7 @@ use crate::data;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ComponentRelease {
     pub version: Version,
-    pub gitlab_url: String,
+    pub gitlab_url: Option<String>,
     pub changelog: Option<String>,
     pub product_versions: BTreeSet<Version>,
 }
@@ -19,7 +19,7 @@ pub struct ComponentRelease {
 impl ComponentRelease {
     pub fn from_data_component_release(
         version: &Version,
-        gitlab_url: String,
+        gitlab_url: Option<String>,
         component_release: &data::ComponentRelease,
         product_versions: BTreeSet<Version>,
     ) -> Self {

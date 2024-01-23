@@ -11,7 +11,7 @@ pub struct ReleaseComponent {
     pub identifier: ComponentIdentifier,
     pub category: ComponentCategoryName,
     pub version: Version,
-    pub gitlab_url: String,
+    pub gitlab_url: Option<String>,
 }
 
 impl ReleaseComponent {
@@ -19,7 +19,7 @@ impl ReleaseComponent {
         identifier: ComponentIdentifier,
         category: ComponentCategoryName,
         version: Version,
-        gitlab_url: String,
+        gitlab_url: Option<String>,
     ) -> Self {
         Self {
             identifier,

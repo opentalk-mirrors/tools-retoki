@@ -43,8 +43,11 @@ impl ShowArgs {
             #[tabled(rename = "Version")]
             pub name: &'a ComponentName,
 
-            #[tabled(rename = "GitLab URL")]
-            pub gitlab_url: &'a String,
+            #[tabled(
+                rename = "GitLab URL",
+                display_with = "crate::helper::tabled::display_option"
+            )]
+            pub gitlab_url: &'a Option<String>,
 
             #[tabled(
                 rename = "Container base URL",

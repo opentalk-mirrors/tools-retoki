@@ -16,7 +16,9 @@ use super::{
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Component {
     pub name: ComponentName,
-    pub gitlab_url: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gitlab_url: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub container_base_url: Option<String>,
