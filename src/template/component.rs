@@ -9,7 +9,7 @@ use crate::data::{self, ComponentIdentifier, ComponentName};
 pub struct Component {
     pub identifier: ComponentIdentifier,
     pub name: ComponentName,
-    pub gitlab_url: String,
+    pub gitlab_url: Option<String>,
 }
 
 impl Component {

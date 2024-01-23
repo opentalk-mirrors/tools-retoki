@@ -40,7 +40,7 @@ impl ComponentPage {
                         .get_product_releases_for_component_version(component_identifier, &version);
                     ComponentRelease::from_data_component_release(
                         &version,
-                        data.gitlab_url.to_string(),
+                        data.gitlab_url.clone(),
                         &release,
                         product_releases,
                     )

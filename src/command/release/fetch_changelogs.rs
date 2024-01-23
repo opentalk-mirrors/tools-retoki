@@ -95,9 +95,13 @@ impl FetchChangelogsArgs {
         version: &Version,
         token: &str,
     ) -> Result<()> {
+        let Some(gitlab_url) = &component.gitlab_url else {
+            print!("Component {component_identifier} has no GitLab URL, skipping release lookup…");
+            return Ok(());
+        };
         print!("Looking up release {version} of {component_identifier}…");
 
-        let gitlab_url: Url = component.gitlab_url.parse()?;
+        let gitlab_url: Url = gitlab_url.parse()?;
         let host = gitlab_url
             .host_str()
             .context(format!("No host part found in url {gitlab_url:?}"))?;
