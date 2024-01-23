@@ -11,13 +11,19 @@ use anyhow::{Context as _, Result};
 use clap::Args;
 use tera::{Context, Tera};
 
-use crate::{data, template};
+use crate::{
+    data::{self, StripReleases},
+    template,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct GenerateArgs {
     /// The target directory for the release information.
     #[clap(long, default_value = ".")]
     pub target_dir: PathBuf,
+
+    #[clap(long)]
+    pub without_prereleases: bool,
 }
 
 impl GenerateArgs {
@@ -31,8 +37,14 @@ impl GenerateArgs {
             "Couldn't open release file {:?}",
             release_file.as_ref()
         ))?;
-        let raw_data: data::Releases =
-            serde_yaml::from_reader::<_, data::Releases>(file)?.without_obsolete_prereleases();
+        let strip_releases = if self.without_prereleases {
+            StripReleases::PreReleases
+        } else {
+            StripReleases::ObsoletePreReleases
+        };
+
+        let raw_data: data::Releases = serde_yaml::from_reader::<_, data::Releases>(file)?
+            .with_releases_stripped(strip_releases);
 
         let target_dir = create_and_canonicalize_dir(self.target_dir)?;
         let releases_dir = create_and_canonicalize_dir(target_dir.join("releases"))?;

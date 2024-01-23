@@ -25,6 +25,6 @@ pub use component_release::ComponentRelease;
 pub use product_name::ProductName;
 pub use release::Release;
 pub use release_series::ReleaseSeries;
-pub use releases::Releases;
+pub use releases::{Releases, StripReleases};
 pub use series_codename::SeriesCodename;
 pub use series_number::SeriesNumber;
