@@ -7,7 +7,11 @@ use indexmap::IndexMap;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 
-use super::{ComponentCategoryIdentifier, ComponentName, ComponentRelease};
+use crate::helper::releases::is_obsolete_prerelease;
+
+use super::{
+    releases::StripReleases, ComponentCategoryIdentifier, ComponentName, ComponentRelease,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Component {
@@ -53,20 +57,16 @@ impl Component {
         }
     }
 
-    pub fn without_obsolete_prereleases(self) -> Self {
+    pub fn with_releases_stripped(self, strip_releases: StripReleases) -> Self {
         let releases = self
             .releases
             .clone()
             .into_iter()
-            .filter(|(version, _release)| {
-                let is_final = version.pre.is_empty();
-                let final_exists = self.releases.contains_key(&Version::new(
-                    version.major,
-                    version.minor,
-                    version.patch,
-                ));
-
-                is_final || !final_exists
+            .filter(|(version, _release)| match strip_releases {
+                StripReleases::ObsoletePreReleases => {
+                    !is_obsolete_prerelease(&self.releases, version)
+                }
+                StripReleases::PreReleases => version.pre.is_empty(),
             })
             .collect();
         Self { releases, ..self }

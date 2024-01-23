@@ -12,6 +12,15 @@ use super::{
     ReleaseSeries, SeriesNumber,
 };
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum StripReleases {
+    /// Strip obsolete pre-releases (those where a final release is available)
+    ObsoletePreReleases,
+
+    /// Strip all pre-releleases
+    PreReleases,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Releases {
     pub product_name: ProductName,
@@ -38,17 +47,19 @@ impl Releases {
         product_versions
     }
 
-    pub fn without_obsolete_prereleases(self) -> Self {
+    pub fn with_releases_stripped(self, strip_releases: StripReleases) -> Self {
         Self {
             series: self
                 .series
                 .into_iter()
-                .map(|(number, series)| (number, series.without_obsolete_prereleases()))
+                .map(|(number, series)| (number, series.with_releases_stripped(strip_releases)))
                 .collect(),
             components: self
                 .components
                 .into_iter()
-                .map(|(number, component)| (number, component.without_obsolete_prereleases()))
+                .map(|(number, component)| {
+                    (number, component.with_releases_stripped(strip_releases))
+                })
                 .collect(),
             ..self
         }
