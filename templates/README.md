@@ -1,5 +1,6 @@
 # {{ product_name }} Release Bundles
 
+{% if show_gantt_chart %}
 ```mermaid
 ---
 displayMode: compact
@@ -15,6 +16,7 @@ gantt
     EOL  :milestone, {{ serie.end_of_life }}
 {% endfor %}
 ```
+{% endif %}
 
 {% for serie in series | reverse %}
 ## {{ serie.version }}{% if serie.codename %} ({{ serie.codename }}){% endif %}
