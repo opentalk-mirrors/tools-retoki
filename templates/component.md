@@ -1,8 +1,10 @@
+{%- if show_md_header -%}
 ---
 sidebar_position: {{ sidebar_position }}
 title: {{ component_name }}
 ---
 
+{% endif -%}
 # {{ component_name }} version history
 
 {% for release in releases | reverse %}

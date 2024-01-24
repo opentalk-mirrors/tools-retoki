@@ -1,8 +1,10 @@
+{%- if show_md_header -%}
 ---
 sidebar_position: 0
 title: Release Bundles
 ---
 
+{% endif -%}
 # {{ product_name }} Release Bundles
 {% if show_gantt_chart %}
 ```mermaid

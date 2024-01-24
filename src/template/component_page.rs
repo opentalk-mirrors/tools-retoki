@@ -20,6 +20,8 @@ pub struct ComponentPage {
     // because tera whitespace control appears to not be providing what is needed
     // to control the number of spaces in the loop elements properly
     pub space: String,
+
+    pub show_md_header: bool,
 }
 
 impl ComponentPage {
@@ -29,6 +31,7 @@ impl ComponentPage {
         product_name: &ProductName,
         data_releases: &data::Releases,
         sidebar_position: usize,
+        show_md_header: bool,
     ) -> Self {
         let mut releases = data.releases.clone();
         releases.sort_keys();
@@ -51,6 +54,7 @@ impl ComponentPage {
                 .collect(),
             space: " ".to_string(),
             sidebar_position,
+            show_md_header,
         }
     }
 }

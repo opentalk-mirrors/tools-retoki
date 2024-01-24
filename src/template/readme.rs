@@ -27,6 +27,8 @@ pub struct Readme {
     pub show_gantt_chart: bool,
 
     pub show_gitlab_release_links: bool,
+
+    pub show_md_header: bool,
 }
 
 impl Readme {
@@ -56,6 +58,7 @@ impl Readme {
             empty_release_component: EmptyReleaseComponent::default(),
             show_gantt_chart: true,
             show_gitlab_release_links: true,
+            show_md_header: false,
         })
     }
 }

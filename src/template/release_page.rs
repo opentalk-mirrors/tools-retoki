@@ -27,6 +27,8 @@ pub struct ReleasePage {
     pub show_gitlab_release_links: bool,
 
     pub sidebar_position: usize,
+
+    pub show_md_header: bool,
 }
 
 impl ReleasePage {
@@ -37,6 +39,7 @@ impl ReleasePage {
         next: Option<(Version, &data::Release)>,
         end_date: Date,
         sidebar_position: usize,
+        show_md_header: bool,
     ) -> Result<Self> {
         let series_number = SeriesNumber::from(&version);
 
@@ -87,6 +90,7 @@ impl ReleasePage {
             space: " ".to_string(),
             show_gitlab_release_links: true,
             sidebar_position,
+            show_md_header,
         })
     }
 }
