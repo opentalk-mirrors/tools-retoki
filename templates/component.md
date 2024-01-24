@@ -1,3 +1,8 @@
+---
+sidebar_position: {{ sidebar_position }}
+title: {{ component_name }}
+---
+
 # {{ component_name }} version history
 
 {% for release in releases | reverse %}
