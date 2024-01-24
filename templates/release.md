@@ -21,7 +21,7 @@
 | Category | Component | Version |
 | -------- | --------- | ------- |
 {% for component in components -%}
-| **{{ component.category }}** | [**{{ component.identifier }}**](../components/{{ component.identifier }}.md) | {%- if component.gitlab_url -%}[v{{ component.version }}]({{ component.gitlab_url }}/-/releases/v{{ component.version }}){%- else -%}v{{ component.version }}{%- endif -%} |
+| **{{ component.category }}** | [**{{ component.identifier }}**](../components/{{ component.identifier }}.md) | {%- if show_gitlab_release_links and component.gitlab_url -%}[v{{ component.version }}]({{ component.gitlab_url }}/-/releases/v{{ component.version }}){%- else -%}v{{ component.version }}{%- endif -%} |
 {% endfor -%}
 
 {% for component in components %}

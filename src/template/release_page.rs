@@ -23,6 +23,8 @@ pub struct ReleasePage {
     // because tera whitespace control appears to not be providing what is needed
     // to control the number of spaces in the loop elements properly
     pub space: String,
+
+    pub show_gitlab_release_links: bool,
 }
 
 impl ReleasePage {
@@ -80,6 +82,7 @@ impl ReleasePage {
                 &data.component_categories,
             )?,
             space: " ".to_string(),
+            show_gitlab_release_links: true,
         })
     }
 }

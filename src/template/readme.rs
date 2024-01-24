@@ -25,6 +25,8 @@ pub struct Readme {
     pub empty_release_component: EmptyReleaseComponent,
 
     pub show_gantt_chart: bool,
+
+    pub show_gitlab_release_links: bool,
 }
 
 impl Readme {
@@ -53,6 +55,7 @@ impl Readme {
             space: " ".to_string(),
             empty_release_component: EmptyReleaseComponent::default(),
             show_gantt_chart: true,
+            show_gitlab_release_links: true,
         })
     }
 }

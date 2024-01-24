@@ -35,7 +35,7 @@ gantt
 {%- for component in components -%}
 {%- set release_component = release.components_by_identifier | get(key=component.identifier, default=empty_release_component) -%}
 {%- if 'version' in release_component -%}
-{{- space }}{%- if component.gitlab_url -%}[v{{ release_component.version }}]({{ component.gitlab_url }}/-/releases/v{{ release_component.version }}){%- else -%}v{{ release_component.version }}{%- endif -%}{{ space }}|
+{{- space }}{%- if show_gitlab_release_links and component.gitlab_url -%}[v{{ release_component.version }}]({{ component.gitlab_url }}/-/releases/v{{ release_component.version }}){%- else -%}v{{ release_component.version }}{%- endif -%}{{ space }}|
 {%- else -%}
 {{- space }}-{{ space }}|
 {%- endif -%}
