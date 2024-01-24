@@ -1,8 +1,10 @@
+{%- if show_md_header -%}
 ---
 sidebar_position: {{ sidebar_position }}
 title: {{ product_name }} v{{ version }}
 ---
 
+{% endif -%}
 # {{ product_name }} v{{ version }}
 
 - Release date: **{{ date }}**
