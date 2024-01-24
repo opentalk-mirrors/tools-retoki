@@ -75,13 +75,14 @@ impl GenerateArgs {
             write!(file, "{}", rendered)?;
         }
 
-        for series in raw_data.series.values() {
+        let mut position = 0;
+        for series in raw_data.series.values().rev() {
             let versions_with_padding = std::iter::once(None)
                 .chain(series.releases.iter().map(Some))
                 .chain(std::iter::once(None))
                 .collect::<Vec<_>>();
 
-            for entry in versions_with_padding.windows(3) {
+            for entry in versions_with_padding.windows(3).rev() {
                 let previous = entry[0].map(|(v, r)| (v.clone(), r));
                 let version = entry[1].unwrap().0;
                 let next = entry[2].map(|(v, r)| (v.clone(), r));
@@ -97,6 +98,7 @@ impl GenerateArgs {
                     previous,
                     next,
                     end_date,
+                    position,
                 )?;
                 template_data.show_gitlab_release_links = !self.without_gitlab_release_links;
                 let rendered =
@@ -107,15 +109,17 @@ impl GenerateArgs {
                 let mut file = File::create(&full_path)
                     .context(format!("Couldn't create file {:?}", full_path))?;
                 write!(file, "{}", rendered)?;
+                position += 1;
             }
         }
 
-        for component in &raw_data.components {
+        for (position, component) in raw_data.components.iter().enumerate() {
             let template_data = template::ComponentPage::from_data_component(
                 component.0,
                 component.1,
                 &raw_data.product_name,
                 &raw_data,
+                position,
             );
 
             let rendered =

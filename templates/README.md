@@ -1,3 +1,8 @@
+---
+sidebar_position: 0
+title: Release Bundles
+---
+
 # {{ product_name }} Release Bundles
 {% if show_gantt_chart %}
 ```mermaid

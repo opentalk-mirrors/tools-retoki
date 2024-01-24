@@ -1,3 +1,8 @@
+---
+sidebar_position: {{ sidebar_position }}
+title: {{ product_name }} v{{ version }}
+---
+
 # {{ product_name }} v{{ version }}
 
 - Release date: **{{ date }}**
