@@ -29,6 +29,10 @@ pub struct GenerateArgs {
     /// Don't render the gantt chart in the README file.
     #[clap(long)]
     pub without_readme_gantt_chart: bool,
+
+    /// Don't link to GitLab releases.
+    #[clap(long)]
+    pub without_gitlab_release_links: bool,
 }
 
 impl GenerateArgs {
@@ -61,6 +65,7 @@ impl GenerateArgs {
         {
             let mut template_data = template::Readme::from_data_releases(&raw_data)?;
             template_data.show_gantt_chart = !self.without_readme_gantt_chart;
+            template_data.show_gitlab_release_links = !self.without_gitlab_release_links;
             let rendered = tera.render("README.md", &Context::from_serialize(&template_data)?)?;
             let relative_path = "README.md";
             let full_path = target_dir.join(relative_path);
@@ -86,13 +91,14 @@ impl GenerateArgs {
                     .map(|(_, release)| release.date)
                     .unwrap_or(series.end_of_life);
 
-                let template_data = template::ReleasePage::from_data_release(
+                let mut template_data = template::ReleasePage::from_data_release(
                     &raw_data,
                     version.clone(),
                     previous,
                     next,
                     end_date,
                 )?;
+                template_data.show_gitlab_release_links = !self.without_gitlab_release_links;
                 let rendered =
                     tera.render("release.md", &Context::from_serialize(&template_data)?)?;
                 let relative_path = releases_dir.join(&format!("{version}.md"));
