@@ -23,6 +23,8 @@ pub struct Readme {
     // into the components, as it looks like one can't create object values
     // inside tera
     pub empty_release_component: EmptyReleaseComponent,
+
+    pub show_gantt_chart: bool,
 }
 
 impl Readme {
@@ -50,6 +52,7 @@ impl Readme {
                 .collect(),
             space: " ".to_string(),
             empty_release_component: EmptyReleaseComponent::default(),
+            show_gantt_chart: true,
         })
     }
 }

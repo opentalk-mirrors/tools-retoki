@@ -22,8 +22,13 @@ pub struct GenerateArgs {
     #[clap(long, default_value = ".")]
     pub target_dir: PathBuf,
 
+    /// Don't render any prereleases.
     #[clap(long)]
     pub without_prereleases: bool,
+
+    /// Don't render the gantt chart in the README file.
+    #[clap(long)]
+    pub without_readme_gantt_chart: bool,
 }
 
 impl GenerateArgs {
@@ -54,7 +59,8 @@ impl GenerateArgs {
             .context(format!("Couldn't create releases dir {:?}", releases_dir))?;
 
         {
-            let template_data = template::Readme::from_data_releases(&raw_data)?;
+            let mut template_data = template::Readme::from_data_releases(&raw_data)?;
+            template_data.show_gantt_chart = !self.without_readme_gantt_chart;
             let rendered = tera.render("README.md", &Context::from_serialize(&template_data)?)?;
             let relative_path = "README.md";
             let full_path = target_dir.join(relative_path);
