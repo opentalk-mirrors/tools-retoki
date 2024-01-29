@@ -19,7 +19,7 @@ owo-colors = "4.0.0"
 semver = { version = "1.0.21", features = ["serde"] }
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = { version = "1.0.113" }
-serde_yaml = "0.9.30"
+serde_yaml = "0.9.31"
 tabled = "0.15.0"
 tera = "1.19.1"
 time = { version = "0.3.31", features = ["serde", "macros", "serde-human-readable", "serde-well-known"] }
