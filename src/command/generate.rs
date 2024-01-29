@@ -60,8 +60,12 @@ impl GenerateArgs {
             StripReleases::ObsoletePreReleases
         };
 
-        let raw_data: data::Releases = serde_yaml::from_reader::<_, data::Releases>(file)?
+        let mut raw_data: data::Releases = serde_yaml::from_reader::<_, data::Releases>(file)?
             .with_releases_stripped(strip_releases);
+
+        if self.without_release_series_codenames {
+            raw_data.strip_release_series_codenames();
+        }
 
         let target_dir = create_and_canonicalize_dir(self.target_dir)?;
         let releases_dir = create_and_canonicalize_dir(target_dir.join("releases"))?;
@@ -75,7 +79,6 @@ impl GenerateArgs {
             template_data.show_gantt_chart = !self.without_readme_gantt_chart;
             template_data.show_gitlab_release_links = !self.without_gitlab_release_links;
             template_data.show_md_header = self.with_md_header;
-            template_data.show_release_series_codenames = !self.without_release_series_codenames;
             let rendered = tera.render("README.md", &Context::from_serialize(&template_data)?)?;
             let relative_path = "README.md";
             let full_path = target_dir.join(relative_path);
@@ -112,8 +115,6 @@ impl GenerateArgs {
                     self.with_md_header,
                 )?;
                 template_data.show_gitlab_release_links = !self.without_gitlab_release_links;
-                template_data.show_release_series_codenames =
-                    !self.without_release_series_codenames;
                 let rendered =
                     tera.render("release.md", &Context::from_serialize(&template_data)?)?;
                 let relative_path = releases_dir.join(&format!("{version}.md"));

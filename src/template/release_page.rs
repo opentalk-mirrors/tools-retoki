@@ -29,8 +29,6 @@ pub struct ReleasePage {
     pub sidebar_position: usize,
 
     pub show_md_header: bool,
-
-    pub show_release_series_codenames: bool,
 }
 
 impl ReleasePage {
@@ -93,7 +91,6 @@ impl ReleasePage {
             show_gitlab_release_links: true,
             sidebar_position,
             show_md_header,
-            show_release_series_codenames: true,
         })
     }
 }
