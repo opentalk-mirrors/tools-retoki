@@ -29,6 +29,8 @@ pub struct Readme {
     pub show_gitlab_release_links: bool,
 
     pub show_md_header: bool,
+
+    pub show_release_series_codenames: bool,
 }
 
 impl Readme {
@@ -59,6 +61,7 @@ impl Readme {
             show_gantt_chart: true,
             show_gitlab_release_links: true,
             show_md_header: false,
+            show_release_series_codenames: true,
         })
     }
 }
