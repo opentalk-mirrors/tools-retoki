@@ -34,6 +34,10 @@ pub struct GenerateArgs {
     #[clap(long)]
     pub without_gitlab_release_links: bool,
 
+    /// Don't write the release series codenames anywhere in the generated output.
+    #[clap(long)]
+    pub without_release_series_codenames: bool,
+
     /// Insert a markdown header with `sidebar_position` and `title` fields
     #[clap(long)]
     pub with_md_header: bool,
@@ -71,6 +75,7 @@ impl GenerateArgs {
             template_data.show_gantt_chart = !self.without_readme_gantt_chart;
             template_data.show_gitlab_release_links = !self.without_gitlab_release_links;
             template_data.show_md_header = self.with_md_header;
+            template_data.show_release_series_codenames = !self.without_release_series_codenames;
             let rendered = tera.render("README.md", &Context::from_serialize(&template_data)?)?;
             let relative_path = "README.md";
             let full_path = target_dir.join(relative_path);
@@ -107,6 +112,8 @@ impl GenerateArgs {
                     self.with_md_header,
                 )?;
                 template_data.show_gitlab_release_links = !self.without_gitlab_release_links;
+                template_data.show_release_series_codenames =
+                    !self.without_release_series_codenames;
                 let rendered =
                     tera.render("release.md", &Context::from_serialize(&template_data)?)?;
                 let relative_path = releases_dir.join(&format!("{version}.md"));
