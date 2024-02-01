@@ -132,9 +132,10 @@ impl FetchChangelogsArgs {
                 date: None,
                 changelog,
             };
-            component
+            let (index, _) = component
                 .releases
-                .insert(version.clone(), component_release);
+                .insert_full(version.clone(), component_release);
+            component.releases.move_index(index, 0);
         } else {
             println!(" {}", "FAIL".red());
             bail!("Release {version} not found for {component_identifier}");
