@@ -3,8 +3,9 @@
 
 ---
 
+image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.76.0-bookworm
+
 lint:fmt:
-  image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.75.0-bookworm
   needs: []
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
@@ -12,7 +13,6 @@ lint:fmt:
     - cargo fmt --check
 
 lint:clippy:
-  image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.75.0-bookworm
   needs: []
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
@@ -30,7 +30,6 @@ lint:licensing:
     - reuse lint
 
 test:cargo_test:
-  image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.75.0-bookworm
   needs: []
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
@@ -68,7 +67,6 @@ test:cargo_test:
     - xmllint --xpath "$COVERAGE_XML_PATH" target/coverage/cobertura.xml
 
 build:
-  image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.75.0-bookworm
   needs: []
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
