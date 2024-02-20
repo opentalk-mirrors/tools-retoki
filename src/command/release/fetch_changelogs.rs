@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use std::{fs::File, io::BufWriter, path::Path};
+use std::{fs::File, path::Path};
 
 use anyhow::{bail, Context, Result};
 use clap::Args;
@@ -13,7 +13,10 @@ use owo_colors::OwoColorize;
 use semver::Version;
 use url::Url;
 
-use crate::data::{self, Component, ComponentIdentifier, ComponentRelease};
+use crate::{
+    command::utils::write_releases_yml_file,
+    data::{self, Component, ComponentIdentifier, ComponentRelease},
+};
 
 const GITLAB_TOKEN_ENV_VAR: &str = "GITLAB_TOKEN";
 
@@ -69,14 +72,7 @@ impl FetchChangelogsArgs {
             }
         }
 
-        let file = File::create(&release_file).context(format!(
-            "Couldn't write to release file {:?}",
-            release_file.as_ref()
-        ))?;
-        let writer = BufWriter::new(file);
-
-        serde_yaml::to_writer(writer, &raw_data)
-            .context("Couldn't write releases file {release_file:?}")?;
+        write_releases_yml_file(&release_file, raw_data)?;
 
         println!();
         println!(

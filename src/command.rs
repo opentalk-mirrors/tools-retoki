@@ -7,10 +7,12 @@ use anyhow::Result;
 use clap::Subcommand;
 
 use self::{
-    component::ComponentArgs, generate::GenerateArgs, release::ReleaseArgs, series::SeriesArgs,
+    component::ComponentArgs, edit::EditArgs, generate::GenerateArgs, release::ReleaseArgs,
+    series::SeriesArgs,
 };
 
 mod component;
+mod edit;
 mod generate;
 mod release;
 mod series;
@@ -18,7 +20,7 @@ mod utils;
 
 #[derive(Clone, Debug, PartialEq, Eq, Subcommand)]
 pub enum Command {
-    /// Generate the release information from a `releases.yml` file.
+    /// Generate the release information from a `releases.yml` file
     Generate(GenerateArgs),
 
     /// Perform actions releated a release
@@ -29,6 +31,9 @@ pub enum Command {
 
     /// Perform actions releated a component
     Component(ComponentArgs),
+
+    /// Edit a `releases.yml` file
+    Edit(EditArgs),
 }
 
 impl Command {
@@ -38,6 +43,7 @@ impl Command {
             Command::Release(args) => args.execute(release_file),
             Command::Component(args) => args.execute(release_file),
             Command::Series(args) => args.execute(release_file),
+            Command::Edit(args) => args.execute(release_file),
         }
     }
 }
