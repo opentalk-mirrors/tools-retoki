@@ -15,7 +15,7 @@ title: {{ component_name }}
 {% if release.product_versions %}
 (found in {{ product_name -}}{{- space -}}{%- for product_version in release.product_versions | reverse -%}
 {%- if not loop.first -%},{{- space -}}{%- endif -%}
-[**v{{ product_version }}**](../releases/{{ product_version }}.md)
+[**v{{ product_version }}**](../{{ product_version }}/README.md)
 {%- endfor -%}
 )
 {%- endif %}

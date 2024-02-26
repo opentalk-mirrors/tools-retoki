@@ -68,11 +68,7 @@ impl GenerateArgs {
         }
 
         let target_dir = create_and_canonicalize_dir(self.target_dir)?;
-        let releases_dir = create_and_canonicalize_dir(target_dir.join("releases"))?;
         let components_dir = create_and_canonicalize_dir(target_dir.join("components"))?;
-
-        std::fs::create_dir_all(&releases_dir)
-            .context(format!("Couldn't create releases dir {:?}", releases_dir))?;
 
         {
             let mut template_data = template::Readme::from_data_releases(&raw_data)?;
@@ -117,8 +113,9 @@ impl GenerateArgs {
                 template_data.show_gitlab_release_links = !self.without_gitlab_release_links;
                 let rendered =
                     tera.render("release.md", &Context::from_serialize(&template_data)?)?;
-                let relative_path = releases_dir.join(&format!("{version}.md"));
-                let full_path = target_dir.join(&relative_path);
+                let release_dir = target_dir.join(&format!("{version}"));
+                std::fs::create_dir_all(target_dir.join(&release_dir))?;
+                let full_path = release_dir.join("README.md");
                 println!("Writing file {full_path:?}");
                 let mut file = File::create(&full_path)
                     .context(format!("Couldn't create file {:?}", full_path))?;
