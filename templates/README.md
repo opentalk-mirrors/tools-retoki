@@ -26,7 +26,7 @@ gantt
 {% for serie in series | reverse %}
 ## {{ serie.version }}{% if serie.codename %} ({{ serie.codename }}){% endif %}
 {% for release in serie.releases | reverse %}
-- [**v{{ release.version }}** ({{ release.date }})](releases/{{ release.version }}.md)
+- [**v{{ release.version }}** ({{ release.date }})]({{ release.version }}/README.md)
 {%- endfor %}
 {% endfor %}
 
@@ -36,7 +36,7 @@ gantt
 | ------- |{% for component in components -%}{{ space }}----------{{ space }}|{%- endfor %}
 {% for serie in series | reverse -%}
 {%- for release in serie.releases | reverse -%}
-| [**v{{ release.version }}**](releases/{{ release.version }}.md) |
+| [**v{{ release.version }}**]({{ release.version }}/README.md) |
 {%- for component in components -%}
 {%- set release_component = release.components_by_identifier | get(key=component.identifier, default=empty_release_component) -%}
 {%- if 'version' in release_component -%}
