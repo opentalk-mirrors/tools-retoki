@@ -13,6 +13,7 @@ use tera::{Context, Tera};
 
 use crate::{
     data::{self, StripReleases},
+    release_metadata::ReleaseMetadata,
     template,
 };
 
@@ -37,6 +38,10 @@ pub struct GenerateArgs {
     /// Don't write the release series codenames anywhere in the generated output.
     #[clap(long)]
     pub without_release_series_codenames: bool,
+
+    /// Write metadata files in JSON format for each release.
+    #[clap(long)]
+    pub with_release_metadata_files: bool,
 
     /// Insert a markdown header with `sidebar_position` and `title` fields
     #[clap(long)]
@@ -115,11 +120,25 @@ impl GenerateArgs {
                     tera.render("release.md", &Context::from_serialize(&template_data)?)?;
                 let release_dir = target_dir.join(&format!("{version}"));
                 std::fs::create_dir_all(target_dir.join(&release_dir))?;
-                let full_path = release_dir.join("README.md");
-                println!("Writing file {full_path:?}");
-                let mut file = File::create(&full_path)
-                    .context(format!("Couldn't create file {:?}", full_path))?;
-                write!(file, "{}", rendered)?;
+
+                {
+                    let full_path = release_dir.join("README.md");
+                    println!("Writing file {full_path:?}");
+                    let mut file = File::create(&full_path)
+                        .context(format!("Couldn't create file {:?}", full_path))?;
+                    write!(file, "{}", rendered)?;
+                }
+
+                if self.with_release_metadata_files {
+                    let release_metadata =
+                        ReleaseMetadata::from_data_release(&raw_data, version.clone())?;
+                    let full_path = release_dir.join("metadata.json");
+                    println!("Writing file {full_path:?}");
+                    let file = File::create(&full_path)
+                        .context(format!("Couldn't create file {:?}", full_path))?;
+                    serde_json::to_writer_pretty(file, &release_metadata)?;
+                }
+
                 position += 1;
             }
         }
