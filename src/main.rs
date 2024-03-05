@@ -11,6 +11,7 @@ mod command;
 mod data;
 mod helper;
 mod output_format;
+mod release_metadata;
 mod template;
 
 #[derive(Clone, Debug, PartialEq, Eq, Parser)]
