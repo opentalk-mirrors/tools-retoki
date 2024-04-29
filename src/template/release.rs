@@ -9,9 +9,8 @@ use semver::Version;
 use serde::{Deserialize, Serialize};
 use time::Date;
 
-use crate::data::{self, ComponentCategory, ComponentCategoryIdentifier, ComponentIdentifier};
-
 use super::{ComponentRelease, ReleaseComponent};
+use crate::data::{self, ComponentCategory, ComponentCategoryIdentifier, ComponentIdentifier};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Release {

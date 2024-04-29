@@ -3,14 +3,14 @@
 
 ---
 
-image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.76.0-bookworm
+image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.77.0-bookworm
 
 lint:fmt:
   needs: []
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
   script:
-    - cargo fmt --check
+    - cargo +nightly fmt --check
 
 lint:clippy:
   needs: []

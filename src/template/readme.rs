@@ -4,9 +4,8 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::data::{self, ProductName};
-
 use super::{Component, EmptyReleaseComponent, ReleaseSeries};
+use crate::data::{self, ProductName};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Readme {

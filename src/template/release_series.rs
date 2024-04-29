@@ -6,11 +6,10 @@ use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use time::Date;
 
+use super::Release;
 use crate::data::{
     self, ComponentCategoryIdentifier, ComponentIdentifier, SeriesCodename, SeriesNumber,
 };
-
-use super::Release;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReleaseSeries {

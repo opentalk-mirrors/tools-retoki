@@ -7,11 +7,10 @@ use indexmap::IndexMap;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 
-use crate::helper::releases::is_obsolete_prerelease;
-
 use super::{
     releases::StripReleases, ComponentCategoryIdentifier, ComponentName, ComponentRelease,
 };
+use crate::helper::releases::is_obsolete_prerelease;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Component {

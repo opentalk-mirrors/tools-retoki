@@ -7,9 +7,8 @@ use anyhow::{Context, Result};
 use semver::Version;
 use serde::{Deserialize, Serialize};
 
-use crate::data::{self, ComponentIdentifier, SeriesNumber};
-
 use self::release_component_metadata::ReleaseComponentMetadata;
+use crate::data::{self, ComponentIdentifier, SeriesNumber};
 
 mod release_component_metadata;
 
