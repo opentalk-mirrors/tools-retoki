@@ -7,9 +7,8 @@ use anyhow::{Context as _, Result};
 use clap::Args;
 use owo_colors::OwoColorize;
 
-use crate::data::{self, StripReleases};
-
 use super::utils::write_releases_yml_file;
+use crate::data::{self, StripReleases};
 
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct EditArgs {

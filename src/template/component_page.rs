@@ -3,9 +3,8 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::data::{self, ComponentIdentifier, ComponentName, ProductName};
-
 use super::ComponentRelease;
+use crate::data::{self, ComponentIdentifier, ComponentName, ProductName};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ComponentPage {

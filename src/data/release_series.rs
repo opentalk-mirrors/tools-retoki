@@ -6,9 +6,8 @@ use semver::Version;
 use serde::{Deserialize, Serialize};
 use time::Date;
 
-use crate::helper::releases::is_obsolete_prerelease;
-
 use super::{releases::StripReleases, Release, SeriesCodename};
+use crate::helper::releases::is_obsolete_prerelease;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReleaseSeries {

@@ -6,9 +6,8 @@ use semver::Version;
 use serde::{Deserialize, Serialize};
 use time::Date;
 
-use crate::data::{self, ProductName, SeriesNumber};
-
 use super::{Release, ReleaseSeries};
+use crate::data::{self, ProductName, SeriesNumber};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ReleasePage {
