@@ -128,10 +128,13 @@ impl FetchChangelogsArgs {
                 date: None,
                 changelog,
             };
-            let (index, _) = component
+            component
                 .releases
-                .insert_full(version.clone(), component_release);
-            component.releases.move_index(index, 0);
+                .insert(version.clone(), component_release);
+            // sort in reverse order, highest version number first
+            component
+                .releases
+                .sort_unstable_by(|k1, _v1, k2, _v2| k2.cmp(k1))
         } else {
             println!(" {}", "FAIL".red());
             bail!("Release {version} not found for {component_identifier}");
