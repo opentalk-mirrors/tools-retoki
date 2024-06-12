@@ -7,10 +7,11 @@ use anyhow::Result;
 use clap::Subcommand;
 
 use self::{
-    component::ComponentArgs, edit::EditArgs, generate::GenerateArgs, release::ReleaseArgs,
-    series::SeriesArgs,
+    compare::CompareArgs, component::ComponentArgs, edit::EditArgs, generate::GenerateArgs,
+    release::ReleaseArgs, series::SeriesArgs,
 };
 
+mod compare;
 mod component;
 mod edit;
 mod generate;
@@ -34,6 +35,24 @@ pub enum Command {
 
     /// Edit a `releases.yml` file
     Edit(EditArgs),
+
+    /// Compare the `releases.yml` file with another `releases.yml` file
+    ///
+    /// This will print to stdout one line for each release that is found in either of the `releases.yml` files
+    ///
+    /// A release was added from the other to the current `releases.yml` file:
+    /// + <version>
+    ///
+    /// A release was removed from the other to the current `releases.yml` file:
+    /// - <version>
+    ///
+    /// A release is present in both `releases.yml` files and was unchanged:
+    /// = <version>
+    ///
+    /// A release is present in both `releases.yml` files and was changed:
+    /// ~ <version>
+    #[clap(verbatim_doc_comment)]
+    Compare(CompareArgs),
 }
 
 impl Command {
@@ -44,6 +63,7 @@ impl Command {
             Command::Component(args) => args.execute(release_file),
             Command::Series(args) => args.execute(release_file),
             Command::Edit(args) => args.execute(release_file),
+            Command::Compare(args) => args.execute(release_file),
         }
     }
 }
