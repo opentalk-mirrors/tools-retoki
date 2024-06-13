@@ -42,12 +42,6 @@ impl ShowArgs {
             .get(version)
             .with_context(|| format!("Release {version} not found in series {series_number}"))?;
 
-        #[derive(Debug, Serialize)]
-        struct Component<'a> {
-            identifier: &'a ComponentIdentifier,
-            version: &'a Version,
-        }
-
         fn display_components(components: &IndexMap<ComponentIdentifier, Version>) -> String {
             components
                 .iter()
