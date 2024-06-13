@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     Component, ComponentCategory, ComponentCategoryIdentifier, ComponentIdentifier, ProductName,
-    ReleaseSeries, SeriesNumber,
+    Release, ReleaseSeries, SeriesNumber,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -70,5 +70,18 @@ impl Releases {
                 .collect(),
             ..self
         }
+    }
+
+    pub fn all_product_versions(&self) -> BTreeSet<Version> {
+        self.series
+            .values()
+            .flat_map(|s| s.releases.keys().cloned())
+            .collect()
+    }
+
+    pub fn get_release(&self, version: &Version) -> Option<&Release> {
+        self.series
+            .get(&SeriesNumber::from(version))
+            .and_then(|series| series.releases.get(version))
     }
 }
