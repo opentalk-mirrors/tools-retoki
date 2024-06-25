@@ -29,6 +29,22 @@ lint:licensing:
   script:
     - reuse lint
 
+lint:dependency_check:
+  needs: []
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      changes:
+        - Cargo.lock
+        - deny.toml
+    - if: $CI_PIPELINE_SOURCE == 'schedule'
+  script:
+    - cargo-deny
+      --workspace
+      check
+      --deny unmatched-skip
+      --deny license-not-encountered
+      --deny license-exception-not-encountered
+
 test:cargo_test:
   needs: []
   rules:
