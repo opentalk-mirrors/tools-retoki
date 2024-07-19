@@ -6,6 +6,11 @@ title: Release Bundles
 
 {% endif -%}
 # {{ product_name }} Release Bundles
+{%- if releases_page_header %}
+
+{{ releases_page_header }}
+
+{% endif -%}
 {% if show_gantt_chart %}
 ```mermaid
 ---

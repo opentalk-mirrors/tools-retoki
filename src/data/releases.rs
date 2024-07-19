@@ -24,6 +24,8 @@ pub enum StripReleases {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Releases {
     pub product_name: ProductName,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub releases_page_header: Option<String>,
     pub series: BTreeMap<SeriesNumber, ReleaseSeries>,
     pub components: IndexMap<ComponentIdentifier, Component>,
     pub component_categories: IndexMap<ComponentCategoryIdentifier, ComponentCategory>,
