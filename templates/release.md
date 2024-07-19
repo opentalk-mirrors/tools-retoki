@@ -10,10 +10,10 @@ title: {{ product_name }} v{{ version }}
 - Release date: **{{ date }}**
 - Release series: [**{{ series.version }}{% if series.codename %} ({{ series.codename }}){% endif %}**](../README.md#{{ series.markdown_anchor }})
 {%- if previous %}
-- Previous release: [**v{{ previous }}**]({{ previous }}.md)
+- Previous release: [**v{{ previous }}**](../{{ previous }}/README.md)
 {%- endif %}
 {%- if next %}
-- Next release: [**v{{ next }}**]({{ next }}.md)
+- Next release: [**v{{ next }}**](../{{ next }}/README.md)
 {%- endif %}
 
 {%- if release_notes %}
