@@ -10,6 +10,7 @@ use crate::data::{self, ProductName};
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Readme {
     pub product_name: ProductName,
+    pub releases_page_header: Option<String>,
     pub series: Vec<ReleaseSeries>,
     pub components: Vec<Component>,
 
@@ -34,6 +35,7 @@ impl Readme {
     pub fn from_data_releases(releases: &data::Releases) -> Result<Self> {
         Ok(Self {
             product_name: releases.product_name.clone(),
+            releases_page_header: releases.releases_page_header.clone(),
             series: releases
                 .series
                 .iter()
