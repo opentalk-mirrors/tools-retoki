@@ -10,6 +10,7 @@ pub struct ReleaseComponent {
     pub identifier: ComponentIdentifier,
     pub category: ComponentCategoryName,
     pub version: ComponentVersion,
+    pub prefixed_version: String,
     pub gitlab_url: Option<String>,
 }
 
@@ -23,6 +24,7 @@ impl ReleaseComponent {
         Self {
             identifier,
             category,
+            prefixed_version: version.prefixed(),
             version,
             gitlab_url,
         }

@@ -10,7 +10,7 @@ title: {{ component_name }}
 {% for release in releases | reverse %}
 ---
 
-# {{ component_identifier }} v{{ release.version }}
+# {{ component_identifier }} {{ release.prefixed_version }}
 
 {% if release.product_versions %}
 (found in {{ product_name -}}{{- space -}}{%- for product_version in release.product_versions | reverse -%}

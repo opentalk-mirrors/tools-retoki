@@ -23,6 +23,18 @@ impl ComponentVersion {
         }
         None
     }
+
+    pub fn prefix(&self) -> &'static str {
+        match self {
+            Self::Semver(_) => "v",
+            Self::SeriesNumber(_) => "v",
+            Self::Other(_) => "",
+        }
+    }
+
+    pub fn prefixed(&self) -> String {
+        format!("{}{self}", self.prefix())
+    }
 }
 
 impl Display for ComponentVersion {

@@ -118,7 +118,7 @@ impl FetchChangelogsArgs {
 
         let releases: Vec<ReleaseTag> = endpoint.query(&gitlab)?;
 
-        let release_tag = format!("v{version}");
+        let release_tag = version.prefixed();
         if let Some(ReleaseTag {
             tag_name: _,
             description,
