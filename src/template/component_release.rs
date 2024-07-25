@@ -6,11 +6,11 @@ use std::collections::BTreeSet;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 
-use crate::data;
+use crate::data::{self, ComponentVersion};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ComponentRelease {
-    pub version: Version,
+    pub version: ComponentVersion,
     pub gitlab_url: Option<String>,
     pub changelog: Option<String>,
     pub product_versions: BTreeSet<Version>,
@@ -18,7 +18,7 @@ pub struct ComponentRelease {
 
 impl ComponentRelease {
     pub fn from_data_component_release(
-        version: &Version,
+        version: &ComponentVersion,
         gitlab_url: Option<String>,
         component_release: &data::ComponentRelease,
         product_versions: BTreeSet<Version>,

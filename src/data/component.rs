@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use indexmap::IndexMap;
 use semver::Version;
@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     releases::StripReleases, ComponentCategoryIdentifier, ComponentName, ComponentRelease,
+    ComponentVersion,
 };
 use crate::helper::releases::is_obsolete_prerelease;
 
@@ -24,50 +25,55 @@ pub struct Component {
     pub category: ComponentCategoryIdentifier,
 
     #[serde(default)]
-    pub releases: IndexMap<Version, ComponentRelease>,
+    pub releases: IndexMap<ComponentVersion, ComponentRelease>,
 }
 
 impl Component {
     pub fn get_releases(
         &self,
-        after: Option<Version>,
-        until: Version,
-    ) -> BTreeMap<Version, ComponentRelease> {
+        after: Option<ComponentVersion>,
+        until: ComponentVersion,
+    ) -> BTreeMap<ComponentVersion, ComponentRelease> {
         if let Some(after) = after {
-            self.releases
+            return self
+                .releases
                 .iter()
-                .filter_map(|(v, r)| {
-                    if *v > after && *v <= until {
-                        Some((v.clone(), r.clone()))
-                    } else {
-                        None
-                    }
-                })
-                .collect::<BTreeMap<Version, ComponentRelease>>()
-        } else {
-            self.releases
-                .iter()
-                .filter_map(|(v, r)| {
-                    if *v <= until {
-                        Some((v.clone(), r.clone()))
-                    } else {
-                        None
-                    }
-                })
-                .collect::<BTreeMap<Version, ComponentRelease>>()
+                .filter(|(v, _)| (*v > &after && *v <= &until))
+                .map(|(v, r)| (v.clone(), r.clone()))
+                .collect::<BTreeMap<ComponentVersion, ComponentRelease>>();
         }
+        self.releases
+            .iter()
+            .filter(|(v, _)| (*v <= &until))
+            .map(|(v, r)| (v.clone(), r.clone()))
+            .collect::<BTreeMap<ComponentVersion, ComponentRelease>>()
     }
 
     pub fn with_releases_stripped(self, strip_releases: StripReleases) -> Self {
+        let releases: BTreeSet<Version> = self
+            .releases
+            .keys()
+            .filter_map(|v| v.as_semver())
+            .cloned()
+            .collect();
+
         let releases = self
             .releases
             .clone()
             .into_iter()
             .filter(|(version, _release)| match strip_releases {
                 StripReleases::ObsoletePreReleases => {
-                    !is_obsolete_prerelease(&self.releases, version)
+                    if let ComponentVersion::Semver(version) = version {
+                        return !is_obsolete_prerelease(&releases, version);
+                    }
+                    true
                 }
-                StripReleases::PreReleases => version.pre.is_empty(),
+                StripReleases::PreReleases => {
+                    if let ComponentVersion::Semver(version) = version {
+                        return version.pre.is_empty();
+                    }
+                    true
+                }
             })
             .collect();
         Self { releases, ..self }

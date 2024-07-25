@@ -15,7 +15,7 @@ use url::Url;
 
 use crate::{
     command::utils::write_releases_yml_file,
-    data::{self, Component, ComponentIdentifier, ComponentRelease},
+    data::{self, Component, ComponentIdentifier, ComponentRelease, ComponentVersion},
 };
 
 const GITLAB_TOKEN_ENV_VAR: &str = "GITLAB_TOKEN";
@@ -88,11 +88,11 @@ impl FetchChangelogsArgs {
         &self,
         component_identifier: ComponentIdentifier,
         component: &mut Component,
-        version: &Version,
+        version: &ComponentVersion,
         token: &str,
     ) -> Result<()> {
         let Some(gitlab_url) = &component.gitlab_url else {
-            print!("Component {component_identifier} has no GitLab URL, skipping release lookup…");
+            println!("Component {component_identifier} has no GitLab URL, skipping release lookup…");
             return Ok(());
         };
         print!("Looking up release {version} of {component_identifier}…");

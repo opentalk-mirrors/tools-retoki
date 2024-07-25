@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
+use std::collections::BTreeSet;
+
 use indexmap::IndexMap;
 use semver::Version;
 use serde::{Deserialize, Serialize};
@@ -19,13 +21,15 @@ pub struct ReleaseSeries {
 
 impl ReleaseSeries {
     pub fn with_releases_stripped(self, strip_releases: StripReleases) -> Self {
+        let all_releases: BTreeSet<Version> = self.releases.keys().cloned().collect();
+
         let releases = self
             .releases
             .clone()
             .into_iter()
             .filter(|(version, _release)| match strip_releases {
                 StripReleases::ObsoletePreReleases => {
-                    !is_obsolete_prerelease(&self.releases, version)
+                    !is_obsolete_prerelease(&all_releases, version)
                 }
                 StripReleases::PreReleases => version.pre.is_empty(),
             })
