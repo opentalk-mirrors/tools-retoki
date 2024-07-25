@@ -91,11 +91,18 @@ impl FetchChangelogsArgs {
         version: &ComponentVersion,
         token: &str,
     ) -> Result<()> {
+        print!("Looking up release {version} of {component_identifier}…");
+
         let Some(gitlab_url) = &component.gitlab_url else {
-            println!("Component {component_identifier} has no GitLab URL, skipping release lookup…");
+            println!(" no GitLab URL, {}", "SKIPPING".yellow());
+            let component_release = ComponentRelease {
+                date: None,
+                changelog: None,
+            };
+            component.insert_release(version.clone(), component_release);
+
             return Ok(());
         };
-        print!("Looking up release {version} of {component_identifier}…");
 
         let gitlab_url: Url = gitlab_url.parse()?;
         let host = gitlab_url
@@ -128,13 +135,7 @@ impl FetchChangelogsArgs {
                 date: None,
                 changelog,
             };
-            component
-                .releases
-                .insert(version.clone(), component_release);
-            // sort in reverse order, highest version number first
-            component
-                .releases
-                .sort_unstable_by(|k1, _v1, k2, _v2| k2.cmp(k1))
+            component.insert_release(version.clone(), component_release);
         } else {
             println!(" {}", "FAIL".red());
             bail!("Release {version} not found for {component_identifier}");

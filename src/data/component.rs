@@ -29,6 +29,17 @@ pub struct Component {
 }
 
 impl Component {
+    pub fn insert_release(
+        &mut self,
+        version: ComponentVersion,
+        component_release: ComponentRelease,
+    ) {
+        self.releases.insert(version, component_release);
+        // sort in reverse order, highest version number first
+        self.releases
+            .sort_unstable_by(|k1, _v1, k2, _v2| k2.cmp(k1));
+    }
+
     pub fn get_releases(
         &self,
         after: Option<ComponentVersion>,
