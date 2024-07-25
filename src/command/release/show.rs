@@ -11,7 +11,7 @@ use serde::Serialize;
 use tabled::Tabled;
 
 use crate::{
-    data::{self, ComponentIdentifier, SeriesNumber},
+    data::{self, ComponentIdentifier, ComponentVersion, SeriesNumber},
     output_format::OutputFormat,
 };
 
@@ -42,7 +42,9 @@ impl ShowArgs {
             .get(version)
             .with_context(|| format!("Release {version} not found in series {series_number}"))?;
 
-        fn display_components(components: &IndexMap<ComponentIdentifier, Version>) -> String {
+        fn display_components(
+            components: &IndexMap<ComponentIdentifier, ComponentVersion>,
+        ) -> String {
             components
                 .iter()
                 .map(|(identifier, version)| format!("{identifier}: {version}"))
@@ -64,7 +66,7 @@ impl ShowArgs {
             pub series: SeriesNumber,
 
             #[tabled(rename = "Components", display_with = "display_components")]
-            pub components: &'a IndexMap<ComponentIdentifier, Version>,
+            pub components: &'a IndexMap<ComponentIdentifier, ComponentVersion>,
         }
 
         let info = ReleaseInformation {

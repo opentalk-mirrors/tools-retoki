@@ -28,14 +28,14 @@ title: {{ product_name }} v{{ version }}
 | Category | Component | Version |
 | -------- | --------- | ------- |
 {% for component in components -%}
-| **{{ component.category }}** | [**{{ component.identifier }}**](../components/{{ component.identifier }}.md) | {%- if show_gitlab_release_links and component.gitlab_url -%}[v{{ component.version }}]({{ component.gitlab_url }}/-/releases/v{{ component.version }}){%- else -%}v{{ component.version }}{%- endif -%} |
+| **{{ component.category }}** | [**{{ component.identifier }}**](../components/{{ component.identifier }}.md) | {%- if show_gitlab_release_links and component.gitlab_url -%}[{{ component.prefixed_version }}]({{ component.gitlab_url }}/-/releases/{{ component.prefixed_version }}){%- else -%}{{ component.prefixed_version }}{%- endif -%} |
 {% endfor -%}
 
 {% for component in components %}
 {%- if component.identifier in component_releases %}
 ---
 {% for component_release in component_releases[component.identifier] | reverse %}
-## {{ component.identifier }} v{{ component_release.version }}
+## {{ component.identifier }} {{ component_release.prefixed_version }}
 {% if component_release.changelog %}
 {{ component_release.changelog }}
 {%- endif -%}

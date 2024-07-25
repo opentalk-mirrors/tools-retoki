@@ -4,13 +4,32 @@
 use core::fmt;
 use std::{fmt::Display, str::FromStr};
 
-use semver::Version;
+use semver::{BuildMetadata, Prerelease, Version};
 use serde::{de, Serialize, Serializer};
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, derive_more::From, derive_more::Into)]
+#[derive(
+    Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, derive_more::From, derive_more::Into,
+)]
 pub struct SeriesNumber {
     major: u64,
     minor: u64,
+}
+
+impl SeriesNumber {
+    pub fn to_semver_version(
+        &self,
+        patch: u64,
+        pre: Option<Prerelease>,
+        build: Option<BuildMetadata>,
+    ) -> Version {
+        Version {
+            major: self.major,
+            minor: self.minor,
+            patch,
+            pre: pre.unwrap_or_default(),
+            build: build.unwrap_or_default(),
+        }
+    }
 }
 
 impl Display for SeriesNumber {

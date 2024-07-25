@@ -8,8 +8,8 @@ use semver::Version;
 use serde::{Deserialize, Serialize};
 
 use super::{
-    Component, ComponentCategory, ComponentCategoryIdentifier, ComponentIdentifier, ProductName,
-    Release, ReleaseSeries, SeriesNumber,
+    Component, ComponentCategory, ComponentCategoryIdentifier, ComponentIdentifier,
+    ComponentVersion, ProductName, Release, ReleaseSeries, SeriesNumber,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -35,7 +35,7 @@ impl Releases {
     pub fn get_product_releases_for_component_version(
         &self,
         component: &ComponentIdentifier,
-        component_version: &Version,
+        component_version: &ComponentVersion,
     ) -> BTreeSet<Version> {
         let mut product_versions = BTreeSet::new();
         for series in &self.series {
