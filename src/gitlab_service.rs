@@ -16,10 +16,10 @@ use url::Url;
 
 use crate::{
     gitlab_service::api::{Issue, Milestone, Project},
-    vcs_service::VcsService,
+    vcs_service::{self, VcsService},
 };
 
-use self::api::MilestoneState;
+use self::api::{LinkedIssue, MilestoneState};
 
 pub(crate) struct GitlabService {
     group: String,
@@ -59,7 +59,7 @@ impl GitlabService {
 }
 
 impl VcsService for GitlabService {
-    fn get_milestones(&self) -> Result<Vec<crate::vcs_service::Milestone>, Whatever> {
+    fn get_milestones(&self) -> Result<Vec<vcs_service::Milestone>, Whatever> {
         let endpoint = GroupMilestones::builder()
             .group(&self.group)
             .state(Some(MilestoneState::Active))
@@ -78,7 +78,7 @@ impl VcsService for GitlabService {
         &self,
         milestone: &str,
         label: &str,
-    ) -> Result<Vec<crate::vcs_service::Issue>, Whatever> {
+    ) -> Result<Vec<vcs_service::Issue>, Whatever> {
         let endpoint = Issues::builder()
             .milestone(Some(milestone))
             .label(Some(label))
@@ -97,6 +97,32 @@ impl VcsService for GitlabService {
         issues
             .into_iter()
             .map(|i| i.to_vcs_service_issue(&projects))
+            .collect::<Result<Vec<_>, Whatever>>()
+    }
+
+    fn get_linked_issues(
+        &self,
+        project: &str,
+        issue_id: u64,
+    ) -> Result<Vec<vcs_service::LinkedIssue>, Whatever> {
+        let endpoint = LinkedIssues::builder()
+            .project(NameOrId::Name(project.into()))
+            .issue(issue_id)
+            .build()
+            .whatever_context("couldn't build linked issues endpoint")?;
+
+        let linked_issues: Vec<LinkedIssue> =
+            endpoint.query(&self.client).with_whatever_context(|_e| {
+                format!("couldn't get linked issues for issue {issue_id} in project {project}")
+            })?;
+
+        let project_ids = linked_issues.iter().map(|i| i.issue.project_id).collect();
+
+        let projects = self.get_projects(project_ids)?;
+
+        linked_issues
+            .into_iter()
+            .map(|i| i.to_vcs_service_linked_issue(&projects))
             .collect::<Result<Vec<_>, Whatever>>()
     }
 }
@@ -176,5 +202,30 @@ impl<'a> Endpoint for Issues<'a> {
             .push_opt("labels", self.label);
 
         params
+    }
+}
+
+#[derive(Debug, Builder, Clone)]
+struct LinkedIssues<'a> {
+    #[builder(setter(into))]
+    project: NameOrId<'a>,
+
+    issue: u64,
+}
+
+impl<'a> LinkedIssues<'a> {
+    /// Create a builder for the endpoint.
+    fn builder() -> LinkedIssuesBuilder<'a> {
+        LinkedIssuesBuilder::default()
+    }
+}
+
+impl<'a> Endpoint for LinkedIssues<'a> {
+    fn method(&self) -> Method {
+        Method::GET
+    }
+
+    fn endpoint(&self) -> Cow<'static, str> {
+        format!("projects/{}/issues/{}/links", self.project, self.issue).into()
     }
 }

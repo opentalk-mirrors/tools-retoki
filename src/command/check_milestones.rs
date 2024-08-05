@@ -6,7 +6,7 @@ use snafu::Whatever;
 use crate::{
     config::Config,
     gitlab_service::GitlabService,
-    vcs_service::{Milestone, OverdueMilestone, VcsService},
+    vcs_service::{IssueLinkType, Milestone, OverdueMilestone, VcsService},
 };
 
 #[derive(Clone, Debug, Args)]
@@ -53,12 +53,20 @@ impl CheckMilestonesArgs {
             );
             println!();
             for issue in issues {
-                let full_path = issue
-                    .project
-                    .path_with_namespace
+                let ticket_id = issue
+                    .reference
                     .trim_start_matches(&format!("{}/", config.gitlab_group));
-                let ticket_id = format!("{}#{}", full_path, issue.id.to_string().bold());
-                println!("- {}: {}", ticket_id.blue(), issue.title);
+                println!("- {}: {}", ticket_id.bold().blue(), issue.title);
+
+                for linked_issue in
+                    gitlab_service.get_linked_issues(&issue.project.id.to_string(), issue.iid)?
+                {
+                    if linked_issue.link_type == IssueLinkType::IsBlockedBy
+                        && linked_issue.issue.state.is_opened()
+                    {
+                        println!("    → blocked by {}", linked_issue.issue.reference);
+                    }
+                }
             }
             println!();
         }

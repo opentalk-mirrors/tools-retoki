@@ -66,8 +66,11 @@ impl From<Milestone> for vcs_service::Milestone {
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub(crate) struct Issue {
     pub id: u64,
+    pub iid: u64,
     pub title: String,
     pub project_id: u64,
+    pub references: IssueReferences,
+    pub state: IssueState,
 }
 
 impl Issue {
@@ -77,8 +80,11 @@ impl Issue {
     ) -> Result<vcs_service::Issue, Whatever> {
         let Self {
             id,
+            iid,
             title,
             project_id,
+            references,
+            state,
         } = self.clone();
         let project = projects
             .get(&project_id)
@@ -90,8 +96,22 @@ impl Issue {
             })?
             .clone()
             .into();
-        Ok(vcs_service::Issue { id, title, project })
+        Ok(vcs_service::Issue {
+            id,
+            iid,
+            title,
+            project,
+            reference: references.full,
+            state: state.into(),
+        })
     }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+pub(crate) struct IssueReferences {
+    pub full: String,
+    pub relative: String,
+    pub short: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -119,6 +139,64 @@ impl From<Project> for vcs_service::Project {
         Self {
             id,
             path_with_namespace,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum IssueLinkType {
+    Blocks,
+    IsBlockedBy,
+    RelatesTo,
+}
+
+impl From<IssueLinkType> for vcs_service::IssueLinkType {
+    fn from(value: IssueLinkType) -> Self {
+        match value {
+            IssueLinkType::Blocks => Self::Blocks,
+            IssueLinkType::IsBlockedBy => Self::IsBlockedBy,
+            IssueLinkType::RelatesTo => Self::RelatesTo,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+pub(crate) struct LinkedIssue {
+    pub link_type: IssueLinkType,
+
+    #[serde(flatten)]
+    pub issue: Issue,
+}
+
+impl LinkedIssue {
+    pub(crate) fn to_vcs_service_linked_issue(
+        &self,
+        projects: &BTreeMap<u64, Project>,
+    ) -> Result<vcs_service::LinkedIssue, Whatever> {
+        let Self { link_type, issue } = self.clone();
+
+        let issue = issue.to_vcs_service_issue(projects)?;
+
+        Ok(vcs_service::LinkedIssue {
+            link_type: link_type.into(),
+            issue,
+        })
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum IssueState {
+    Opened,
+    Closed,
+}
+
+impl From<IssueState> for vcs_service::IssueState {
+    fn from(value: IssueState) -> Self {
+        match value {
+            IssueState::Opened => Self::Opened,
+            IssueState::Closed => Self::Closed,
         }
     }
 }

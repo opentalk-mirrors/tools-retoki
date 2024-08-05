@@ -44,6 +44,9 @@ pub(crate) trait VcsService {
         }
         Ok(overdue_milestones_with_release_issues)
     }
+
+    fn get_linked_issues(&self, project: &str, issue_id: u64)
+        -> Result<Vec<LinkedIssue>, Whatever>;
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -74,8 +77,11 @@ pub(crate) struct Project {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct Issue {
     pub id: u64,
+    pub iid: u64,
     pub title: String,
     pub project: Project,
+    pub reference: String,
+    pub state: IssueState,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -83,4 +89,29 @@ pub(crate) struct OverdueMilestone {
     pub milestone: Milestone,
     pub overdue_since: Timestamp,
     pub issues: Vec<Issue>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct LinkedIssue {
+    pub link_type: IssueLinkType,
+    pub issue: Issue,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum IssueLinkType {
+    Blocks,
+    IsBlockedBy,
+    RelatesTo,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum IssueState {
+    Opened,
+    Closed,
+}
+
+impl IssueState {
+    pub(crate) const fn is_opened(&self) -> bool {
+        matches!(self, Self::Opened)
+    }
 }
