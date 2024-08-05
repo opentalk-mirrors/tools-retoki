@@ -122,7 +122,9 @@ mod tests {
     use strip_ansi_escapes::strip_str;
 
     use super::{CheckMilestonesArgs, Output};
-    use crate::vcs_service::{Milestone, MockVcsService, OverdueMilestone};
+    use crate::vcs_service::{
+        Issue, IssueState, LinkedIssue, Milestone, MockVcsService, OverdueMilestone, Project,
+    };
 
     struct DummyOutput(String);
 
@@ -154,8 +156,9 @@ mod tests {
         CheckMilestonesArgs::run_inner(&vcs_service_mock, at, "Release", &mut output).unwrap();
 
         assert_eq!(
-            "Found 0 overdue milestones\n\
-            ",
+            "\
+Found 0 overdue milestones
+",
             output.0
         );
     }
@@ -186,14 +189,112 @@ mod tests {
         CheckMilestonesArgs::run_inner(&vcs_service_mock, at, "Release", &mut output).unwrap();
 
         assert_eq!(
-            "Found 1 overdue milestones\n\
-            \n\
-            Milestone 24.10.0\n\
-            \n\
-            overdue since 2024-05-09T22:00:00Z\n\
-            \n\
-            0 open issues tagged with Release\n\
-            ",
+            "\
+Found 1 overdue milestones
+
+Milestone 24.10.0
+
+overdue since 2024-05-09T22:00:00Z
+
+0 open issues tagged with Release
+",
+            strip_str(output.0)
+        );
+    }
+
+    #[test]
+    fn check_multiple_overdue_milestones_with_issues() {
+        let mut vcs_service_mock = MockVcsService::new();
+        let mut output = DummyOutput::new();
+
+        let at = Timestamp::from_second(1722866956).unwrap();
+
+        let _ = vcs_service_mock
+            .expect_get_overdue_milestones_with_release_issues()
+            .with(eq(at), eq("Release"))
+            .times(1)
+            .return_once(|_, _| {
+                Ok(vec![
+                    OverdueMilestone {
+                        milestone: Milestone {
+                            id: 780,
+                            title: "24.10.0".to_string(),
+                            due_date: Some(Date::constant(2024, 5, 10)),
+                        },
+                        overdue_since: Timestamp::from_second(1715292000).unwrap(),
+                        issues: vec![Issue {
+                            id: 423,
+                            iid: 49,
+                            title: "Release v1.2.3 of component".to_string(),
+                            project: Project {
+                                id: 283,
+                                path_with_namespace: "path/to/project".to_string(),
+                            },
+                            short_reference: "to/project#49".to_string(),
+                            state: IssueState::Opened,
+                            linked_issues: vec![],
+                        }],
+                    },
+                    OverdueMilestone {
+                        milestone: Milestone {
+                            id: 785,
+                            title: "24.11.0-rc.1".to_string(),
+                            due_date: Some(Date::constant(2024, 6, 1)),
+                        },
+                        overdue_since: Timestamp::from_second(1715292000).unwrap(),
+                        issues: vec![Issue {
+                            id: 425,
+                            iid: 52,
+                            title: "Release v1.3.0 of component".to_string(),
+                            project: Project {
+                                id: 283,
+                                path_with_namespace: "path/to/project".to_string(),
+                            },
+                            short_reference: "to/project#52".to_string(),
+                            state: IssueState::Opened,
+                            linked_issues: vec![LinkedIssue {
+                                link_type: crate::vcs_service::IssueLinkType::IsBlockedBy,
+                                issue: Issue {
+                                    id: 95,
+                                    iid: 93,
+                                    title: "Fix issue abc".to_string(),
+                                    project: Project {
+                                        id: 22,
+                                        path_with_namespace: "path/to/another/project".to_string(),
+                                    },
+                                    short_reference: "to/another/project#93".to_string(),
+                                    state: IssueState::Opened,
+                                    linked_issues: vec![],
+                                },
+                            }],
+                        }],
+                    },
+                ])
+            });
+
+        CheckMilestonesArgs::run_inner(&vcs_service_mock, at, "Release", &mut output).unwrap();
+
+        assert_eq!(
+            "\
+Found 2 overdue milestones
+
+Milestone 24.10.0
+
+overdue since 2024-05-09T22:00:00Z
+
+1 open issues tagged with Release
+
+- to/project#49: Release v1.2.3 of component
+
+Milestone 24.11.0-rc.1
+
+overdue since 2024-05-09T22:00:00Z
+
+1 open issues tagged with Release
+
+- to/project#52: Release v1.3.0 of component
+    → blocked by to/another/project#93
+",
             strip_str(output.0)
         );
     }
