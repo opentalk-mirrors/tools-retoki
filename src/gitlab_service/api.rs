@@ -100,6 +100,12 @@ pub(crate) struct Project {
     pub description: Option<String>,
     pub path: String,
     pub path_with_namespace: String,
+    pub namespace: ProjectNamespace,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+pub(crate) struct ProjectNamespace {
+    pub path: String,
 }
 
 impl From<Project> for vcs_service::Project {

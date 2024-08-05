@@ -1,5 +1,6 @@
 use clap::Args;
 use jiff::{Timestamp, Zoned};
+use owo_colors::OwoColorize as _;
 use snafu::Whatever;
 
 use crate::{
@@ -39,14 +40,25 @@ impl CheckMilestonesArgs {
         } in overdue_milestones
         {
             println!(
-                "{title} is overdue since {overdue_since} with {} open release issues",
-                issues.len()
+                "{}",
+                format!("Milestone {}", title.green()).bold().underline()
             );
+            println!();
+            println!("overdue since {}", overdue_since.bold().blue(),);
+            println!();
+            println!(
+                "{} open issues tagged with {}",
+                issues.len().bold().blue(),
+                config.release_label.bold().blue()
+            );
+            println!();
             for issue in issues {
-                println!(
-                    "- {}#{}: {}",
-                    issue.project.path_with_namespace, issue.id, issue.title
-                );
+                let full_path = issue
+                    .project
+                    .path_with_namespace
+                    .trim_start_matches(&format!("{}/", config.gitlab_group));
+                let ticket_id = format!("{}#{}", full_path, issue.id.to_string().bold());
+                println!("- {}: {}", ticket_id.blue(), issue.title);
             }
             println!();
         }
