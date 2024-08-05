@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: OpenTalk Team <mail@opentalk.eu>
+// SPDX-FileCopyrightText: Wolfgang Silbermayr <w.silbermayr@opentalk.eu>
+// SPDX-License-Identifier: EUPL-1.2
+
 mod api;
 
 use std::{
@@ -14,12 +18,11 @@ use http::Method;
 use snafu::{ResultExt, Whatever};
 use url::Url;
 
+use self::api::{LinkedIssue, MilestoneState};
 use crate::{
     gitlab_service::api::{Issue, Milestone, Project},
     vcs_service::{self, VcsService},
 };
-
-use self::api::{LinkedIssue, MilestoneState};
 
 pub(crate) struct GitlabService {
     group: String,

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: OpenTalk Team <mail@opentalk.eu>
+// SPDX-FileCopyrightText: Wolfgang Silbermayr <w.silbermayr@opentalk.eu>
+// SPDX-License-Identifier: EUPL-1.2
+
 use serde::{Deserialize, Serialize};
 use snafu::{ResultExt as _, Whatever};
 use url::Url;

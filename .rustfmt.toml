@@ -1,0 +1,8 @@
+# SPDX-FileCopyrightText: OpenTalk Team <mail@opentalk.eu>
+# SPDX-License-Identifier: EUPL-1.2
+
+group_imports = "StdExternalCrate"
+imports_granularity = "Crate"
+
+comment_width = 120
+wrap_comments = true

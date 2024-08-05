@@ -1,7 +1,12 @@
-use self::check_milestones::CheckMilestonesArgs;
-use crate::Config;
+// SPDX-FileCopyrightText: OpenTalk Team <mail@opentalk.eu>
+// SPDX-FileCopyrightText: Wolfgang Silbermayr <w.silbermayr@opentalk.eu>
+// SPDX-License-Identifier: EUPL-1.2
+
 use clap::Subcommand;
 use snafu::Whatever;
+
+use self::check_milestones::CheckMilestonesArgs;
+use crate::Config;
 
 mod check_milestones;
 

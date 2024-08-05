@@ -1,7 +1,11 @@
+# SPDX-FileCopyrightText: OpenTalk Team <mail@opentalk.eu>
+# SPDX-License-Identifier: EUPL-1.2
+
 [package]
+edition = "2021"
+license = "EUPL-1.2"
 name = "relbo"
 version = "0.1.0"
-edition = "2021"
 
 [dependencies]
 clap = { version = "4.5.13", features = ["derive"] }
