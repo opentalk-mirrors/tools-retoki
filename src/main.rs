@@ -30,12 +30,16 @@
 
 use clap::Parser;
 
-use crate::cli::Cli;
+use crate::{cli::Cli, config::Config};
 
 mod cli;
+mod config;
 
 fn main() {
     let cli = Cli::parse();
 
     println!("command-line arguments: {cli:?}");
+
+    let config = Config::load();
+    println!("config: {config:?}");
 }
