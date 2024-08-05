@@ -31,19 +31,17 @@
 use clap::Parser;
 use snafu::Whatever;
 
-use crate::{cli::Cli, config::Config};
+use crate::{cli::Cli, command::Command, config::Config};
 
 mod cli;
+mod command;
 mod config;
 
 #[snafu::report]
 fn main() -> Result<(), Whatever> {
     let cli = Cli::parse();
 
-    println!("command-line arguments: {cli:?}");
-
     let config = Config::load()?;
-    println!("config: {config:?}");
 
-    Ok(())
+    cli.run(&config)
 }
