@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use snafu::{ResultExt as _, Whatever};
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub(crate) struct Config {}
@@ -22,8 +23,8 @@ mod figment_impls {
                 .merge(Env::prefixed("RELBO_"))
         }
 
-        pub(crate) fn load() -> Self {
-            Self::from(Self::figment()).expect("valid config")
+        pub(crate) fn load() -> Result<Self, Whatever> {
+            Self::from(Self::figment()).whatever_context("couldn't load config")
         }
     }
 }
