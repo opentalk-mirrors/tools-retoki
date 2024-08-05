@@ -81,6 +81,8 @@ impl Issue {
     pub(crate) fn to_vcs_service_issue(
         &self,
         projects: &BTreeMap<u64, Project>,
+        gitlab_group: &str,
+        linked_issues: Vec<vcs_service::LinkedIssue>,
     ) -> Result<vcs_service::Issue, Whatever> {
         let Self {
             id,
@@ -105,8 +107,12 @@ impl Issue {
             iid,
             title,
             project,
-            reference: references.full,
+            short_reference: references
+                .full
+                .trim_start_matches(&format!("{}/", gitlab_group))
+                .to_string(),
             state: state.into(),
+            linked_issues,
         })
     }
 }
@@ -177,10 +183,11 @@ impl LinkedIssue {
     pub(crate) fn to_vcs_service_linked_issue(
         &self,
         projects: &BTreeMap<u64, Project>,
+        gitlab_group: &str,
     ) -> Result<vcs_service::LinkedIssue, Whatever> {
         let Self { link_type, issue } = self.clone();
 
-        let issue = issue.to_vcs_service_issue(projects)?;
+        let issue = issue.to_vcs_service_issue(projects, gitlab_group, vec![])?;
 
         Ok(vcs_service::LinkedIssue {
             link_type: link_type.into(),

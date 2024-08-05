@@ -99,7 +99,10 @@ impl VcsService for GitlabService {
 
         issues
             .into_iter()
-            .map(|i| i.to_vcs_service_issue(&projects))
+            .map(|i| {
+                let linked_issues = self.get_linked_issues(&i.project_id.to_string(), i.iid)?;
+                i.to_vcs_service_issue(&projects, &self.group, linked_issues)
+            })
             .collect::<Result<Vec<_>, Whatever>>()
     }
 
@@ -125,7 +128,7 @@ impl VcsService for GitlabService {
 
         linked_issues
             .into_iter()
-            .map(|i| i.to_vcs_service_linked_issue(&projects))
+            .map(|i| i.to_vcs_service_linked_issue(&projects, &self.group))
             .collect::<Result<Vec<_>, Whatever>>()
     }
 }

@@ -84,8 +84,9 @@ pub(crate) struct Issue {
     pub iid: u64,
     pub title: String,
     pub project: Project,
-    pub reference: String,
+    pub short_reference: String,
     pub state: IssueState,
+    pub linked_issues: Vec<LinkedIssue>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

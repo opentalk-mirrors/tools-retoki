@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: EUPL-1.2
 
 use clap::Args;
-use jiff::{Timestamp, Zoned};
+use jiff::Timestamp;
 use owo_colors::OwoColorize as _;
-use snafu::Whatever;
+use snafu::{ResultExt, Whatever};
 
 use crate::{
     config::Config,
@@ -27,13 +27,20 @@ impl CheckMilestonesArgs {
             config.gitlab_group.clone(),
         )?;
 
-        let at = self
-            .faketime
-            .map(|ts| ts.intz("UTC").expect("valid timestamp"))
-            .unwrap_or_else(|| Zoned::now().intz("UTC").expect("valid datetime"));
+        let at = self.faketime.unwrap_or_else(Timestamp::now);
+
+        Self::run_inner(&gitlab_service, at, &config.release_label)
+    }
+
+    fn run_inner(
+        vcs_service: &dyn VcsService,
+        at: Timestamp,
+        release_label: &str,
+    ) -> Result<(), Whatever> {
+        let at = at.intz("UTC").whatever_context("invalid timestamp")?;
 
         let overdue_milestones =
-            gitlab_service.get_overdue_milestones_with_release_issues(at, &config.release_label)?;
+            vcs_service.get_overdue_milestones_with_release_issues(at, release_label)?;
 
         println!("Found {} overdue milestones:", overdue_milestones.len());
         println!();
@@ -53,22 +60,20 @@ impl CheckMilestonesArgs {
             println!(
                 "{} open issues tagged with {}",
                 issues.len().bold().blue(),
-                config.release_label.bold().blue()
+                release_label.bold().blue()
             );
             println!();
             for issue in issues {
-                let ticket_id = issue
-                    .reference
-                    .trim_start_matches(&format!("{}/", config.gitlab_group));
-                println!("- {}: {}", ticket_id.bold().blue(), issue.title);
+                println!("- {}: {}", issue.short_reference.bold().blue(), issue.title);
 
-                for linked_issue in
-                    gitlab_service.get_linked_issues(&issue.project.id.to_string(), issue.iid)?
-                {
+                for linked_issue in issue.linked_issues {
                     if linked_issue.link_type == IssueLinkType::IsBlockedBy
                         && linked_issue.issue.state.is_opened()
                     {
-                        println!("    → blocked by {}", linked_issue.issue.reference);
+                        println!(
+                            "    → blocked by {}",
+                            linked_issue.issue.short_reference.red()
+                        );
                     }
                 }
             }
