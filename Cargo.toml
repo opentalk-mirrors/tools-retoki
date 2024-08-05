@@ -5,7 +5,12 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.5.13", features = ["derive"] }
+derive_builder = "0.20.0"
 figment = { version = "0.10.19", features = ["env", "toml"] }
+gitlab = "0.1702.0"
+http = "1.1.0"
+jiff = { version = "0.1.4", features = ["serde"] }
+semver = { version = "1.0.23", features = ["serde"] }
 serde = { version = "1.0.204", features = ["derive"] }
 snafu = "0.8.4"
 url = { version = "2.5.2", features = ["serde"] }

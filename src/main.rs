@@ -36,6 +36,8 @@ use crate::{cli::Cli, command::Command, config::Config};
 mod cli;
 mod command;
 mod config;
+mod gitlab_service;
+mod vcs_service;
 
 #[snafu::report]
 fn main() -> Result<(), Whatever> {

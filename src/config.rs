@@ -7,6 +7,7 @@ pub(crate) struct Config {
     pub gitlab_url: Url,
     pub gitlab_group: String,
     pub gitlab_token: String,
+    pub release_label: String,
 }
 
 mod figment_impls {
