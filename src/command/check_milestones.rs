@@ -5,7 +5,7 @@
 use clap::Args;
 use jiff::Timestamp;
 use owo_colors::OwoColorize as _;
-use snafu::{ResultExt, Whatever};
+use snafu::Whatever;
 
 use crate::{
     config::Config,
@@ -37,8 +37,6 @@ impl CheckMilestonesArgs {
         at: Timestamp,
         release_label: &str,
     ) -> Result<(), Whatever> {
-        let at = at.intz("UTC").whatever_context("invalid timestamp")?;
-
         let overdue_milestones =
             vcs_service.get_overdue_milestones_with_release_issues(at, release_label)?;
 
@@ -81,5 +79,28 @@ impl CheckMilestonesArgs {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use jiff::Timestamp;
+    use mockall::predicate::eq;
+
+    use super::CheckMilestonesArgs;
+    use crate::vcs_service::MockVcsService;
+
+    #[test]
+    fn check_milestones_empty() {
+        let mut mock = MockVcsService::new();
+
+        let at = Timestamp::from_second(1722866956).unwrap();
+
+        let _ = mock
+            .expect_get_overdue_milestones_with_release_issues()
+            .with(eq(at), eq("Release"))
+            .times(1)
+            .return_once(|_, _| Ok(vec![]));
+        CheckMilestonesArgs::run_inner(&mock, at, "Release").unwrap();
     }
 }

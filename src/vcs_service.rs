@@ -4,8 +4,9 @@
 
 use jiff::{civil::Date, Timestamp, Zoned};
 use semver::Version;
-use snafu::Whatever;
+use snafu::{ResultExt as _, Whatever};
 
+#[cfg_attr(test, mockall::automock)]
 pub(crate) trait VcsService {
     fn get_milestones(&self) -> Result<Vec<Milestone>, Whatever>;
 
@@ -17,9 +18,11 @@ pub(crate) trait VcsService {
 
     fn get_overdue_milestones_with_release_issues(
         &self,
-        at: Zoned,
+        at: Timestamp,
         release_label: &str,
     ) -> Result<Vec<OverdueMilestone>, Whatever> {
+        let at = at.intz("UTC").whatever_context("invalid timestamp")?;
+
         let milestones = self.get_milestones()?;
 
         let overdue_milestones = milestones
