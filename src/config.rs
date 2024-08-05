@@ -1,8 +1,13 @@
 use serde::{Deserialize, Serialize};
 use snafu::{ResultExt as _, Whatever};
+use url::Url;
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub(crate) struct Config {}
+pub(crate) struct Config {
+    pub gitlab_url: Url,
+    pub gitlab_group: String,
+    pub gitlab_token: String,
+}
 
 mod figment_impls {
     use figment::{
