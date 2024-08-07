@@ -13,7 +13,7 @@ license = "EUPL-1.2"
 [dependencies]
 anyhow = "1.0.86"
 clap = { version = "4.5.7", features = ["derive"] }
-derive_more = "0.99.18"
+derive_more = { version = "1.0.0", features = ["from", "into", "display"] }
 gitlab = "0.1608.0"
 indexmap = { version = "2.2.6", features = ["serde"] }
 owo-colors = "4.0.0"
