@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use std::{fs::File, path::Path};
+use std::path::Path;
 
 use anyhow::{bail, Context, Result};
 use clap::Args;
@@ -15,7 +15,7 @@ use url::Url;
 
 use crate::{
     command::utils::write_releases_yml_file,
-    data::{self, Component, ComponentIdentifier, ComponentRelease, ComponentVersion},
+    data::{read_release_file, Component, ComponentIdentifier, ComponentRelease, ComponentVersion},
 };
 
 const GITLAB_TOKEN_ENV_VAR: &str = "GITLAB_TOKEN";
@@ -25,13 +25,7 @@ pub struct FetchChangelogsArgs {}
 
 impl FetchChangelogsArgs {
     pub fn execute<R: AsRef<Path>>(self, release_file: R, version: &Version) -> Result<()> {
-        let mut raw_data: data::Releases = {
-            let file = File::open(&release_file).context(format!(
-                "Couldn't open release file {:?}",
-                release_file.as_ref()
-            ))?;
-            serde_yaml::from_reader(file)?
-        };
+        let mut raw_data = read_release_file(&release_file, Default::default())?;
 
         let series_number = version.into();
         let series = raw_data

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use std::{fs::File, path::Path};
+use std::path::Path;
 
 use anyhow::{Context, Result};
 use clap::Args;
@@ -11,7 +11,7 @@ use serde::Serialize;
 use tabled::Tabled;
 
 use crate::{
-    data::{self, ComponentIdentifier, ComponentVersion, SeriesNumber},
+    data::{read_release_file, ComponentIdentifier, ComponentVersion, SeriesNumber},
     output_format::OutputFormat,
 };
 
@@ -26,11 +26,7 @@ impl ShowArgs {
     pub fn execute<R: AsRef<Path>>(self, release_file: R, version: &Version) -> Result<()> {
         let Self { format } = self;
 
-        let file = File::open(&release_file).context(format!(
-            "Couldn't open release file {:?}",
-            release_file.as_ref()
-        ))?;
-        let raw_data: data::Releases = serde_yaml::from_reader(file)?;
+        let raw_data = read_release_file(&release_file, Default::default())?;
 
         let series_number = version.into();
         let series = raw_data

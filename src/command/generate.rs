@@ -12,7 +12,7 @@ use clap::Args;
 use tera::{Context, Tera};
 
 use crate::{
-    data::{self, StripReleases},
+    data::{read_release_file, ReleaseFileReadOptions, ReleaseSeriesCodenames, StripReleases},
     release_metadata::ReleaseMetadata,
     template,
 };
@@ -55,22 +55,22 @@ impl GenerateArgs {
         tera.add_raw_template("release.md", include_str!("../../templates/release.md"))?;
         tera.add_raw_template("component.md", include_str!("../../templates/component.md"))?;
 
-        let file = File::open(&release_file).context(format!(
-            "Couldn't open release file {:?}",
-            release_file.as_ref()
-        ))?;
         let strip_releases = if self.without_prereleases {
             StripReleases::PreReleases
         } else {
             StripReleases::ObsoletePreReleases
         };
 
-        let mut raw_data: data::Releases = serde_yaml::from_reader::<_, data::Releases>(file)?
-            .with_releases_stripped(strip_releases);
-
-        if self.without_release_series_codenames {
-            raw_data.strip_release_series_codenames();
-        }
+        let raw_data = read_release_file(
+            &release_file,
+            ReleaseFileReadOptions {
+                strip_prereleases: Some(strip_releases),
+                release_series_codenames: self
+                    .without_release_series_codenames
+                    .then_some(ReleaseSeriesCodenames::Strip)
+                    .unwrap_or_default(),
+            },
+        )?;
 
         let target_dir = create_and_canonicalize_dir(self.target_dir)?;
         let components_dir = create_and_canonicalize_dir(target_dir.join("components"))?;
