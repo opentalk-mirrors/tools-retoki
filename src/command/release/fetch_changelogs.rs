@@ -43,9 +43,8 @@ impl FetchChangelogsArgs {
             .get(version)
             .with_context(|| format!("Release {version} not found in series {series_number}"))?;
 
-        let gitlab_token = std::env::var(GITLAB_TOKEN_ENV_VAR).context(format!(
-            "Environment varible {GITLAB_TOKEN_ENV_VAR} is not set"
-        ))?;
+        let gitlab_token = std::env::var(GITLAB_TOKEN_ENV_VAR)
+            .with_context(|| format!("Environment variable {GITLAB_TOKEN_ENV_VAR} is not set"))?;
 
         let mut errors = Vec::new();
         let mut overall = 0usize;
@@ -55,7 +54,7 @@ impl FetchChangelogsArgs {
             let component = raw_data
                 .components
                 .get_mut(&identifier)
-                .context(format!("Couldn't find component {:?}", identifier))?;
+                .with_context(|| format!("Couldn't find component {:?}", identifier))?;
             if let Err(e) = self.fetch_changelog(identifier, component, &version, &gitlab_token) {
                 errors.push(e);
             } else {
@@ -107,7 +106,7 @@ impl FetchChangelogsArgs {
         let gitlab_url: Url = gitlab_url.parse()?;
         let host = gitlab_url
             .host_str()
-            .context(format!("No host part found in url {gitlab_url:?}"))?;
+            .with_context(|| format!("No host part found in url {gitlab_url:?}"))?;
         let gitlab = Gitlab::new(host, token)?;
 
         let project_path = gitlab_url.path().trim_start_matches('/');

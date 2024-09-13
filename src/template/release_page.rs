@@ -61,12 +61,11 @@ impl ReleasePage {
         let series = data
             .series
             .get(&series_number)
-            .context("Couldn't find release series {series_number:?}.")?;
+            .with_context(|| format!("Couldn't find release series {series_number:?}."))?;
 
-        let release = series
-            .releases
-            .get(&version)
-            .context("Couldn't find release {version:?} in series {series_number}.")?;
+        let release = series.releases.get(&version).with_context(|| {
+            format!("Couldn't find release {version:?} in series {series_number}.")
+        })?;
 
         Ok(Self {
             product_name: data.product_name.clone(),

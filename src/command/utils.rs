@@ -9,7 +9,7 @@ use time::{format_description::well_known::Rfc3339, Date};
 use crate::data::Releases;
 
 pub fn parse_date(s: &str) -> Result<Date> {
-    Date::parse(s, &Rfc3339).context(format!("Invalid date string {:?}", s))
+    Date::parse(s, &Rfc3339).with_context(|| format!("Invalid date string {:?}", s))
 }
 
 pub fn tabled_display_option<D: Display>(o: &Option<D>) -> String {
@@ -26,7 +26,7 @@ pub fn write_releases_yml_file(release_file: impl AsRef<Path>, data: Releases) -
     let writer = BufWriter::new(file);
 
     serde_yaml::to_writer(writer, &data)
-        .context("Couldn't write releases file {release_file:?}")?;
+        .with_context(|| format!("Couldn't write releases file {:?}", release_file.as_ref()))?;
 
     Ok(())
 }

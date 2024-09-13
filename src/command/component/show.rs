@@ -36,7 +36,7 @@ impl ShowArgs {
         let component = raw_data
             .components
             .get(identifier)
-            .context(format!("Component {identifier} not found"))?;
+            .with_context(|| format!("Component {identifier} not found"))?;
 
         #[derive(Debug, Serialize, Tabled)]
         struct ComponentInformation<'a> {

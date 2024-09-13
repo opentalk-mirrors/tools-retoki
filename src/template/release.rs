@@ -80,14 +80,13 @@ impl Release {
                 for (identifier, version) in &release.components {
                     let component = components
                         .get(identifier)
-                        .context(format!("Couldn't find component {:?}", identifier))?;
+                        .with_context(|| format!("Couldn't find component {:?}", identifier))?;
                     let category =
                         component_categories
                             .get(&component.category)
-                            .context(format!(
-                                "Couldn't find component category {:?}",
-                                component.category
-                            ))?;
+                            .with_context(|| {
+                                format!("Couldn't find component category {:?}", component.category)
+                            })?;
                     categorized
                         .entry(component.category.clone())
                         .or_default()
@@ -109,14 +108,13 @@ impl Release {
                 .map(|(identifier, version)| {
                     let component = components
                         .get(identifier)
-                        .context(format!("Couldn't find component {:?}", identifier))?;
+                        .with_context(|| format!("Couldn't find component {:?}", identifier))?;
                     let category =
                         component_categories
                             .get(&component.category)
-                            .context(format!(
-                                "Couldn't find component category {:?}",
-                                component.category
-                            ))?;
+                            .with_context(|| {
+                                format!("Couldn't find component category {:?}", component.category)
+                            })?;
                     Ok((
                         identifier.clone(),
                         ReleaseComponent::from_data_component(

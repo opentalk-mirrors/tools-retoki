@@ -21,12 +21,12 @@ pub struct ReleaseMetadata {
 impl ReleaseMetadata {
     pub fn from_data_release(data: &data::Releases, version: Version) -> Result<Self> {
         let series_number = SeriesNumber::from(version.clone());
-        let release_series = data.series.get(&series_number).context(format!(
-            "Release series {series_number} for version {version} not found"
-        ))?;
-        let release = release_series.releases.get(&version).context(format!(
-            "Release {version} not found in release series {series_number}"
-        ))?;
+        let release_series = data.series.get(&series_number).with_context(|| {
+            format!("Release series {series_number} for version {version} not found")
+        })?;
+        let release = release_series.releases.get(&version).with_context(|| {
+            format!("Release {version} not found in release series {series_number}")
+        })?;
 
         let components = release
             .components
@@ -36,11 +36,10 @@ impl ReleaseMetadata {
                 let component = data
                     .components
                     .get(&component_identifier)
-                    .context(format!("Component {component_identifier} not found"))?;
-                let component_release = component
-                    .releases
-                    .get(&version)
-                    .context("Release {version} for component {component_identifier} not found")?;
+                    .with_context(|| format!("Component {component_identifier} not found"))?;
+                let component_release = component.releases.get(&version).with_context(|| {
+                    format!("Release {version} for component {component_identifier} not found")
+                })?;
                 Ok((
                     component_identifier,
                     ReleaseComponentMetadata {
