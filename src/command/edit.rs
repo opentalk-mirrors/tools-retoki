@@ -7,8 +7,7 @@ use anyhow::Result;
 use clap::Args;
 use owo_colors::OwoColorize;
 
-use super::utils::write_releases_yml_file;
-use crate::data::{read_release_file, ReleaseFileReadOptions, StripReleases};
+use crate::data::{read_release_file, write_releases_file, ReleaseFileReadOptions, StripReleases};
 
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct EditArgs {
@@ -27,7 +26,7 @@ impl EditArgs {
             },
         )?;
 
-        write_releases_yml_file(&release_file, raw_data)?;
+        write_releases_file(&release_file, raw_data)?;
 
         println!();
         println!(

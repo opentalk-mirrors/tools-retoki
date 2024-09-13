@@ -13,9 +13,9 @@ use owo_colors::OwoColorize;
 use semver::Version;
 use url::Url;
 
-use crate::{
-    command::utils::write_releases_yml_file,
-    data::{read_release_file, Component, ComponentIdentifier, ComponentRelease, ComponentVersion},
+use crate::data::{
+    read_release_file, write_releases_file, Component, ComponentIdentifier, ComponentRelease,
+    ComponentVersion,
 };
 
 const GITLAB_TOKEN_ENV_VAR: &str = "GITLAB_TOKEN";
@@ -65,7 +65,7 @@ impl FetchChangelogsArgs {
             }
         }
 
-        write_releases_yml_file(&release_file, raw_data)?;
+        write_releases_file(&release_file, raw_data)?;
 
         println!();
         println!(

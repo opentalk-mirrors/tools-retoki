@@ -24,7 +24,9 @@ pub use component_identifier::ComponentIdentifier;
 pub use component_name::ComponentName;
 pub use component_release::ComponentRelease;
 pub use component_version::ComponentVersion;
-pub use file::{read_release_file, ReleaseFileReadOptions, ReleaseSeriesCodenames};
+pub use file::{
+    read_release_file, write_releases_file, ReleaseFileReadOptions, ReleaseSeriesCodenames,
+};
 pub use product_name::ProductName;
 pub use release::Release;
 pub use release_series::ReleaseSeries;
@@ -33,7 +35,7 @@ pub use series_codename::SeriesCodename;
 pub use series_number::SeriesNumber;
 
 mod file {
-    use std::{fs::File, path::Path};
+    use std::{fs::File, io::BufWriter, path::Path};
 
     use anyhow::Context as _;
 
@@ -86,5 +88,20 @@ mod file {
         }
 
         Ok(raw_data)
+    }
+
+    pub fn write_releases_file(
+        release_file: impl AsRef<Path>,
+        data: Releases,
+    ) -> anyhow::Result<()> {
+        let file = File::create(&release_file).with_context(|| {
+            format!("Couldn't write to release file {:?}", release_file.as_ref())
+        })?;
+        let writer = BufWriter::new(file);
+
+        serde_yaml::to_writer(writer, &data)
+            .with_context(|| format!("Couldn't write releases file {:?}", release_file.as_ref()))?;
+
+        Ok(())
     }
 }
