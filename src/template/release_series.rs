@@ -26,6 +26,7 @@ impl ReleaseSeries {
         version: SeriesNumber,
         release_series: &data::ReleaseSeries,
         components: &IndexMap<ComponentIdentifier, data::Component>,
+        component_profiles: &IndexMap<ComponentIdentifier, data::ComponentProfile>,
         component_categories: &IndexMap<ComponentCategoryIdentifier, data::ComponentCategory>,
     ) -> Result<Self> {
         let release_markdown_code = match &release_series.codename {
@@ -69,6 +70,7 @@ impl ReleaseSeries {
                         end_date,
                         release,
                         components,
+                        component_profiles,
                         component_categories,
                     )
                 })

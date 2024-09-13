@@ -11,10 +11,11 @@ use anyhow::{Context as _, Result};
 use clap::Args;
 use tera::{Context, Tera};
 
+use super::ProfileArgs;
 use crate::{
     data::{
-        read_release_file_with_options, ReleaseFileReadOptions, ReleaseSeriesCodenames,
-        StripReleases,
+        read_profile_file, read_release_file_with_options, ReleaseFileReadOptions,
+        ReleaseSeriesCodenames, StripReleases,
     },
     release_metadata::ReleaseMetadata,
     template,
@@ -49,6 +50,9 @@ pub struct GenerateArgs {
     /// Insert a markdown header with `sidebar_position` and `title` fields
     #[clap(long)]
     pub with_md_header: bool,
+
+    #[clap(flatten)]
+    pub profile: ProfileArgs,
 }
 
 impl GenerateArgs {
@@ -64,7 +68,7 @@ impl GenerateArgs {
             StripReleases::ObsoletePreReleases
         };
 
-        let raw_data = read_release_file_with_options(
+        let releases = read_release_file_with_options(
             &release_file,
             ReleaseFileReadOptions {
                 strip_prereleases: Some(strip_releases),
@@ -75,12 +79,18 @@ impl GenerateArgs {
             },
         )
         .context("Failed to read release configuration")?;
+        let profile = read_profile_file(
+            &release_file,
+            &self.profile.profile,
+            self.profile.profile_path.as_deref(),
+        )
+        .context("Failed to read profile")?;
 
         let target_dir = create_and_canonicalize_dir(self.target_dir)?;
         let components_dir = create_and_canonicalize_dir(target_dir.join("components"))?;
 
         {
-            let mut template_data = template::Readme::from_data_releases(&raw_data)?;
+            let mut template_data = template::Readme::from_data_releases(&releases, &profile)?;
             template_data.show_gantt_chart = !self.without_readme_gantt_chart;
             template_data.show_gitlab_release_links = !self.without_gitlab_release_links;
             template_data.show_md_header = self.with_md_header;
@@ -94,7 +104,7 @@ impl GenerateArgs {
         }
 
         let mut position = 0;
-        for series in raw_data.series.values().rev() {
+        for series in releases.series.values().rev() {
             let versions_with_padding = std::iter::once(None)
                 .chain(series.releases.iter().map(Some))
                 .chain(std::iter::once(None))
@@ -111,7 +121,8 @@ impl GenerateArgs {
                     .unwrap_or(series.end_of_life);
 
                 let mut template_data = template::ReleasePage::from_data_release(
-                    &raw_data,
+                    &releases,
+                    &profile,
                     version.clone(),
                     previous,
                     next,
@@ -135,7 +146,7 @@ impl GenerateArgs {
 
                 if self.with_release_metadata_files {
                     let release_metadata =
-                        ReleaseMetadata::from_data_release(&raw_data, version.clone())?;
+                        ReleaseMetadata::from_data_release(&releases, version.clone())?;
                     let full_path = release_dir.join("metadata.json");
                     println!("Writing file {full_path:?}");
                     let file = File::create(&full_path)
@@ -147,12 +158,19 @@ impl GenerateArgs {
             }
         }
 
-        for (position, component) in raw_data.components.iter().enumerate() {
+        for (position, component) in releases.components.iter().enumerate() {
+            let component_profile = profile.components.get(component.0).with_context(|| {
+                format!(
+                    "Missing `{}` component in profile `{}`",
+                    component.0, profile.profile_name
+                )
+            })?;
             let template_data = template::ComponentPage::from_data_component(
                 component.0,
                 component.1,
-                &raw_data.product_name,
-                &raw_data,
+                component_profile,
+                &releases.product_name,
+                &releases,
                 position,
                 self.with_md_header,
             );

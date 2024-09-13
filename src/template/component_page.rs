@@ -4,7 +4,9 @@
 use serde::{Deserialize, Serialize};
 
 use super::ComponentRelease;
-use crate::data::{self, ComponentIdentifier, ComponentName, ProductName};
+use crate::data::{
+    Component, ComponentIdentifier, ComponentName, ComponentProfile, ProductName, Releases,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -16,7 +18,7 @@ pub struct ComponentPage {
 
     pub sidebar_position: usize,
 
-    // TODO: this is an ugly workaround to get beautiful spaciing for tables,
+    // TODO: this is an ugly workaround to get beautiful spacing for tables,
     // because tera whitespace control appears to not be providing what is needed
     // to control the number of spaces in the loop elements properly
     pub space: String,
@@ -27,17 +29,18 @@ pub struct ComponentPage {
 impl ComponentPage {
     pub fn from_data_component(
         component_identifier: &ComponentIdentifier,
-        data: &data::Component,
+        component: &Component,
+        profile: &ComponentProfile,
         product_name: &ProductName,
-        data_releases: &data::Releases,
+        data_releases: &Releases,
         sidebar_position: usize,
         show_md_header: bool,
     ) -> Self {
-        let mut releases = data.releases.clone();
+        let mut releases = component.releases.clone();
         releases.sort_keys();
         Self {
             product_name: product_name.clone(),
-            component_name: data.name.clone(),
+            component_name: component.name.clone(),
             component_identifier: component_identifier.clone(),
             releases: releases
                 .into_iter()
@@ -46,7 +49,7 @@ impl ComponentPage {
                         .get_product_releases_for_component_version(component_identifier, &version);
                     ComponentRelease::from_data_component_release(
                         &version,
-                        data.gitlab_url.clone(),
+                        profile.gitlab_url.clone(),
                         &release,
                         product_releases,
                     )
