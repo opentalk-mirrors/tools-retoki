@@ -11,8 +11,8 @@
 # dependencies not shared by any other crates, would be ignored, as the target
 # list here is effectively saying which targets you are building for.
 targets = [
-    { triple = "x86_64-unknown-linux-gnu" },
-    { triple = "x86_64-unknown-linux-musl" },
+  { triple = "x86_64-unknown-linux-gnu" },
+  { triple = "x86_64-unknown-linux-musl" },
 ]
 
 # This section is considered when running `cargo deny check advisories`
@@ -26,7 +26,13 @@ db-urls = ["https://github.com/rustsec/advisory-db"]
 yanked = "deny"
 # A list of advisory IDs to ignore. Note that ignored advisories will still
 # output a note when they are encountered.
-ignore = []
+ignore = [
+  # proc-macro-error is unmaintained
+  #
+  # This is a transitive dependency of this project.
+  # We need to wait for our dependencies to fix this by switching themselves.
+  "RUSTSEC-2024-0370",
+]
 # Threshold for security vulnerabilities, any vulnerability with a CVSS score
 # lower than the range specified will be ignored. Note that ignored advisories
 # will still output a note when they are encountered.
@@ -46,13 +52,13 @@ version = 2
 # See https://spdx.org/licenses/ for list of possible licenses
 # [possible values: any SPDX 3.11 short identifier (+ optional exception)].
 allow = [
-    "Apache-2.0",
-    "BSD-3-Clause",
-    "ISC",
-    "MIT",
-    "MPL-2.0",
-    "OpenSSL",
-    "Unicode-DFS-2016",
+  "Apache-2.0",
+  "BSD-3-Clause",
+  "ISC",
+  "MIT",
+  "MPL-2.0",
+  "OpenSSL",
+  "Unicode-DFS-2016",
 ]
 # The confidence threshold for detecting a license from license text.
 # The higher the value, the more closely the license text must be to the
@@ -116,13 +122,13 @@ highlight = "all"
 allow = []
 # List of crates to deny
 deny = [
-    # Each entry the name of a crate and a version range. If version is
-    # not specified, all versions will be matched.
-    #{ name = "ansi_term", version = "=0.11.0" },
-    #
-    # Wrapper crates can optionally be specified to allow the crate when it
-    # is a direct dependency of the otherwise banned crate
-    #{ name = "ansi_term", version = "=0.11.0", wrappers = [] },
+  # Each entry the name of a crate and a version range. If version is
+  # not specified, all versions will be matched.
+  #{ name = "ansi_term", version = "=0.11.0" },
+  #
+  # Wrapper crates can optionally be specified to allow the crate when it
+  # is a direct dependency of the otherwise banned crate
+  #{ name = "ansi_term", version = "=0.11.0", wrappers = [] },
 ]
 # Certain crates/versions that will be skipped when doing duplicate detection.
 skip = [
