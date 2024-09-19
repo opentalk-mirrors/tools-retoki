@@ -25,7 +25,8 @@ pub use component_name::ComponentName;
 pub use component_release::ComponentRelease;
 pub use component_version::ComponentVersion;
 pub use file::{
-    read_release_file, write_releases_file, ReleaseFileReadOptions, ReleaseSeriesCodenames,
+    read_release_file, read_release_file_with_options, write_releases_file, ReleaseFileReadOptions,
+    ReleaseSeriesCodenames,
 };
 pub use product_name::ProductName;
 pub use release::Release;
@@ -65,7 +66,11 @@ mod file {
         pub release_series_codenames: ReleaseSeriesCodenames,
     }
 
-    pub fn read_release_file(
+    pub fn read_release_file(release_file: impl AsRef<Path>) -> anyhow::Result<Releases> {
+        read_release_file_with_options(release_file, Default::default())
+    }
+
+    pub fn read_release_file_with_options(
         release_file: impl AsRef<Path>,
         options: ReleaseFileReadOptions,
     ) -> anyhow::Result<Releases> {

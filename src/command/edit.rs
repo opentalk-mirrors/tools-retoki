@@ -7,7 +7,9 @@ use anyhow::Result;
 use clap::Args;
 use owo_colors::OwoColorize;
 
-use crate::data::{read_release_file, write_releases_file, ReleaseFileReadOptions, StripReleases};
+use crate::data::{
+    read_release_file_with_options, write_releases_file, ReleaseFileReadOptions, StripReleases,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct EditArgs {
@@ -18,7 +20,7 @@ pub struct EditArgs {
 
 impl EditArgs {
     pub fn execute<R: AsRef<Path>>(self, release_file: R) -> Result<()> {
-        let raw_data = read_release_file(
+        let raw_data = read_release_file_with_options(
             &release_file,
             ReleaseFileReadOptions {
                 strip_prereleases: self.strip_prereleases.then_some(StripReleases::PreReleases),

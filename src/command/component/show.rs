@@ -27,7 +27,7 @@ impl ShowArgs {
         identifier: &ComponentIdentifier,
     ) -> Result<()> {
         let Self { format } = self;
-        let raw_data = read_release_file(&release_file, Default::default())?;
+        let raw_data = read_release_file(&release_file)?;
 
         let component = raw_data
             .components

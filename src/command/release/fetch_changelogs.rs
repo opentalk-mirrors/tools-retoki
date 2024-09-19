@@ -25,7 +25,7 @@ pub struct FetchChangelogsArgs {}
 
 impl FetchChangelogsArgs {
     pub fn execute<R: AsRef<Path>>(self, release_file: R, version: &Version) -> Result<()> {
-        let mut raw_data = read_release_file(&release_file, Default::default())?;
+        let mut raw_data = read_release_file(&release_file)?;
 
         let series_number = version.into();
         let series = raw_data

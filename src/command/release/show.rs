@@ -26,7 +26,7 @@ impl ShowArgs {
     pub fn execute<R: AsRef<Path>>(self, release_file: R, version: &Version) -> Result<()> {
         let Self { format } = self;
 
-        let raw_data = read_release_file(&release_file, Default::default())?;
+        let raw_data = read_release_file(&release_file)?;
 
         let series_number = version.into();
         let series = raw_data

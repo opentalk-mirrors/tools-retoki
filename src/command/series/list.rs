@@ -33,7 +33,7 @@ impl ListArgs {
 
         let date = date.unwrap_or_else(|| OffsetDateTime::now_utc().date());
 
-        let raw_data = read_release_file(release_file, Default::default())?;
+        let raw_data = read_release_file(release_file)?;
 
         #[derive(Debug, Serialize, Tabled)]
         struct SeriesInformation {

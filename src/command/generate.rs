@@ -12,7 +12,10 @@ use clap::Args;
 use tera::{Context, Tera};
 
 use crate::{
-    data::{read_release_file, ReleaseFileReadOptions, ReleaseSeriesCodenames, StripReleases},
+    data::{
+        read_release_file_with_options, ReleaseFileReadOptions, ReleaseSeriesCodenames,
+        StripReleases,
+    },
     release_metadata::ReleaseMetadata,
     template,
 };
@@ -61,7 +64,7 @@ impl GenerateArgs {
             StripReleases::ObsoletePreReleases
         };
 
-        let raw_data = read_release_file(
+        let raw_data = read_release_file_with_options(
             &release_file,
             ReleaseFileReadOptions {
                 strip_prereleases: Some(strip_releases),

@@ -23,9 +23,9 @@ impl CompareArgs {
     pub fn execute<R: AsRef<Path>>(self, release_file: R) -> Result<()> {
         let CompareArgs { target_file } = self;
 
-        let current_data = read_release_file(release_file, Default::default())?;
+        let current_data = read_release_file(release_file)?;
 
-        let other_data = read_release_file(target_file, Default::default())?;
+        let other_data = read_release_file(target_file)?;
 
         let current_versions: BTreeSet<Version> = current_data.all_product_versions();
         let other_versions: BTreeSet<Version> = other_data.all_product_versions();
