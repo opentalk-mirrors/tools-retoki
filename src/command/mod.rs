@@ -5,21 +5,21 @@
 use clap::Subcommand;
 use snafu::Whatever;
 
-use self::check_milestones::CheckMilestonesArgs;
+use self::ci::CiArgs;
 use crate::Config;
 
-mod check_milestones;
+mod ci;
 
 #[derive(Clone, Debug, Subcommand)]
 pub(crate) enum Command {
-    /// Check the milestones in the organization for due releases
-    CheckMilestones(CheckMilestonesArgs),
+    /// Run all tasks that should be executed in a CI run
+    Ci(CiArgs),
 }
 
 impl Command {
     pub(crate) fn run(&self, config: &Config) -> Result<(), Whatever> {
         match self {
-            Self::CheckMilestones(args) => args.run(config),
+            Self::Ci(args) => args.run(config),
         }
     }
 }

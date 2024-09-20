@@ -19,7 +19,7 @@ use crate::{
 };
 
 #[derive(Clone, Debug, Args)]
-pub(crate) struct CheckMilestonesArgs {
+pub(crate) struct CiArgs {
     #[arg(long)]
     faketime: Option<Timestamp>,
 }
@@ -34,7 +34,7 @@ impl<W: Write> Output for W {
     }
 }
 
-impl CheckMilestonesArgs {
+impl CiArgs {
     pub(crate) fn run(&self, config: &Config) -> Result<(), Whatever> {
         let gitlab_service = GitlabService::connect(
             config.gitlab_url.clone(),
@@ -121,7 +121,7 @@ mod tests {
     use pretty_assertions::assert_eq;
     use strip_ansi_escapes::strip_str;
 
-    use super::{CheckMilestonesArgs, Output};
+    use super::{CiArgs, Output};
     use crate::vcs_service::{
         Issue, IssueState, LinkedIssue, Milestone, MockVcsService, OverdueMilestone, Project,
     };
@@ -153,7 +153,7 @@ mod tests {
             .times(1)
             .return_once(|_, _| Ok(vec![]));
 
-        CheckMilestonesArgs::run_inner(&vcs_service_mock, at, "Release", &mut output).unwrap();
+        CiArgs::run_inner(&vcs_service_mock, at, "Release", &mut output).unwrap();
 
         assert_eq!(
             "\
@@ -186,7 +186,7 @@ Found 0 overdue milestones
                 }])
             });
 
-        CheckMilestonesArgs::run_inner(&vcs_service_mock, at, "Release", &mut output).unwrap();
+        CiArgs::run_inner(&vcs_service_mock, at, "Release", &mut output).unwrap();
 
         assert_eq!(
             "\
@@ -272,7 +272,7 @@ overdue since 2024-05-09T22:00:00Z
                 ])
             });
 
-        CheckMilestonesArgs::run_inner(&vcs_service_mock, at, "Release", &mut output).unwrap();
+        CiArgs::run_inner(&vcs_service_mock, at, "Release", &mut output).unwrap();
 
         assert_eq!(
             "\
