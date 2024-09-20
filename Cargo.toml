@@ -32,3 +32,7 @@ time = { version = "0.3.36", features = [
   "serde-well-known",
 ] }
 url = "2.5.2"
+
+[dev-dependencies]
+insta = { version = "1.40.0", features = ["glob", "yaml"] }
+tempfile = "3.12.0"

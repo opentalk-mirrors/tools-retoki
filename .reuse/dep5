@@ -9,5 +9,7 @@ Files:
  CHANGELOG.md
  renovate.json
  templates/**.md
+ tests/**/snapshots/*.snap
+ tests/README.md
 Copyright: OpenTalk GmbH <mail@opentalk.eu>
 License: EUPL-1.2
