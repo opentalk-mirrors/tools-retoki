@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use std::{fs::File, path::Path};
+use std::path::Path;
 
 use anyhow::{bail, Context, Result};
 use clap::Args;
@@ -13,9 +13,9 @@ use owo_colors::OwoColorize;
 use semver::Version;
 use url::Url;
 
-use crate::{
-    command::utils::write_releases_yml_file,
-    data::{self, Component, ComponentIdentifier, ComponentRelease, ComponentVersion},
+use crate::data::{
+    read_release_file, write_releases_file, Component, ComponentIdentifier, ComponentRelease,
+    ComponentVersion,
 };
 
 const GITLAB_TOKEN_ENV_VAR: &str = "GITLAB_TOKEN";
@@ -25,13 +25,7 @@ pub struct FetchChangelogsArgs {}
 
 impl FetchChangelogsArgs {
     pub fn execute<R: AsRef<Path>>(self, release_file: R, version: &Version) -> Result<()> {
-        let mut raw_data: data::Releases = {
-            let file = File::open(&release_file).context(format!(
-                "Couldn't open release file {:?}",
-                release_file.as_ref()
-            ))?;
-            serde_yaml::from_reader(file)?
-        };
+        let mut raw_data = read_release_file(&release_file)?;
 
         let series_number = version.into();
         let series = raw_data
@@ -43,9 +37,8 @@ impl FetchChangelogsArgs {
             .get(version)
             .with_context(|| format!("Release {version} not found in series {series_number}"))?;
 
-        let gitlab_token = std::env::var(GITLAB_TOKEN_ENV_VAR).context(format!(
-            "Environment varible {GITLAB_TOKEN_ENV_VAR} is not set"
-        ))?;
+        let gitlab_token = std::env::var(GITLAB_TOKEN_ENV_VAR)
+            .with_context(|| format!("Environment variable {GITLAB_TOKEN_ENV_VAR} is not set"))?;
 
         let mut errors = Vec::new();
         let mut overall = 0usize;
@@ -55,7 +48,7 @@ impl FetchChangelogsArgs {
             let component = raw_data
                 .components
                 .get_mut(&identifier)
-                .context(format!("Couldn't find component {:?}", identifier))?;
+                .with_context(|| format!("Couldn't find component {:?}", identifier))?;
             if let Err(e) = self.fetch_changelog(identifier, component, &version, &gitlab_token) {
                 errors.push(e);
             } else {
@@ -72,7 +65,7 @@ impl FetchChangelogsArgs {
             }
         }
 
-        write_releases_yml_file(&release_file, raw_data)?;
+        write_releases_file(&release_file, raw_data)?;
 
         println!();
         println!(
@@ -107,7 +100,7 @@ impl FetchChangelogsArgs {
         let gitlab_url: Url = gitlab_url.parse()?;
         let host = gitlab_url
             .host_str()
-            .context(format!("No host part found in url {gitlab_url:?}"))?;
+            .with_context(|| format!("No host part found in url {gitlab_url:?}"))?;
         let gitlab = Gitlab::new(host, token)?;
 
         let project_path = gitlab_url.path().trim_start_matches('/');

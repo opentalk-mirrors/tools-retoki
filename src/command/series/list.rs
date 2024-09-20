@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use std::{fs::File, path::Path};
+use std::path::Path;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::Args;
 use semver::Version;
 use serde::Serialize;
@@ -12,7 +12,7 @@ use time::{Date, OffsetDateTime};
 
 use crate::{
     command::utils::{parse_date, tabled_display_option},
-    data::{self, SeriesNumber},
+    data::{read_release_file, SeriesNumber},
     output_format::OutputFormat,
 };
 
@@ -33,11 +33,7 @@ impl ListArgs {
 
         let date = date.unwrap_or_else(|| OffsetDateTime::now_utc().date());
 
-        let file = File::open(&release_file).context(format!(
-            "Couldn't open release file {:?}",
-            release_file.as_ref()
-        ))?;
-        let raw_data: data::Releases = serde_yaml::from_reader(file)?;
+        let raw_data = read_release_file(release_file)?;
 
         #[derive(Debug, Serialize, Tabled)]
         struct SeriesInformation {

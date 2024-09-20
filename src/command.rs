@@ -24,13 +24,13 @@ pub enum Command {
     /// Generate the release information from a `releases.yml` file
     Generate(GenerateArgs),
 
-    /// Perform actions releated a release
+    /// Perform actions related to a release
     Release(ReleaseArgs),
 
-    /// Perform actions releated a release series
+    /// Perform actions related to a release series
     Series(SeriesArgs),
 
-    /// Perform actions releated a component
+    /// Perform actions related to a component
     Component(ComponentArgs),
 
     /// Edit a `releases.yml` file

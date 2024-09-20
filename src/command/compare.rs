@@ -3,15 +3,14 @@
 
 use std::{
     collections::BTreeSet,
-    fs::File,
     path::{Path, PathBuf},
 };
 
-use anyhow::{Context as _, Result};
+use anyhow::Result;
 use clap::Args;
 use semver::Version;
 
-use crate::data;
+use crate::data::read_release_file;
 
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct CompareArgs {
@@ -24,23 +23,9 @@ impl CompareArgs {
     pub fn execute<R: AsRef<Path>>(self, release_file: R) -> Result<()> {
         let CompareArgs { target_file } = self;
 
-        let current_file = File::open(&release_file).context(format!(
-            "Couldn't open release file {:?}",
-            release_file.as_ref()
-        ))?;
-        let current_data: data::Releases =
-            serde_yaml::from_reader::<_, data::Releases>(current_file)?;
+        let current_data = read_release_file(release_file)?;
 
-        let other_reader: Box<dyn std::io::Read> = if target_file.as_os_str() == "-" {
-            Box::new(std::io::stdin().lock())
-        } else {
-            Box::new(
-                File::open(&target_file)
-                    .context(format!("Couldn't open release file {:?}", target_file))?,
-            )
-        };
-        let other_data: data::Releases =
-            serde_yaml::from_reader::<_, data::Releases>(other_reader)?;
+        let other_data = read_release_file(target_file)?;
 
         let current_versions: BTreeSet<Version> = current_data.all_product_versions();
         let other_versions: BTreeSet<Version> = other_data.all_product_versions();

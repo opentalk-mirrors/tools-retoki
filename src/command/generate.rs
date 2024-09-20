@@ -12,7 +12,10 @@ use clap::Args;
 use tera::{Context, Tera};
 
 use crate::{
-    data::{self, StripReleases},
+    data::{
+        read_release_file_with_options, ReleaseFileReadOptions, ReleaseSeriesCodenames,
+        StripReleases,
+    },
     release_metadata::ReleaseMetadata,
     template,
 };
@@ -55,22 +58,22 @@ impl GenerateArgs {
         tera.add_raw_template("release.md", include_str!("../../templates/release.md"))?;
         tera.add_raw_template("component.md", include_str!("../../templates/component.md"))?;
 
-        let file = File::open(&release_file).context(format!(
-            "Couldn't open release file {:?}",
-            release_file.as_ref()
-        ))?;
         let strip_releases = if self.without_prereleases {
             StripReleases::PreReleases
         } else {
             StripReleases::ObsoletePreReleases
         };
 
-        let mut raw_data: data::Releases = serde_yaml::from_reader::<_, data::Releases>(file)?
-            .with_releases_stripped(strip_releases);
-
-        if self.without_release_series_codenames {
-            raw_data.strip_release_series_codenames();
-        }
+        let raw_data = read_release_file_with_options(
+            &release_file,
+            ReleaseFileReadOptions {
+                strip_prereleases: Some(strip_releases),
+                release_series_codenames: self
+                    .without_release_series_codenames
+                    .then_some(ReleaseSeriesCodenames::Strip)
+                    .unwrap_or_default(),
+            },
+        )?;
 
         let target_dir = create_and_canonicalize_dir(self.target_dir)?;
         let components_dir = create_and_canonicalize_dir(target_dir.join("components"))?;
@@ -85,7 +88,7 @@ impl GenerateArgs {
             let full_path = target_dir.join(relative_path);
             println!("Writing file {full_path:?}");
             let mut file = File::create(&full_path)
-                .context(format!("Couldn't create file {:?}", full_path))?;
+                .with_context(|| format!("Couldn't create file {:?}", full_path))?;
             write!(file, "{}", rendered)?;
         }
 
@@ -118,14 +121,14 @@ impl GenerateArgs {
                 template_data.show_gitlab_release_links = !self.without_gitlab_release_links;
                 let rendered =
                     tera.render("release.md", &Context::from_serialize(&template_data)?)?;
-                let release_dir = target_dir.join(&format!("{version}"));
+                let release_dir = target_dir.join(format!("{version}"));
                 std::fs::create_dir_all(target_dir.join(&release_dir))?;
 
                 {
                     let full_path = release_dir.join("README.md");
                     println!("Writing file {full_path:?}");
                     let mut file = File::create(&full_path)
-                        .context(format!("Couldn't create file {:?}", full_path))?;
+                        .with_context(|| format!("Couldn't create file {:?}", full_path))?;
                     write!(file, "{}", rendered)?;
                 }
 
@@ -135,7 +138,7 @@ impl GenerateArgs {
                     let full_path = release_dir.join("metadata.json");
                     println!("Writing file {full_path:?}");
                     let file = File::create(&full_path)
-                        .context(format!("Couldn't create file {:?}", full_path))?;
+                        .with_context(|| format!("Couldn't create file {:?}", full_path))?;
                     serde_json::to_writer_pretty(file, &release_metadata)?;
                 }
 
@@ -155,11 +158,11 @@ impl GenerateArgs {
 
             let rendered =
                 tera.render("component.md", &Context::from_serialize(&template_data)?)?;
-            let relative_path = components_dir.join(&format!("{}.md", component.0));
+            let relative_path = components_dir.join(format!("{}.md", component.0));
             let full_path = target_dir.join(&relative_path);
             println!("Writing file {full_path:?}");
             let mut file = File::create(&full_path)
-                .context(format!("Couldn't create file: {:?}", full_path))?;
+                .with_context(|| format!("Couldn't create file: {:?}", full_path))?;
             write!(file, "{}", rendered)?;
         }
 
@@ -169,7 +172,7 @@ impl GenerateArgs {
 
 fn create_and_canonicalize_dir<P: AsRef<Path>>(path: P) -> Result<PathBuf> {
     let path = path.as_ref();
-    std::fs::create_dir_all(path).context(format!("Couldn't create dir {path:?}"))?;
+    std::fs::create_dir_all(path).with_context(|| format!("Couldn't create dir {path:?}"))?;
     path.canonicalize()
         .with_context(|| format!("Couldn't canonicalize directory path {path:?}"))
 }
