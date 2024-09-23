@@ -22,6 +22,7 @@ pub enum StripReleases {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Releases {
     pub product_name: ProductName,
     #[serde(skip_serializing_if = "Option::is_none")]

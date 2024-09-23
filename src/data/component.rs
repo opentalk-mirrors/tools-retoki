@@ -14,6 +14,7 @@ use super::{
 use crate::helper::releases::is_obsolete_prerelease;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Component {
     pub name: ComponentName,
 

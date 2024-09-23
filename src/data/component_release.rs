@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use time::Date;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ComponentRelease {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub date: Option<Date>,

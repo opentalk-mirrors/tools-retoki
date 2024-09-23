@@ -13,6 +13,7 @@ use super::{ComponentRelease, ReleaseComponent};
 use crate::data::{self, ComponentCategory, ComponentCategoryIdentifier, ComponentIdentifier};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Release {
     pub version: Version,
     pub previous: Option<Version>,

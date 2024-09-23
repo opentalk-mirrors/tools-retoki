@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::data::{self, ComponentIdentifier, ComponentName};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Component {
     pub identifier: ComponentIdentifier,
     pub name: ComponentName,

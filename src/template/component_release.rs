@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::data::{self, ComponentVersion};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ComponentRelease {
     pub version: ComponentVersion,
     pub prefixed_version: String,

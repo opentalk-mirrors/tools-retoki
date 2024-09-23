@@ -12,6 +12,7 @@ use crate::data::{
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ReleaseSeries {
     pub version: SeriesNumber,
     pub codename: Option<SeriesCodename>,

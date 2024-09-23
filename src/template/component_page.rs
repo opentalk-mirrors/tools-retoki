@@ -7,6 +7,7 @@ use super::ComponentRelease;
 use crate::data::{self, ComponentIdentifier, ComponentName, ProductName};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ComponentPage {
     pub product_name: ProductName,
     pub component_name: ComponentName,
