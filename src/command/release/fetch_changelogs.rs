@@ -18,10 +18,12 @@ use crate::data::{
     ComponentVersion,
 };
 
-const GITLAB_TOKEN_ENV_VAR: &str = "GITLAB_TOKEN";
-
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
-pub struct FetchChangelogsArgs {}
+pub struct FetchChangelogsArgs {
+    /// The GitLab access token. This token requires at least `api:read` capabilities.
+    #[clap(long, env = "GITLAB_TOKEN")]
+    pub gitlab_token: String,
+}
 
 impl FetchChangelogsArgs {
     pub fn execute<R: AsRef<Path>>(self, release_file: R, version: &Version) -> Result<()> {
@@ -37,9 +39,6 @@ impl FetchChangelogsArgs {
             .get(version)
             .with_context(|| format!("Release {version} not found in series {series_number}"))?;
 
-        let gitlab_token = std::env::var(GITLAB_TOKEN_ENV_VAR)
-            .with_context(|| format!("Environment variable {GITLAB_TOKEN_ENV_VAR} is not set"))?;
-
         let mut errors = Vec::new();
         let mut overall = 0usize;
         let mut successful = 0usize;
@@ -49,7 +48,9 @@ impl FetchChangelogsArgs {
                 .components
                 .get_mut(&identifier)
                 .with_context(|| format!("Couldn't find component {:?}", identifier))?;
-            if let Err(e) = self.fetch_changelog(identifier, component, &version, &gitlab_token) {
+            if let Err(e) =
+                self.fetch_changelog(identifier, component, &version, &self.gitlab_token)
+            {
                 errors.push(e);
             } else {
                 successful += 1;
