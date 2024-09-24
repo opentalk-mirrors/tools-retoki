@@ -3,6 +3,7 @@
 
 use std::{fs, path::Path};
 
+mod fetch_changelog;
 mod generate;
 
 /// Execute the `test_fn` for all files in `base_dir`.
