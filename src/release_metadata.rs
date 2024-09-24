@@ -13,6 +13,7 @@ use crate::data::{self, ComponentIdentifier, SeriesNumber};
 mod release_component_metadata;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ReleaseMetadata {
     pub version: Version,
     pub components: BTreeMap<ComponentIdentifier, ReleaseComponentMetadata>,

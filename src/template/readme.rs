@@ -8,6 +8,7 @@ use super::{Component, EmptyReleaseComponent, ReleaseSeries};
 use crate::data::{self, ProductName};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Readme {
     pub product_name: ProductName,
     pub releases_page_header: Option<String>,

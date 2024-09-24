@@ -73,7 +73,8 @@ impl GenerateArgs {
                     .then_some(ReleaseSeriesCodenames::Strip)
                     .unwrap_or_default(),
             },
-        )?;
+        )
+        .context("Failed to read release configuration")?;
 
         let target_dir = create_and_canonicalize_dir(self.target_dir)?;
         let components_dir = create_and_canonicalize_dir(target_dir.join("components"))?;

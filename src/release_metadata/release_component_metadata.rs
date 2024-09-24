@@ -7,6 +7,7 @@ use time::Date;
 use crate::data::ComponentVersion;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ReleaseComponentMetadata {
     pub version: ComponentVersion,
 

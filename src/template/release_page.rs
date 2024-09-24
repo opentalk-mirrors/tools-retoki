@@ -10,6 +10,7 @@ use super::{Release, ReleaseSeries};
 use crate::data::{self, ProductName, SeriesNumber};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ReleasePage {
     pub product_name: ProductName,
 

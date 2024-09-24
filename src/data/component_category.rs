@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use super::ComponentCategoryName;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ComponentCategory {
     pub name: ComponentCategoryName,
 }
