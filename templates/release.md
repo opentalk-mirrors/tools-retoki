@@ -34,7 +34,8 @@ title: {{ product_name }} v{{ version }}
 {% for component in components %}
 {%- if component.identifier in component_releases %}
 ---
-{% for component_release in component_releases[component.identifier] | reverse %}
+{%- for component_release in component_releases[component.identifier] | reverse %}
+
 ## {{ component.identifier }} {{ component_release.prefixed_version }}
 {% if component_release.changelog %}
 {{ component_release.changelog }}
