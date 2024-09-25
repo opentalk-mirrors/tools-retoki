@@ -24,7 +24,6 @@ fn test_generate_with_public_profile() {
         without_prereleases: false,
         without_readme_gantt_chart: true,
         without_gitlab_release_links: false,
-        without_release_series_codenames: true,
         with_release_metadata_files: true,
         with_md_header: true,
         profile: ProfileArgs {
@@ -70,7 +69,6 @@ fn test_generate_with_private_profile() {
         without_prereleases: false,
         without_readme_gantt_chart: true,
         without_gitlab_release_links: false,
-        without_release_series_codenames: true,
         with_release_metadata_files: true,
         with_md_header: true,
         profile: ProfileArgs {
@@ -110,7 +108,6 @@ fn test_generate_with_invalid_profile() {
         without_prereleases: false,
         without_readme_gantt_chart: true,
         without_gitlab_release_links: false,
-        without_release_series_codenames: true,
         with_release_metadata_files: true,
         with_md_header: true,
         profile: ProfileArgs {

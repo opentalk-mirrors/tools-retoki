@@ -50,12 +50,6 @@ impl Releases {
         product_versions
     }
 
-    pub fn strip_release_series_codenames(&mut self) {
-        self.series.values_mut().for_each(|series| {
-            series.codename.take();
-        });
-    }
-
     pub fn with_releases_stripped(self, strip_releases: StripReleases) -> Self {
         Self {
             series: self

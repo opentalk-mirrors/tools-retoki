@@ -14,7 +14,6 @@ mod profiles;
 mod release;
 mod release_series;
 mod releases;
-mod series_codename;
 mod series_number;
 
 pub use component::Component;
@@ -27,14 +26,13 @@ pub use component_release::ComponentRelease;
 pub use component_version::ComponentVersion;
 pub use file::{
     read_profile_file, read_release_file, read_release_file_with_options, write_releases_file,
-    ReleaseFileReadOptions, ReleaseSeriesCodenames,
+    ReleaseFileReadOptions,
 };
 pub use product_name::ProductName;
 pub use profiles::{ComponentProfile, Profile};
 pub use release::Release;
 pub use release_series::ReleaseSeries;
 pub use releases::{Releases, StripReleases};
-pub use series_codename::SeriesCodename;
 pub use series_number::SeriesNumber;
 
 mod file {
@@ -49,28 +47,9 @@ mod file {
     use super::profiles::Profile;
     use crate::data::{Releases, StripReleases};
 
-    /// Configures whether the release series codenames are striped or kept.
-    #[derive(Debug, Default, PartialEq, Eq)]
-    pub enum ReleaseSeriesCodenames {
-        #[default]
-        Keep,
-        Strip,
-    }
-
-    impl ReleaseSeriesCodenames {
-        /// Returns `true` if the release series codenames is [`Strip`].
-        ///
-        /// [`Strip`]: ReleaseSeriesCodenames::Strip
-        #[must_use]
-        pub fn is_strip(&self) -> bool {
-            matches!(self, Self::Strip)
-        }
-    }
-
     #[derive(Debug, Default)]
     pub struct ReleaseFileReadOptions {
         pub strip_prereleases: Option<StripReleases>,
-        pub release_series_codenames: ReleaseSeriesCodenames,
     }
 
     pub fn read_release_file(release_file: impl AsRef<Path>) -> anyhow::Result<Releases> {
@@ -93,10 +72,6 @@ mod file {
 
         if let Some(strip_prereleases) = options.strip_prereleases {
             data = data.with_releases_stripped(strip_prereleases);
-        }
-
-        if options.release_series_codenames.is_strip() {
-            data.strip_release_series_codenames();
         }
 
         Ok(data)
