@@ -2,18 +2,18 @@
 # SPDX-License-Identifier: EUPL-1.2
 
 [package]
+description = "release toolkit - tools for bundling product releases"
+edition = "2021"
+license = "EUPL-1.2"
 name = "retoki"
 version = "0.7.0"
-edition = "2021"
-description = "release toolkit - tools for bundling product releases"
-license = "EUPL-1.2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 anyhow = "1.0.86"
 clap = { version = "4.5.7", features = ["derive", "env"] }
-derive_more = { version = "1.0.0", features = ["from", "into", "display"] }
+derive_more = { version = "1.0.0", features = ["display", "from", "into"] }
 gitlab = "0.1608.0"
 indexmap = { version = "2.2.6", features = ["serde"] }
 owo-colors = "4.0.0"
@@ -23,5 +23,10 @@ serde_json = { version = "1.0.118" }
 serde_yaml = "0.9.34"
 tabled = "0.16.0"
 tera = "1.20.0"
-time = { version = "0.3.36", features = ["serde", "macros", "serde-human-readable", "serde-well-known"] }
+time = { version = "0.3.36", features = [
+  "macros",
+  "serde",
+  "serde-human-readable",
+  "serde-well-known",
+] }
 url = "2.5.2"

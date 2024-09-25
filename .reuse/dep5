@@ -4,10 +4,10 @@ Upstream-Name: retoki
 Upstream-Contact: OpenTalk GmbH <mail@opentalk.eu>
 
 Files:
+ .commitlintrc.json
  Cargo.lock
  CHANGELOG.md
- templates/**.md
  renovate.json
+ templates/**.md
 Copyright: OpenTalk GmbH <mail@opentalk.eu>
 License: EUPL-1.2
-
