@@ -8,7 +8,8 @@ use clap::Args;
 use owo_colors::OwoColorize;
 
 use crate::data::{
-    read_release_file_with_options, write_releases_file, ReleaseFileReadOptions, StripReleases,
+    read_release_file_with_options, write_releases_file, ReleaseFileReadOptions, Releases,
+    StripReleases,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
@@ -16,17 +17,25 @@ pub struct EditArgs {
     /// Strip prereleases from the `releases.yml` file
     #[clap(long)]
     pub strip_prereleases: bool,
+
+    /// Strip all changelogs from the `releases.yml` file
+    #[clap(long)]
+    pub strip_changelogs: bool,
 }
 
 impl EditArgs {
     pub fn execute<R: AsRef<Path>>(self, release_file: R) -> Result<()> {
-        let raw_data = read_release_file_with_options(
+        let mut raw_data = read_release_file_with_options(
             &release_file,
             ReleaseFileReadOptions {
                 strip_prereleases: self.strip_prereleases.then_some(StripReleases::PreReleases),
                 ..Default::default()
             },
         )?;
+
+        if self.strip_changelogs {
+            strip_changelogs(&mut raw_data);
+        }
 
         write_releases_file(&release_file, raw_data)?;
 
@@ -38,5 +47,13 @@ impl EditArgs {
         );
 
         Ok(())
+    }
+}
+
+fn strip_changelogs(releases: &mut Releases) {
+    for (_, comp) in &mut releases.components {
+        for (_, release) in &mut comp.releases {
+            release.changelog.take();
+        }
     }
 }
