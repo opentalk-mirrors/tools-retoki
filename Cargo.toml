@@ -16,7 +16,9 @@ clap = { version = "4.5.7", features = ["derive", "env"] }
 derive_more = { version = "1.0.0", features = ["display", "from", "into"] }
 gitlab = "0.1608.0"
 indexmap = { version = "2.2.6", features = ["serde"] }
+indicatif = { version = "0.17.8", features = ["rayon"] }
 owo-colors = "4.0.0"
+rayon = "1.10.0"
 semver = { version = "1.0.23", features = ["serde"] }
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = { version = "1.0.118" }
