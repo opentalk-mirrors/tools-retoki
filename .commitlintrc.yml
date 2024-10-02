@@ -1,4 +1,6 @@
 # SPDX-FileCopyrightText: OpenTalk Team <mail@opentalk.eu>
 # SPDX-License-Identifier: EUPL-1.2
 
-/target
+---
+extends:
+  - '@commitlint/config-conventional'
