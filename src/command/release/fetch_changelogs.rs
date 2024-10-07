@@ -9,7 +9,9 @@ use gitlab::{
     api::{projects, Query},
     Gitlab, ReleaseTag,
 };
+use indicatif::{MultiProgress, ProgressBar};
 use owo_colors::OwoColorize;
+use rayon::iter::{IntoParallelIterator as _, ParallelIterator};
 use semver::Version;
 use url::Url;
 
@@ -39,32 +41,41 @@ impl FetchChangelogsArgs {
             .get(version)
             .with_context(|| format!("Release {version} not found in series {series_number}"))?;
 
-        let mut errors = Vec::new();
-        let mut overall = 0usize;
-        let mut successful = 0usize;
-        for (identifier, version) in release.components.clone() {
-            overall += 1;
-            let component = raw_data
-                .components
-                .get_mut(&identifier)
-                .with_context(|| format!("Couldn't find component {:?}", identifier))?;
-            if let Err(e) =
-                self.fetch_changelog(identifier, component, &version, &self.gitlab_token)
-            {
-                errors.push(e);
-            } else {
-                successful += 1;
-            };
-        }
+        let multi_bar = MultiProgress::new();
+        let release_components: Vec<_> = raw_data
+            .components
+            .iter_mut()
+            .filter_map(|(ident, comp)| {
+                release.components.get(ident).map(|comp_version| {
+                    let bar = multi_bar.add(ProgressBar::new_spinner());
+                    (ident, comp_version, comp, bar)
+                })
+            })
+            .collect();
+        multi_bar.set_move_cursor(true);
 
-        println!();
-        println!("Fetched {successful}/{overall} projects successfully");
-        if !errors.is_empty() {
-            eprintln!();
-            for error in errors {
-                eprintln!("{}", error.to_string().red());
+        let res: Vec<_> = release_components
+            .into_par_iter()
+            .map(|(identifier, comp_version, component, bar)| {
+                self.fetch_changelog(
+                    identifier.clone(),
+                    component,
+                    comp_version,
+                    &self.gitlab_token,
+                    bar,
+                )
+            })
+            .collect();
+
+        // Collect errors and count successes
+        let successful = res.into_iter().fold(0usize, |mut count, item| {
+            if let Err(e) = item {
+                eprintln!("{}", e.to_string().red());
+            } else {
+                count += 1;
             }
-        }
+            count
+        });
 
         write_releases_file(&release_file, raw_data)?;
 
@@ -84,17 +95,21 @@ impl FetchChangelogsArgs {
         component: &mut Component,
         version: &ComponentVersion,
         token: &str,
+        bar: ProgressBar,
     ) -> Result<()> {
-        print!("Looking up release {version} of {component_identifier}…");
-
+        bar.set_message(format!(
+            "Looking up release {version} of {component_identifier}…"
+        ));
         let Some(gitlab_url) = &component.gitlab_url else {
-            println!(" no GitLab URL, {}", "SKIPPING".yellow());
             let component_release = ComponentRelease {
                 date: None,
                 changelog: None,
             };
             component.insert_release(version.clone(), component_release);
-
+            bar.finish_with_message(format!(
+                "{component_identifier} has no GitLab URL, {}",
+                "SKIPPING".yellow()
+            ));
             return Ok(());
         };
 
@@ -110,6 +125,7 @@ impl FetchChangelogsArgs {
             .project(project_path)
             .build()?;
 
+        bar.tick();
         let releases: Vec<ReleaseTag> = endpoint.query(&gitlab)?;
 
         let release_tag = version.prefixed();
@@ -118,7 +134,10 @@ impl FetchChangelogsArgs {
             description,
         }) = releases.into_iter().find(|r| r.tag_name == release_tag)
         {
-            println!(" {}", "OK".green());
+            bar.finish_with_message(format!(
+                "{} - Changelog for {component_identifier} v{version} fetched",
+                "OK".green()
+            ));
             let changelog = if description.is_empty() {
                 None
             } else {
@@ -131,7 +150,10 @@ impl FetchChangelogsArgs {
             };
             component.insert_release(version.clone(), component_release);
         } else {
-            println!(" {}", "FAIL".red());
+            bar.finish_with_message(format!(
+                "{} - Changelog for {component_identifier} v{version} not found",
+                "FAIL".red()
+            ));
             bail!("Release {version} not found for {component_identifier}");
         }
 
