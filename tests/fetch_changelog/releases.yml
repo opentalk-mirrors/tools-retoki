@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
+# SPDX-License-Identifier: EUPL-1.2
+
+---
+
+product_name: OpenTalk
+releases_page_header: |
+  ## Release Announcements
+series:
+  '24.8':
+    end_of_life: 2024-09-19
+    releases:
+      24.8.0:
+        date: 2024-07-19
+        components:
+          controller: 0.16.0
+components:
+  controller:
+    name: OpenTalk Controller Community Edition
+    category: services
+    releases: {}
+component_categories:
+  services:
+    name: Services

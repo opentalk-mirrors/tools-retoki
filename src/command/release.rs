@@ -10,6 +10,8 @@ use semver::Version;
 mod fetch_changelogs;
 mod show;
 
+pub use fetch_changelogs::FetchChangelogsArgs;
+
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct ReleaseArgs {
     /// The release version
@@ -33,7 +35,7 @@ pub enum ReleaseCommand {
     /// Fetch all changelog entries for the component releases of a product release
     ///
     /// Requires the GITLAB_TOKEN environment variable to be set
-    FetchChangelogs(fetch_changelogs::FetchChangelogsArgs),
+    FetchChangelogs(FetchChangelogsArgs),
 }
 
 impl ReleaseCommand {

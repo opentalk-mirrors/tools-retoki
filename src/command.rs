@@ -11,13 +11,13 @@ use self::{
     release::ReleaseArgs, series::SeriesArgs,
 };
 
-mod compare;
-mod component;
-mod edit;
-mod generate;
-mod release;
-mod series;
-mod utils;
+pub mod compare;
+pub mod component;
+pub mod edit;
+pub mod generate;
+pub mod release;
+pub mod series;
+pub mod utils;
 
 #[derive(Clone, Debug, PartialEq, Eq, Subcommand)]
 pub enum Command {
