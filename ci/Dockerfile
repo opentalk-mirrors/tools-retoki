@@ -17,6 +17,6 @@ RUN apt update \
     && apt install -y git \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /relbo/target/release/relbo /usr/opt
+COPY --from=builder /relbo/target/release/relbo /usr/local/bin/relbo
 
-ENTRYPOINT [ "/opt/relbo" ]
+ENTRYPOINT [ "/usr/local/bin/relbo" ]
