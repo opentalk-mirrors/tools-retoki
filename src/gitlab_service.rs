@@ -82,7 +82,7 @@ impl VcsService for GitlabService {
         milestone: &str,
         label: &str,
     ) -> Result<Vec<vcs_service::Issue>, Whatever> {
-        let endpoint = Issues::builder()
+        let endpoint = Issues::builder(&self.group)
             .milestone(Some(milestone))
             .label(Some(label))
             .state(Some(IssueState::Opened))
@@ -170,6 +170,8 @@ impl<'a> Endpoint for GroupMilestones<'a> {
 
 #[derive(Debug, Builder, Clone)]
 struct Issues<'a> {
+    group: &'a str,
+
     /// Filter issues based on milestone
     #[builder(default)]
     milestone: Option<&'a str>,
@@ -185,8 +187,10 @@ struct Issues<'a> {
 
 impl<'a> Issues<'a> {
     /// Create a builder for the endpoint.
-    pub fn builder() -> IssuesBuilder<'a> {
-        IssuesBuilder::default()
+    pub fn builder(group: &'a str) -> IssuesBuilder<'a> {
+        let mut builder = IssuesBuilder::default();
+        let _ = builder.group(group);
+        builder
     }
 }
 
@@ -196,7 +200,7 @@ impl<'a> Endpoint for Issues<'a> {
     }
 
     fn endpoint(&self) -> Cow<'static, str> {
-        "issues".into()
+        format!("groups/{}/issues", urlencoding::encode(self.group)).into()
     }
 
     fn parameters(&self) -> QueryParams {
