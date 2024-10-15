@@ -8,7 +8,7 @@ name = "relbo"
 version = "0.1.0"
 
 [dependencies]
-clap = { version = "4.5.13", features = ["derive"] }
+clap = { version = "4.5.13", features = ["derive", "env"] }
 derive_builder = "0.20.0"
 figment = { version = "0.10.19", features = ["env", "toml"] }
 gitlab = "0.1702.0"
