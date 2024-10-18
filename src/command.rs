@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
-use clap::Subcommand;
+use clap::{Args, Subcommand};
 
 use self::{
     compare::CompareArgs, component::ComponentArgs, edit::EditArgs, generate::GenerateArgs,
@@ -66,4 +66,18 @@ impl Command {
             Command::Compare(args) => args.execute(release_file),
         }
     }
+}
+
+/// Arguments that are shared by all commands
+#[derive(Clone, Debug, PartialEq, Eq, Args)]
+pub struct ProfileArgs {
+    /// The name of the profile that should be used for the release yaml
+    #[clap(short = 'p', long = "profile")]
+    pub profile: String,
+
+    /// The path to the directory containing the profile configurations. Defaults
+    /// to the `retoki-profiles` folder which is expected in the same directory as the
+    /// `releases.yml`
+    #[clap(long = "profile-path")]
+    pub profile_path: Option<PathBuf>,
 }

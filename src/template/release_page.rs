@@ -32,8 +32,10 @@ pub struct ReleasePage {
 }
 
 impl ReleasePage {
+    #[allow(clippy::too_many_arguments)]
     pub fn from_data_release(
-        data: &data::Releases,
+        releases: &data::Releases,
+        profile: &data::Profile,
         version: Version,
         previous: Option<(Version, &data::Release)>,
         next: Option<(Version, &data::Release)>,
@@ -47,7 +49,11 @@ impl ReleasePage {
             .as_ref()
             .map(|(k, v)| (k.clone(), (*v).clone()))
             .or_else(|| {
-                let previous_series = data.series.iter().rev().find(|(k, _)| **k < series_number);
+                let previous_series = releases
+                    .series
+                    .iter()
+                    .rev()
+                    .find(|(k, _)| **k < series_number);
                 let releases = previous_series
                     .map(|s| s.1.releases.clone())
                     .unwrap_or_default();
@@ -59,7 +65,7 @@ impl ReleasePage {
                     .map(|(k, v)| (k.clone(), v.clone()))
             });
 
-        let series = data
+        let series = releases
             .series
             .get(&series_number)
             .with_context(|| format!("Couldn't find release series {series_number:?}."))?;
@@ -69,12 +75,13 @@ impl ReleasePage {
         })?;
 
         Ok(Self {
-            product_name: data.product_name.clone(),
+            product_name: releases.product_name.clone(),
             series: ReleaseSeries::from_data_release_series(
                 series_number,
                 series,
-                &data.components,
-                &data.component_categories,
+                &releases.components,
+                &profile.components,
+                &releases.component_categories,
             )?,
             release: Release::from_data_release(
                 version,
@@ -83,8 +90,9 @@ impl ReleasePage {
                 next,
                 end_date,
                 release,
-                &data.components,
-                &data.component_categories,
+                &releases.components,
+                &profile.components,
+                &releases.component_categories,
             )?,
             space: " ".to_string(),
             show_gitlab_release_links: true,

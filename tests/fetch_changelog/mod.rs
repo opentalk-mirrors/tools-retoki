@@ -6,7 +6,7 @@ use std::fs;
 use insta::{assert_debug_snapshot, assert_snapshot};
 use retoki::command::{
     release::{FetchChangelogsArgs, ReleaseArgs, ReleaseCommand},
-    Command,
+    Command, ProfileArgs,
 };
 use tempfile::tempdir_in;
 
@@ -19,7 +19,7 @@ use crate::for_all_files;
 ///     * only the version information is added to the component
 /// 4. ensure the files have the expected output
 #[test]
-fn test_fetch_changelog() {
+fn test_fetch_changelog_with_public_profile() {
     // SETUP: Ensure result directory exists, create a temporary directory, copy
     //        release.yml since it will be changed (changelog added by retoki)
     let _ = fs::create_dir("tests/test-result");
@@ -33,6 +33,14 @@ fn test_fetch_changelog() {
         version: "24.8.0".parse().expect("Must be a valid version"),
         command: ReleaseCommand::FetchChangelogs(FetchChangelogsArgs {
             gitlab_token: "Dummy".to_owned(),
+            profile: ProfileArgs {
+                profile: "public".to_owned(),
+                profile_path: Some(
+                    "tests/fetch_changelog/retoki-profiles"
+                        .parse()
+                        .expect("Must be valid path"),
+                ),
+            },
         }),
     });
     command.execute(&tmp_release_yml).unwrap();

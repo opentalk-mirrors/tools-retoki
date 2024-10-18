@@ -9,7 +9,8 @@ use serde::Serialize;
 use tabled::Tabled;
 
 use crate::{
-    data::{read_release_file, ComponentIdentifier, ComponentName},
+    command::ProfileArgs,
+    data::{read_profile_file, read_release_file, ComponentIdentifier, ComponentName},
     output_format::OutputFormat,
 };
 
@@ -18,6 +19,9 @@ pub struct ShowArgs {
     /// The format in which to print the information
     #[clap(long, default_value = "table")]
     format: OutputFormat,
+
+    #[clap(flatten)]
+    profile: ProfileArgs,
 }
 
 impl ShowArgs {
@@ -26,14 +30,24 @@ impl ShowArgs {
         release_file: R,
         identifier: &ComponentIdentifier,
     ) -> Result<()> {
-        let Self { format } = self;
-        let raw_data = read_release_file(&release_file)?;
+        let Self { format, profile } = self;
+        let releases = read_release_file(&release_file)?;
+        let profile = read_profile_file(
+            &release_file,
+            &profile.profile,
+            profile.profile_path.as_deref(),
+        )?;
 
-        let component = raw_data
+        let component = releases
             .components
             .get(identifier)
             .with_context(|| format!("Component {identifier} not found"))?;
-
+        let component_profile = profile.components.get(identifier).with_context(|| {
+            format!(
+                "Component {identifier} not found in profile {}",
+                profile.profile_name
+            )
+        })?;
         #[derive(Debug, Serialize, Tabled)]
         struct ComponentInformation<'a> {
             #[tabled(rename = "Version")]
@@ -55,8 +69,8 @@ impl ShowArgs {
 
         let info = ComponentInformation {
             name: &component.name,
-            gitlab_url: &component.gitlab_url,
-            container_base_url: &component.container_base_url,
+            gitlab_url: &component_profile.gitlab_url,
+            container_base_url: &component_profile.container_base_url,
         };
         format.output(&info)?;
 

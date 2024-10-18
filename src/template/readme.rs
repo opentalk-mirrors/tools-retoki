@@ -1,11 +1,11 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
 use super::{Component, EmptyReleaseComponent, ReleaseSeries};
-use crate::data::{self, ProductName};
+use crate::data::{self, ProductName, Profile};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -33,7 +33,7 @@ pub struct Readme {
 }
 
 impl Readme {
-    pub fn from_data_releases(releases: &data::Releases) -> Result<Self> {
+    pub fn from_data_releases(releases: &data::Releases, profile: &Profile) -> Result<Self> {
         Ok(Self {
             product_name: releases.product_name.clone(),
             releases_page_header: releases.releases_page_header.clone(),
@@ -45,6 +45,7 @@ impl Readme {
                         version.clone(),
                         series,
                         &releases.components,
+                        &profile.components,
                         &releases.component_categories,
                     )
                 })
@@ -53,9 +54,19 @@ impl Readme {
                 .components
                 .iter()
                 .map(|(identifier, component)| {
-                    Component::from_data_component(identifier.clone(), component)
+                    let profile = profile.components.get(identifier).with_context(|| {
+                        format!(
+                            "Missing `{}` component in `{}` profile",
+                            identifier, profile.profile_name
+                        )
+                    })?;
+                    Ok(Component::from_data_component(
+                        identifier.clone(),
+                        component,
+                        profile,
+                    ))
                 })
-                .collect(),
+                .collect::<anyhow::Result<Vec<_>>>()?,
             space: " ".to_string(),
             empty_release_component: EmptyReleaseComponent::default(),
             show_gantt_chart: true,

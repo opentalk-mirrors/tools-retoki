@@ -40,7 +40,6 @@ component_categories:
 components:
   web-frontend:
     name: Web-Frontend
-    gitlab_url: https://git.opentalk.dev/opentalk/frontend/web/web-app
     category: frontend
     releases:
       1.17.2:
@@ -63,7 +62,6 @@ components:
           ### New Features
   controller:
     name: OpenTalk Controller Community Edition
-    gitlab_url: https://git.opentalk.dev/opentalk/backend/services/controller
     category: services
     releases:
       0.16.1:

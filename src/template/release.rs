@@ -36,6 +36,7 @@ impl Release {
         end_date: Date,
         release: &data::Release,
         components: &IndexMap<ComponentIdentifier, data::Component>,
+        component_profiles: &IndexMap<ComponentIdentifier, data::ComponentProfile>,
         component_categories: &IndexMap<ComponentCategoryIdentifier, ComponentCategory>,
     ) -> Result<Self> {
         let mut component_releases = BTreeMap::new();
@@ -47,13 +48,16 @@ impl Release {
                 .next();
 
             if let Some(component) = components.get(component_identifier) {
+                let component_profile = component_profiles.get(component_identifier);
+                let gitlab_url = component_profile.and_then(|comp| comp.gitlab_url.as_ref());
+
                 let releases = component
                     .get_releases(previous.cloned(), component_version.clone())
                     .into_iter()
                     .map(|(version, release)| {
                         ComponentRelease::from_data_component_release(
                             &version,
-                            component.gitlab_url.clone(),
+                            gitlab_url.cloned(),
                             &release,
                             BTreeSet::default(),
                         )
@@ -82,6 +86,9 @@ impl Release {
                     let component = components
                         .get(identifier)
                         .with_context(|| format!("Couldn't find component {:?}", identifier))?;
+                    let component_profile = component_profiles.get(identifier);
+                    let gitlab_url = component_profile.and_then(|comp| comp.gitlab_url.clone());
+
                     let category =
                         component_categories
                             .get(&component.category)
@@ -95,7 +102,7 @@ impl Release {
                             identifier.clone(),
                             category.name.clone(),
                             version.clone(),
-                            component.gitlab_url.clone(),
+                            gitlab_url,
                         ));
                 }
                 categorized
@@ -110,6 +117,9 @@ impl Release {
                     let component = components
                         .get(identifier)
                         .with_context(|| format!("Couldn't find component {:?}", identifier))?;
+                    let component_profile = component_profiles.get(identifier);
+                    let gitlab_url = component_profile.and_then(|comp| comp.gitlab_url.clone());
+
                     let category =
                         component_categories
                             .get(&component.category)
@@ -122,7 +132,7 @@ impl Release {
                             identifier.clone(),
                             category.name.clone(),
                             version.clone(),
-                            component.gitlab_url.clone(),
+                            gitlab_url,
                         ),
                     ))
                 })

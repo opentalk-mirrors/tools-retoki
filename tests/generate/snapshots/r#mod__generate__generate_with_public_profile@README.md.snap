@@ -1,0 +1,32 @@
+---
+source: tests/generate/mod.rs
+expression: input
+input_file: tests/test-result/.tmp5W8jjj/README.md
+---
+sidebar_position: 0
+title: Release Bundles
+---
+
+# OpenTalk Release Bundles
+
+## Release Announcements
+
+
+
+## 24.8
+
+- [**v24.8.1** (2024-07-30)](24.8.1/README.md)
+- [**v24.8.0** (2024-07-19)](24.8.0/README.md)
+
+
+# Component lookup table
+
+| Release |  [web-frontend](components/web-frontend.md) | [controller](components/controller.md) |
+| ------- | ---------- | ---------- |
+| [**v24.8.1**](24.8.1/README.md) | [v1.17.2](https://gitlab.opencode.de/opentalk/web-frontend/-/releases/v1.17.2) | [v0.16.1](https://gitlab.opencode.de/opentalk/controller/-/releases/v0.16.1) |
+| [**v24.8.0**](24.8.0/README.md) | [v1.17.0](https://gitlab.opencode.de/opentalk/web-frontend/-/releases/v1.17.0) | [v0.16.0](https://gitlab.opencode.de/opentalk/controller/-/releases/v0.16.0) |
+
+
+---
+
+Generation of this document was supported by [retoki](https://git.opentalk.dev/opentalk/tools/retoki).
