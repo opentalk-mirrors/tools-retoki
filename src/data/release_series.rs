@@ -8,14 +8,12 @@ use semver::Version;
 use serde::{Deserialize, Serialize};
 use time::Date;
 
-use super::{releases::StripReleases, Release, SeriesCodename};
+use super::{releases::StripReleases, Release};
 use crate::helper::releases::is_obsolete_prerelease;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ReleaseSeries {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub codename: Option<SeriesCodename>,
     pub end_of_life: Date,
     pub releases: IndexMap<Version, Release>,
 }

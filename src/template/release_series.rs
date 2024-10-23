@@ -7,15 +7,12 @@ use serde::{Deserialize, Serialize};
 use time::Date;
 
 use super::Release;
-use crate::data::{
-    self, ComponentCategoryIdentifier, ComponentIdentifier, SeriesCodename, SeriesNumber,
-};
+use crate::data::{self, ComponentCategoryIdentifier, ComponentIdentifier, SeriesNumber};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ReleaseSeries {
     pub version: SeriesNumber,
-    pub codename: Option<SeriesCodename>,
     pub end_of_life: Date,
     pub releases: Vec<Release>,
     pub markdown_anchor: String,
@@ -29,11 +26,8 @@ impl ReleaseSeries {
         component_profiles: &IndexMap<ComponentIdentifier, data::ComponentProfile>,
         component_categories: &IndexMap<ComponentCategoryIdentifier, data::ComponentCategory>,
     ) -> Result<Self> {
-        let release_markdown_code = match &release_series.codename {
-            Some(codename) => format!("{} ({})", version, codename),
-            None => version.to_string(),
-        };
-        let markdown_anchor = release_markdown_code
+        let markdown_anchor = version
+            .to_string()
             .replace(['(', ')', '.'], "")
             .replace(' ', "-")
             .to_lowercase();
@@ -44,7 +38,6 @@ impl ReleaseSeries {
 
         Ok(Self {
             version: version.clone(),
-            codename: release_series.codename.clone(),
             end_of_life: release_series.end_of_life,
             releases: releases_with_padding
                 .windows(3)

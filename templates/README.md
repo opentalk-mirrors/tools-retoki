@@ -20,7 +20,7 @@ gantt
     title       {{ product_name }} Releases
     dateFormat  YYYY-MM-DD
 {% for serie in series %}
-    section {{ serie.version }}{% if serie.codename %} {{ serie.codename }}{% endif %}
+    section {{ serie.version }}
 {%- for release in serie.releases %}
     {{ release.version }}  :{{ release.date }}, {{ release.end_date }}
 {%- endfor %}
@@ -29,7 +29,7 @@ gantt
 ```
 {% endif -%}
 {% for serie in series | reverse %}
-## {{ serie.version }}{% if serie.codename %} ({{ serie.codename }}){% endif %}
+## {{ serie.version }}
 {% for release in serie.releases | reverse %}
 - [**v{{ release.version }}** ({{ release.date }})]({{ release.version }}/README.md)
 {%- endfor %}

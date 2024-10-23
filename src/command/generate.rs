@@ -14,8 +14,7 @@ use tera::{Context, Tera};
 use super::ProfileArgs;
 use crate::{
     data::{
-        read_profile_file, read_release_file_with_options, ReleaseFileReadOptions,
-        ReleaseSeriesCodenames, StripReleases,
+        read_profile_file, read_release_file_with_options, ReleaseFileReadOptions, StripReleases,
     },
     release_metadata::ReleaseMetadata,
     template,
@@ -38,10 +37,6 @@ pub struct GenerateArgs {
     /// Don't link to GitLab releases.
     #[clap(long)]
     pub without_gitlab_release_links: bool,
-
-    /// Don't write the release series codenames anywhere in the generated output.
-    #[clap(long)]
-    pub without_release_series_codenames: bool,
 
     /// Write metadata files in JSON format for each release.
     #[clap(long)]
@@ -72,10 +67,6 @@ impl GenerateArgs {
             &release_file,
             ReleaseFileReadOptions {
                 strip_prereleases: Some(strip_releases),
-                release_series_codenames: self
-                    .without_release_series_codenames
-                    .then_some(ReleaseSeriesCodenames::Strip)
-                    .unwrap_or_default(),
             },
         )
         .context("Failed to read release configuration")?;

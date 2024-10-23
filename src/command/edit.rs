@@ -3,7 +3,7 @@
 
 use std::path::Path;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Args;
 use owo_colors::OwoColorize;
 
@@ -29,15 +29,16 @@ impl EditArgs {
             &release_file,
             ReleaseFileReadOptions {
                 strip_prereleases: self.strip_prereleases.then_some(StripReleases::PreReleases),
-                ..Default::default()
             },
-        )?;
+        )
+        .context("Failed to read release configuration")?;
 
         if self.strip_changelogs {
             strip_changelogs(&mut raw_data);
         }
 
-        write_releases_file(&release_file, raw_data)?;
+        write_releases_file(&release_file, raw_data)
+            .context("Failed to write release configuration")?;
 
         println!();
         println!(

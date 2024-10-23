@@ -8,7 +8,7 @@ title: {{ product_name }} v{{ version }}
 # {{ product_name }} v{{ version }}
 
 - Release date: **{{ date }}**
-- Release series: [**{{ series.version }}{% if series.codename %} ({{ series.codename }}){% endif %}**](../README.md#{{ series.markdown_anchor }})
+- Release series: [**{{ series.version }}**](../README.md#{{ series.markdown_anchor }})
 {%- if previous %}
 - Previous release: [**v{{ previous }}**](../{{ previous }}/README.md)
 {%- endif %}
