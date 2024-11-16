@@ -137,6 +137,7 @@ skip = [
   { name = "heck", version = "0.4" },
   { name = "strsim", version = "0.10" },
   { name = "syn", version = "1" },
+  { name = "unicode-width", version = "0.1" },
 ]
 # Similarly to `skip` allows you to skip certain crates during duplicate
 # detection. Unlike skip, it also includes the entire tree of transitive
