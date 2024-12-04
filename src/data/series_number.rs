@@ -80,7 +80,7 @@ impl<'de> de::Deserialize<'de> for SeriesNumber {
     {
         struct SeriesNumberVisitor;
 
-        impl<'de> de::Visitor<'de> for SeriesNumberVisitor {
+        impl de::Visitor<'_> for SeriesNumberVisitor {
             type Value = SeriesNumber;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
