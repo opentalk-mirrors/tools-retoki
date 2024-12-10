@@ -58,6 +58,16 @@ impl CiArgs {
         release_label: &str,
         out: &mut dyn Output,
     ) -> Result<(), Whatever> {
+        Self::list_overdue_milestones(vcs_service, at, release_label, out)?;
+        Ok(())
+    }
+
+    fn list_overdue_milestones(
+        vcs_service: &dyn VcsService,
+        at: Timestamp,
+        release_label: &str,
+        out: &mut dyn Output,
+    ) -> Result<(), Whatever> {
         let overdue_milestones =
             vcs_service.get_overdue_milestones_with_release_issues(at, release_label)?;
 
