@@ -54,6 +54,13 @@ pub(crate) trait VcsService {
 
     fn get_linked_issues(&self, project: &str, issue_id: u64)
         -> Result<Vec<LinkedIssue>, Whatever>;
+
+    fn update_issue_description(
+        &self,
+        project: &str,
+        issue_id: u64,
+        description: &str,
+    ) -> Result<(), Whatever>;
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -75,21 +82,35 @@ impl Milestone {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct Project {
     pub id: u64,
     pub path_with_namespace: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct Issue {
     pub id: u64,
     pub iid: u64,
     pub title: String,
     pub project: Project,
     pub short_reference: String,
+    pub description: String,
     pub state: IssueState,
     pub linked_issues: Vec<LinkedIssue>,
+}
+
+impl Issue {
+    pub(crate) fn mermaid_identifier(&self) -> String {
+        format!(
+            "{}_{}",
+            self.project
+                .path_with_namespace
+                .replace("/", "_")
+                .replace("-", "_"),
+            self.iid
+        )
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -99,20 +120,20 @@ pub(crate) struct OverdueMilestone {
     pub issues: Vec<Issue>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct LinkedIssue {
     pub link_type: IssueLinkType,
     pub issue: Issue,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum IssueLinkType {
     Blocks,
     IsBlockedBy,
     RelatesTo,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum IssueState {
     Opened,
     Closed,

@@ -6,7 +6,7 @@ use clap::Subcommand;
 use snafu::Whatever;
 
 use self::ci::CiArgs;
-use crate::Config;
+use crate::{cli::CommonArgs, Config};
 
 mod ci;
 
@@ -17,9 +17,9 @@ pub(crate) enum Command {
 }
 
 impl Command {
-    pub(crate) fn run(&self, config: &Config) -> Result<(), Whatever> {
+    pub(crate) fn run(&self, common_args: &CommonArgs, config: &Config) -> Result<(), Whatever> {
         match self {
-            Self::Ci(args) => args.run(config),
+            Self::Ci(args) => args.run(common_args, config),
         }
     }
 }

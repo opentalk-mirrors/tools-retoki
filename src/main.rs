@@ -41,6 +41,8 @@ mod cli;
 mod command;
 mod config;
 mod gitlab_service;
+mod output;
+mod tasks;
 mod vcs_service;
 
 #[snafu::report]

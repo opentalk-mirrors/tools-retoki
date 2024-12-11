@@ -131,6 +131,25 @@ impl VcsService for GitlabService {
             .map(|i| i.to_vcs_service_linked_issue(&projects, &self.group))
             .collect::<Result<Vec<_>, Whatever>>()
     }
+
+    fn update_issue_description(
+        &self,
+        project: &str,
+        issue_id: u64,
+        description: &str,
+    ) -> Result<(), Whatever> {
+        let endpoint = gitlab::api::projects::issues::EditIssue::builder()
+            .project(project)
+            .issue(issue_id)
+            .description(description)
+            .build()
+            .whatever_context("couldn't build issue editing endpoint")?;
+
+        let _: Issue = endpoint.query(&self.client).with_whatever_context(|_e| {
+            format!("couldn't update description for issue {issue_id} in project {project}")
+        })?;
+        Ok(())
+    }
 }
 
 #[derive(Debug, Builder, Clone)]
