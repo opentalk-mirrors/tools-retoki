@@ -150,7 +150,7 @@ impl<'a> GroupMilestones<'a> {
     }
 }
 
-impl<'a> Endpoint for GroupMilestones<'a> {
+impl Endpoint for GroupMilestones<'_> {
     fn method(&self) -> Method {
         Method::GET
     }
@@ -194,7 +194,7 @@ impl<'a> Issues<'a> {
     }
 }
 
-impl<'a> Endpoint for Issues<'a> {
+impl Endpoint for Issues<'_> {
     fn method(&self) -> Method {
         Method::GET
     }
@@ -230,7 +230,7 @@ impl<'a> LinkedIssues<'a> {
     }
 }
 
-impl<'a> Endpoint for LinkedIssues<'a> {
+impl Endpoint for LinkedIssues<'_> {
     fn method(&self) -> Method {
         Method::GET
     }

@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: OpenTalk Team <mail@opentalk.eu>
 # SPDX-License-Identifier: EUPL-1.2
 
-FROM git.opentalk.dev:5050/opentalk/backend/containers/rust:1.81.0-bookworm AS builder
+FROM git.opentalk.dev:5050/opentalk/backend/containers/rust:1.83.0-bookworm AS builder
 
 WORKDIR /relbo
 
