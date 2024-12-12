@@ -51,7 +51,7 @@ allow = [
   "MIT",
   "MPL-2.0",
   "OpenSSL",
-  "Unicode-DFS-2016",
+  "Unicode-3.0",
 ]
 # The confidence threshold for detecting a license from license text.
 # The higher the value, the more closely the license text must be to the
@@ -117,11 +117,7 @@ allow = []
 # List of crates to deny
 deny = []
 # Certain crates/versions that will be skipped when doing duplicate detection.
-skip = [
-  { name = "heck", version = "0.4" },
-  { name = "syn", version = "1" },
-  { name = "yansi", version = "0.5" },
-]
+skip = [{ name = "heck", version = "0.4" }, { name = "syn", version = "1" }]
 # Similarly to `skip` allows you to skip certain crates during duplicate
 # detection. Unlike skip, it also includes the entire tree of transitive
 # dependencies starting at the specified crate, up to a certain depth, which is
