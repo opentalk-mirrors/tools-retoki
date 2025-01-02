@@ -25,6 +25,6 @@ pub(crate) struct CommonArgs {
 
 impl Cli {
     pub(crate) fn run(&self, config: &Config) -> Result<(), Whatever> {
-        self.command.run(config)
+        self.command.run(&self.common, config)
     }
 }
