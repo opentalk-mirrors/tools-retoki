@@ -142,6 +142,8 @@ impl IssueWithBlockers {
             .replace(">", "&gt;")
             .replace("\"", "&quot;")
             .replace("'", "&apos;")
+            .replace("(", "&#40;")
+            .replace(")", "&#41;")
     }
 }
 
@@ -218,7 +220,7 @@ my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_bla
         let issue_b = Issue {
             id: 12,
             iid: 55,
-            title: "issue b".to_string(),
+            title: "issue b (feature)".to_string(),
             project: project_b.clone(),
             short_reference: "project_b#55".to_string(),
             description: "This is the issue description".to_string(),
@@ -240,7 +242,7 @@ my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_bla
         let issue_d = Issue {
             id: 135,
             iid: 133,
-            title: "issue d".to_string(),
+            title: "issue d (bugfix)".to_string(),
             project: project_a.clone(),
             short_reference: "project_a#133".to_string(),
             description: "This is the issue description".to_string(),
@@ -271,8 +273,8 @@ my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_bla
 ```mermaid
 flowchart LR
 
-another_project_b_55[<a href=https://git.example.com/another/project_b/-/issues/55 target=_blank>another/project_b#55</a><br>issue b]
-my_project_133[<a href=https://git.example.com/my/project/-/issues/133 target=_blank>my/project#133</a><br>issue d]
+another_project_b_55[<a href=https://git.example.com/another/project_b/-/issues/55 target=_blank>another/project_b#55</a><br>issue b &#40;feature&#41;]
+my_project_133[<a href=https://git.example.com/my/project/-/issues/133 target=_blank>my/project#133</a><br>issue d &#40;bugfix&#41;]
 my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_blank>my/project#93</a><br>issue a]
 another_project_b_42[<a href=https://git.example.com/another/project_b/-/issues/42 target=_blank>another/project_b#42</a><br>issue c]
 
