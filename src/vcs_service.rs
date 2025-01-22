@@ -21,7 +21,7 @@ pub(crate) trait VcsService {
         at: Timestamp,
         release_label: &str,
     ) -> Result<Vec<OverdueMilestone>, Whatever> {
-        let at = at.intz("UTC").whatever_context("invalid timestamp")?;
+        let at = at.in_tz("UTC").whatever_context("invalid timestamp")?;
 
         let milestones = self.get_milestones()?;
 
@@ -74,7 +74,7 @@ impl Milestone {
     pub(crate) fn calculate_overdue_since(&self, at: Zoned) -> Option<Zoned> {
         match self
             .due_date
-            .map(|d| d.at(0, 0, 0, 0).intz("UTC").expect("valid date"))
+            .map(|d| d.at(0, 0, 0, 0).in_tz("UTC").expect("valid date"))
         {
             Some(due) if at >= due => Some(due),
             _ => None,
