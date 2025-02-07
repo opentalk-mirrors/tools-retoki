@@ -55,13 +55,13 @@ impl ShowArgs {
 
             #[tabled(
                 rename = "GitLab URL",
-                display_with = "crate::helper::tabled::display_option"
+                display = "crate::helper::tabled::display_option"
             )]
             pub gitlab_url: &'a Option<String>,
 
             #[tabled(
                 rename = "Container base URL",
-                display_with = "crate::helper::tabled::display_option"
+                display = "crate::helper::tabled::display_option"
             )]
             #[serde(skip_serializing_if = "Option::is_none")]
             pub container_base_url: &'a Option<String>,
