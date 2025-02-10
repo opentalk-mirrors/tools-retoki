@@ -61,7 +61,7 @@ impl ShowArgs {
             #[tabled(rename = "Series")]
             pub series: SeriesNumber,
 
-            #[tabled(rename = "Components", display_with = "display_components")]
+            #[tabled(rename = "Components", display = "display_components")]
             pub components: &'a IndexMap<ComponentIdentifier, ComponentVersion>,
         }
 

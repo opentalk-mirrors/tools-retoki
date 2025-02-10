@@ -7,11 +7,11 @@ use anyhow::Result;
 use clap::Args;
 use semver::Version;
 use serde::Serialize;
-use tabled::Tabled;
+use tabled::{derive::display, Tabled};
 use time::{Date, OffsetDateTime};
 
 use crate::{
-    command::utils::{parse_date, tabled_display_option},
+    command::utils::parse_date,
     data::{read_release_file, SeriesNumber},
     output_format::OutputFormat,
 };
@@ -36,11 +36,12 @@ impl ListArgs {
         let raw_data = read_release_file(release_file)?;
 
         #[derive(Debug, Serialize, Tabled)]
+        #[tabled(display(Option, "display::option", "-"))]
         struct SeriesInformation {
             #[tabled(rename = "Series number")]
             pub series_number: SeriesNumber,
 
-            #[tabled(rename = "Highest release", display_with = "tabled_display_option")]
+            #[tabled(rename = "Highest release")]
             pub highest_release: Option<Version>,
 
             #[tabled(rename = "EOL")]
