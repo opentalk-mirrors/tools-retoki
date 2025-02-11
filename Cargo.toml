@@ -14,7 +14,7 @@ figment = { version = "0.10.19", features = ["env", "toml"] }
 gitlab = "0.1708.0"
 http = "1.1.0"
 itertools = "0.14.0"
-jiff = { version = "0.1.4", features = ["serde"] }
+jiff = { version = "0.2.0", features = ["serde"] }
 owo-colors = "4.0.0"
 semver = { version = "1.0.23", features = ["serde"] }
 serde = { version = "1.0.204", features = ["derive"] }
