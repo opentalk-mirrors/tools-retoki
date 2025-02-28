@@ -23,7 +23,7 @@ url = { version = "2.5.2", features = ["serde"] }
 urlencoding = "2"
 
 [dev-dependencies]
-derive_more = { version = "1.0.0", features = [
+derive_more = { version = "2.0.0", features = [
   "as_ref",
   "deref",
   "display",
