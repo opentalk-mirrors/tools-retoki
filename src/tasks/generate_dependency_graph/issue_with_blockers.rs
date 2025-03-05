@@ -144,6 +144,8 @@ impl IssueWithBlockers {
             .replace("'", "&apos;")
             .replace("(", "&#40;")
             .replace(")", "&#41;")
+            .replace("[", "&#91;")
+            .replace("]", "&#93;")
     }
 }
 
@@ -231,7 +233,7 @@ my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_bla
         let issue_c = Issue {
             id: 959,
             iid: 42,
-            title: "issue c".to_string(),
+            title: "[example] issue c".to_string(),
             project: project_b.clone(),
             short_reference: "project_b#42".to_string(),
             description: "This is the issue description".to_string(),
@@ -276,7 +278,7 @@ flowchart LR
 another_project_b_55[<a href=https://git.example.com/another/project_b/-/issues/55 target=_blank>another/project_b#55</a><br>issue b &#40;feature&#41;]
 my_project_133[<a href=https://git.example.com/my/project/-/issues/133 target=_blank>my/project#133</a><br>issue d &#40;bugfix&#41;]
 my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_blank>my/project#93</a><br>issue a]
-another_project_b_42[<a href=https://git.example.com/another/project_b/-/issues/42 target=_blank>another/project_b#42</a><br>issue c]
+another_project_b_42[<a href=https://git.example.com/another/project_b/-/issues/42 target=_blank>another/project_b#42</a><br>&#91;example&#93; issue c]
 
 another_project_b_55 --> my_project_133
 another_project_b_42 --> my_project_133
