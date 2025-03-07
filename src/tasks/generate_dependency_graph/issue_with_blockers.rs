@@ -173,7 +173,7 @@ mod tests {
             title: "An issue <".to_string(),
             project,
             short_reference: "project#93".to_string(),
-            description: "This is the issue description".to_string(),
+            description: Some("This is the issue description".to_string()),
             state: IssueState::Opened,
             linked_issues: vec![],
         };
@@ -214,7 +214,7 @@ my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_bla
             title: "issue a".to_string(),
             project: project_a.clone(),
             short_reference: "project_a#93".to_string(),
-            description: "This is the issue description".to_string(),
+            description: Some("This is the issue description".to_string()),
             state: IssueState::Closed,
             linked_issues: vec![],
         };
@@ -225,7 +225,7 @@ my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_bla
             title: "issue b (feature)".to_string(),
             project: project_b.clone(),
             short_reference: "project_b#55".to_string(),
-            description: "This is the issue description".to_string(),
+            description: Some("This is the issue description".to_string()),
             state: IssueState::Closed,
             linked_issues: vec![],
         };
@@ -236,7 +236,7 @@ my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_bla
             title: "[example] issue c".to_string(),
             project: project_b.clone(),
             short_reference: "project_b#42".to_string(),
-            description: "This is the issue description".to_string(),
+            description: Some("This is the issue description".to_string()),
             state: IssueState::Closed,
             linked_issues: vec![],
         };
@@ -247,7 +247,7 @@ my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_bla
             title: "issue d (bugfix)".to_string(),
             project: project_a.clone(),
             short_reference: "project_a#133".to_string(),
-            description: "This is the issue description".to_string(),
+            description: Some("This is the issue description".to_string()),
             state: IssueState::Opened,
             linked_issues: vec![],
         };

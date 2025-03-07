@@ -72,7 +72,7 @@ pub(crate) struct Issue {
     pub id: u64,
     pub iid: u64,
     pub title: String,
-    pub description: String,
+    pub description: Option<String>,
     pub project_id: u64,
     pub references: IssueReferences,
     pub state: IssueState,

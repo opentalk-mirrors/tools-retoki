@@ -178,7 +178,7 @@ overdue since 2024-05-09T22:00:00Z
                                 path_with_namespace: "path/to/project".to_string(),
                             },
                             short_reference: "to/project#49".to_string(),
-                            description: "Perform the release of this component".to_string(),
+                            description: Some("Perform the release of this component".to_string()),
                             state: IssueState::Opened,
                             linked_issues: vec![],
                         }],
@@ -199,7 +199,7 @@ overdue since 2024-05-09T22:00:00Z
                                 path_with_namespace: "path/to/project".to_string(),
                             },
                             short_reference: "to/project#52".to_string(),
-                            description: "Perform the release of this component".to_string(),
+                            description: Some("Perform the release of this component".to_string()),
                             state: IssueState::Opened,
                             linked_issues: vec![LinkedIssue {
                                 link_type: crate::vcs_service::IssueLinkType::IsBlockedBy,
@@ -212,8 +212,9 @@ overdue since 2024-05-09T22:00:00Z
                                         path_with_namespace: "path/to/another/project".to_string(),
                                     },
                                     short_reference: "to/another/project#93".to_string(),
-                                    description: "Perform the release of this component"
-                                        .to_string(),
+                                    description: Some(
+                                        "Perform the release of this component".to_string(),
+                                    ),
                                     state: IssueState::Opened,
                                     linked_issues: vec![],
                                 },
