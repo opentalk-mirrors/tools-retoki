@@ -84,29 +84,32 @@ impl<'a> DependencyGraphUpdater<'a> {
             .blue()
             .to_string();
 
-        let (start_marker_index, end_marker_index) =
-            match get_dependency_graph_markers(&issue.description) {
-                Ok(Some(marker_indices)) => marker_indices,
-                Ok(None) => return Ok(()),
-                Err(e) => {
-                    if let Some(section_header) = section_header.take() {
-                        self.print_section_header(&section_header);
-                    }
-                    self.out
-                        .println(&format_args!("- {issue_ref}: {}", e.red()));
-                    return Ok(());
+        let Some(description) = issue.description.as_ref() else {
+            return Ok(());
+        };
+
+        let (start_marker_index, end_marker_index) = match get_dependency_graph_markers(description)
+        {
+            Ok(Some(marker_indices)) => marker_indices,
+            Ok(None) => return Ok(()),
+            Err(e) => {
+                if let Some(section_header) = section_header.take() {
+                    self.print_section_header(&section_header);
                 }
-            };
+                self.out
+                    .println(&format_args!("- {issue_ref}: {}", e.red()));
+                return Ok(());
+            }
+        };
 
         if let Some(section_header) = section_header.take() {
             self.print_section_header(&section_header);
         }
 
-        let before = issue
-            .description
+        let before = description
             .lines()
             .take(start_marker_index.saturating_add(1));
-        let after = issue.description.lines().skip(end_marker_index);
+        let after = description.lines().skip(end_marker_index);
 
         let tree = IssueWithBlockers::load_from_vcs_service(
             self.vcs_service,
@@ -118,7 +121,7 @@ impl<'a> DependencyGraphUpdater<'a> {
 
         let overall_description = before.chain(diagram_string.lines()).chain(after).join("\n");
 
-        if overall_description == issue.description {
+        if &overall_description == description {
             if self.dry_run {
                 self.out.println(&format_args!(
                         "- {issue_ref}: No changes required in description. Running in DRY-RUN mode, issue description would remain unchanged:",

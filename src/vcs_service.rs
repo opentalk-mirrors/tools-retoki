@@ -95,7 +95,7 @@ pub(crate) struct Issue {
     pub title: String,
     pub project: Project,
     pub short_reference: String,
-    pub description: String,
+    pub description: Option<String>,
     pub state: IssueState,
     pub linked_issues: Vec<LinkedIssue>,
 }
