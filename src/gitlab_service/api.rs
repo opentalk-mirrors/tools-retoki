@@ -121,6 +121,23 @@ impl Issue {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+pub(crate) struct Epic {
+    pub id: u64,
+    pub iid: u64,
+    pub title: String,
+    pub description: Option<String>,
+    pub references: IssueReferences,
+    pub state: IssueState,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(untagged)]
+pub(crate) enum IssueOrEpic {
+    Issue(Issue),
+    Epic(Epic),
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub(crate) struct IssueReferences {
     pub full: String,
     pub relative: String,
@@ -175,27 +192,33 @@ impl From<IssueLinkType> for vcs_service::IssueLinkType {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub(crate) struct LinkedIssue {
+pub(crate) struct LinkedItem {
     pub link_type: IssueLinkType,
 
     #[serde(flatten)]
-    pub issue: Issue,
+    pub item: IssueOrEpic,
 }
 
-impl LinkedIssue {
+impl LinkedItem {
     pub(crate) fn to_vcs_service_linked_issue(
         &self,
         projects: &BTreeMap<u64, Project>,
         gitlab_group: &str,
-    ) -> Result<vcs_service::LinkedIssue, Whatever> {
-        let Self { link_type, issue } = self.clone();
+    ) -> Result<Option<vcs_service::LinkedIssue>, Whatever> {
+        let Self {
+            link_type,
+            item: IssueOrEpic::Issue(issue),
+        } = self.clone()
+        else {
+            return Ok(None);
+        };
 
         let issue = issue.to_vcs_service_issue(projects, gitlab_group, vec![])?;
 
-        Ok(vcs_service::LinkedIssue {
+        Ok(Some(vcs_service::LinkedIssue {
             link_type: link_type.into(),
             issue,
-        })
+        }))
     }
 }
 
