@@ -18,7 +18,7 @@ use http::Method;
 use snafu::{ResultExt, Whatever};
 use url::Url;
 
-use self::api::{LinkedIssue, MilestoneState};
+use self::api::{LinkedItem, MilestoneState};
 use crate::{
     gitlab_service::api::{Issue, Milestone, Project},
     vcs_service::{self, VcsService},
@@ -111,24 +111,33 @@ impl VcsService for GitlabService {
         project: &str,
         issue_id: u64,
     ) -> Result<Vec<vcs_service::LinkedIssue>, Whatever> {
-        let endpoint = LinkedIssues::builder()
+        let endpoint = LinkedItems::builder()
             .project(NameOrId::Name(project.into()))
             .issue(issue_id)
             .build()
             .whatever_context("couldn't build linked issues endpoint")?;
 
-        let linked_issues: Vec<LinkedIssue> =
+        let linked_items: Vec<LinkedItem> =
             endpoint.query(&self.client).with_whatever_context(|_e| {
                 format!("couldn't get linked issues for issue {issue_id} in project {project}")
             })?;
 
-        let project_ids = linked_issues.iter().map(|i| i.issue.project_id).collect();
+        let project_ids = linked_items
+            .iter()
+            .filter_map(|i| match &i.item {
+                api::IssueOrEpic::Issue(issue) => Some(issue.project_id),
+                api::IssueOrEpic::Epic(_epic) => None,
+            })
+            .collect();
 
         let projects = self.get_projects(project_ids)?;
 
-        linked_issues
+        linked_items
             .into_iter()
-            .map(|i| i.to_vcs_service_linked_issue(&projects, &self.group))
+            .filter_map(|i| {
+                i.to_vcs_service_linked_issue(&projects, &self.group)
+                    .transpose()
+            })
             .collect::<Result<Vec<_>, Whatever>>()
     }
 
@@ -235,21 +244,21 @@ impl Endpoint for Issues<'_> {
 }
 
 #[derive(Debug, Builder, Clone)]
-struct LinkedIssues<'a> {
+struct LinkedItems<'a> {
     #[builder(setter(into))]
     project: NameOrId<'a>,
 
     issue: u64,
 }
 
-impl<'a> LinkedIssues<'a> {
+impl<'a> LinkedItems<'a> {
     /// Create a builder for the endpoint.
-    fn builder() -> LinkedIssuesBuilder<'a> {
-        LinkedIssuesBuilder::default()
+    fn builder() -> LinkedItemsBuilder<'a> {
+        LinkedItemsBuilder::default()
     }
 }
 
-impl Endpoint for LinkedIssues<'_> {
+impl Endpoint for LinkedItems<'_> {
     fn method(&self) -> Method {
         Method::GET
     }
