@@ -104,7 +104,7 @@ mod file {
         } else {
             Box::new(
                 File::open(&profile_path)
-                    .with_context(|| format!("Couldn't open profile file {:?}", profile_path))?,
+                    .with_context(|| format!("Couldn't open profile file {profile_path:?}"))?,
             )
         };
 
@@ -121,12 +121,12 @@ mod file {
         const PROFILE_DIR: &str = "retoki-profiles";
 
         let profile_file = if let Some(profile_path) = profile_path {
-            profile_path.as_ref().join(format!("{}.yml", profile_name))
+            profile_path.as_ref().join(format!("{profile_name}.yml"))
         } else {
             let release_file_dir = release_file.as_ref().parent().with_context(|| format!("Could not build profile path for release file `{:?}` since there was no directory containing that file.", release_file.as_ref()))?;
             PathBuf::from(release_file_dir)
                 .join(PROFILE_DIR)
-                .join(format!("{}.yml", profile_name))
+                .join(format!("{profile_name}.yml"))
         };
 
         Ok(profile_file)

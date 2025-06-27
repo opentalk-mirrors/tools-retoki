@@ -85,7 +85,7 @@ impl Release {
                 for (identifier, version) in &release.components {
                     let component = components
                         .get(identifier)
-                        .with_context(|| format!("Couldn't find component {:?}", identifier))?;
+                        .with_context(|| format!("Couldn't find component {identifier:?}"))?;
                     let component_profile = component_profiles.get(identifier);
                     let gitlab_url = component_profile.and_then(|comp| comp.gitlab_url.clone());
 
@@ -116,7 +116,7 @@ impl Release {
                 .map(|(identifier, version)| {
                     let component = components
                         .get(identifier)
-                        .with_context(|| format!("Couldn't find component {:?}", identifier))?;
+                        .with_context(|| format!("Couldn't find component {identifier:?}"))?;
                     let component_profile = component_profiles.get(identifier);
                     let gitlab_url = component_profile.and_then(|comp| comp.gitlab_url.clone());
 

@@ -90,8 +90,8 @@ impl GenerateArgs {
             let full_path = target_dir.join(relative_path);
             println!("Writing file {full_path:?}");
             let mut file = File::create(&full_path)
-                .with_context(|| format!("Couldn't create file {:?}", full_path))?;
-            write!(file, "{}", rendered)?;
+                .with_context(|| format!("Couldn't create file {full_path:?}"))?;
+            write!(file, "{rendered}")?;
         }
 
         let mut position = 0;
@@ -131,8 +131,8 @@ impl GenerateArgs {
                     let full_path = release_dir.join("README.md");
                     println!("Writing file {full_path:?}");
                     let mut file = File::create(&full_path)
-                        .with_context(|| format!("Couldn't create file {:?}", full_path))?;
-                    write!(file, "{}", rendered)?;
+                        .with_context(|| format!("Couldn't create file {full_path:?}"))?;
+                    write!(file, "{rendered}")?;
                 }
 
                 if self.with_release_metadata_files {
@@ -141,7 +141,7 @@ impl GenerateArgs {
                     let full_path = release_dir.join("metadata.json");
                     println!("Writing file {full_path:?}");
                     let file = File::create(&full_path)
-                        .with_context(|| format!("Couldn't create file {:?}", full_path))?;
+                        .with_context(|| format!("Couldn't create file {full_path:?}"))?;
                     serde_json::to_writer_pretty(file, &release_metadata)?;
                 }
 
@@ -172,8 +172,8 @@ impl GenerateArgs {
             let full_path = target_dir.join(&relative_path);
             println!("Writing file {full_path:?}");
             let mut file = File::create(&full_path)
-                .with_context(|| format!("Couldn't create file: {:?}", full_path))?;
-            write!(file, "{}", rendered)?;
+                .with_context(|| format!("Couldn't create file: {full_path:?}"))?;
+            write!(file, "{rendered}")?;
         }
 
         Ok(())
