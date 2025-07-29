@@ -120,6 +120,7 @@ deny = [
 skip = [
   { name = "base64", version = "0.13" },
   { name = "heck", version = "0.4" },
+  { name = "socket2", version = "0.5.10" },
   { name = "strsim", version = "0.10" },
   { name = "syn", version = "1" },
   { name = "thiserror", version = "1.0" },
