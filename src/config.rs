@@ -23,8 +23,9 @@ mod figment_impls {
     use super::*;
 
     impl Config {
-        fn from<T: Provider>(provider: T) -> Result<Self, Error> {
-            Figment::from(provider).extract()
+        // The error variant is in a box since the error type is at least 208 bytes.
+        fn from<T: Provider>(provider: T) -> Result<Self, Box<Error>> {
+            Figment::from(provider).extract().map_err(Box::new)
         }
 
         pub(crate) fn figment() -> Figment {
