@@ -45,13 +45,13 @@ impl Component {
             return self
                 .releases
                 .iter()
-                .filter(|(v, _)| (*v > &after && *v <= &until))
+                .filter(|(v, _)| *v > &after && *v <= &until)
                 .map(|(v, r)| (v.clone(), r.clone()))
                 .collect::<BTreeMap<ComponentVersion, ComponentRelease>>();
         }
         self.releases
             .iter()
-            .filter(|(v, _)| (*v <= &until))
+            .filter(|(v, _)| *v <= &until)
             .map(|(v, r)| (v.clone(), r.clone()))
             .collect::<BTreeMap<ComponentVersion, ComponentRelease>>()
     }
