@@ -3,11 +3,11 @@
 
 use std::path::Path;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::Args;
 use gitlab::{
-    api::{projects, Query},
     Gitlab, ReleaseTag,
+    api::{Query, projects},
 };
 use indicatif::{MultiProgress, ProgressBar};
 use owo_colors::OwoColorize;
@@ -18,8 +18,8 @@ use url::Url;
 use crate::{
     command::ProfileArgs,
     data::{
-        read_profile_file, read_release_file, write_releases_file, Component, ComponentIdentifier,
-        ComponentProfile, ComponentRelease, ComponentVersion,
+        Component, ComponentIdentifier, ComponentProfile, ComponentRelease, ComponentVersion,
+        read_profile_file, read_release_file, write_releases_file,
     },
 };
 

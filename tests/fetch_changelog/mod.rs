@@ -5,8 +5,8 @@ use std::fs;
 
 use insta::{assert_debug_snapshot, assert_snapshot};
 use retoki::command::{
-    release::{FetchChangelogsArgs, ReleaseArgs, ReleaseCommand},
     Command, ProfileArgs,
+    release::{FetchChangelogsArgs, ReleaseArgs, ReleaseCommand},
 };
 use tempfile::tempdir_in;
 

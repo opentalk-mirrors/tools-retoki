@@ -14,7 +14,7 @@ use tera::{Context, Tera};
 use super::ProfileArgs;
 use crate::{
     data::{
-        read_profile_file, read_release_file_with_options, ReleaseFileReadOptions, StripReleases,
+        ReleaseFileReadOptions, StripReleases, read_profile_file, read_release_file_with_options,
     },
     release_metadata::ReleaseMetadata,
     template,

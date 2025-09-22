@@ -8,8 +8,8 @@ use clap::Args;
 use owo_colors::OwoColorize;
 
 use crate::data::{
-    read_release_file_with_options, write_releases_file, ReleaseFileReadOptions, Releases,
-    StripReleases,
+    ReleaseFileReadOptions, Releases, StripReleases, read_release_file_with_options,
+    write_releases_file,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, Args)]

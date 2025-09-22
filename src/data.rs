@@ -25,8 +25,8 @@ pub use component_name::ComponentName;
 pub use component_release::ComponentRelease;
 pub use component_version::ComponentVersion;
 pub use file::{
-    read_profile_file, read_release_file, read_release_file_with_options, write_releases_file,
-    ReleaseFileReadOptions,
+    ReleaseFileReadOptions, read_profile_file, read_release_file, read_release_file_with_options,
+    write_releases_file,
 };
 pub use product_name::ProductName;
 pub use profiles::{ComponentProfile, Profile};

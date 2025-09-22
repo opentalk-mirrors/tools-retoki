@@ -7,12 +7,12 @@ use anyhow::Result;
 use clap::Args;
 use semver::Version;
 use serde::Serialize;
-use tabled::{derive::display, Tabled};
+use tabled::{Tabled, derive::display};
 use time::{Date, OffsetDateTime};
 
 use crate::{
     command::utils::parse_date,
-    data::{read_release_file, SeriesNumber},
+    data::{SeriesNumber, read_release_file},
     output_format::OutputFormat,
 };
 
