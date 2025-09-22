@@ -27,6 +27,8 @@ pub struct Readme {
 
     pub show_gantt_chart: bool,
 
+    pub show_series_end_of_life: bool,
+
     pub show_gitlab_release_links: bool,
 
     pub show_md_header: bool,
@@ -70,6 +72,7 @@ impl Readme {
             space: " ".to_string(),
             empty_release_component: EmptyReleaseComponent::default(),
             show_gantt_chart: true,
+            show_series_end_of_life: true,
             show_gitlab_release_links: true,
             show_md_header: false,
         })
