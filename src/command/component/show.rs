@@ -10,7 +10,7 @@ use tabled::Tabled;
 
 use crate::{
     command::ProfileArgs,
-    data::{read_profile_file, read_release_file, ComponentIdentifier, ComponentName},
+    data::{ComponentIdentifier, ComponentName, read_profile_file, read_release_file},
     output_format::OutputFormat,
 };
 

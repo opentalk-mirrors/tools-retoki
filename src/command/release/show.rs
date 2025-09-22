@@ -11,7 +11,7 @@ use serde::Serialize;
 use tabled::Tabled;
 
 use crate::{
-    data::{read_release_file, ComponentIdentifier, ComponentVersion, SeriesNumber},
+    data::{ComponentIdentifier, ComponentVersion, SeriesNumber, read_release_file},
     output_format::OutputFormat,
 };
 

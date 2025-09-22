@@ -3,10 +3,10 @@
 
 use std::{io::Write, str::FromStr};
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use clap::{Parser, ValueEnum};
 use serde::Serialize;
-use tabled::{settings::Style, Table, Tabled};
+use tabled::{Table, Tabled, settings::Style};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Parser, ValueEnum)]
 pub enum OutputFormat {

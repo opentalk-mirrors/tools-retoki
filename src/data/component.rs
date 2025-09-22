@@ -8,8 +8,8 @@ use semver::Version;
 use serde::{Deserialize, Serialize};
 
 use super::{
-    releases::StripReleases, ComponentCategoryIdentifier, ComponentName, ComponentRelease,
-    ComponentVersion,
+    ComponentCategoryIdentifier, ComponentName, ComponentRelease, ComponentVersion,
+    releases::StripReleases,
 };
 use crate::helper::releases::is_obsolete_prerelease;
 

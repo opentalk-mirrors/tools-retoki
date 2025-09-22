@@ -4,7 +4,7 @@
 use std::fs;
 
 use insta::{assert_debug_snapshot, assert_snapshot};
-use retoki::command::{generate::GenerateArgs, Command, ProfileArgs};
+use retoki::command::{Command, ProfileArgs, generate::GenerateArgs};
 use tempfile::tempdir_in;
 
 use crate::for_all_files;

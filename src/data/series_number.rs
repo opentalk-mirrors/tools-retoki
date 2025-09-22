@@ -5,7 +5,7 @@ use core::fmt;
 use std::{fmt::Display, str::FromStr};
 
 use semver::{BuildMetadata, Prerelease, Version};
-use serde::{de, Serialize, Serializer};
+use serde::{Serialize, Serializer, de};
 
 #[derive(
     Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, derive_more::From, derive_more::Into,

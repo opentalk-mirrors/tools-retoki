@@ -3,7 +3,7 @@
 
 [package]
 description = "release toolkit - tools for bundling product releases"
-edition = "2021"
+edition = "2024"
 license = "EUPL-1.2"
 name = "retoki"
 version = "0.7.0"
