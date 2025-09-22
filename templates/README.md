@@ -30,6 +30,9 @@ gantt
 {% endif -%}
 {% for serie in series | reverse %}
 ## {{ serie.version }}
+{% if show_series_end_of_life %}
+Supported until: {{ serie.end_of_life }}
+{% endif -%}
 {% for release in serie.releases | reverse %}
 - [**v{{ release.version }}** ({{ release.date }})]({{ release.version }}/README.md)
 {%- endfor %}

@@ -34,6 +34,10 @@ pub struct GenerateArgs {
     #[clap(long)]
     pub without_readme_gantt_chart: bool,
 
+    /// Don't render the end-of-life dates for release series in the README file.
+    #[clap(long)]
+    pub without_readme_end_of_life: bool,
+
     /// Don't link to GitLab releases.
     #[clap(long)]
     pub without_gitlab_release_links: bool,
@@ -83,6 +87,7 @@ impl GenerateArgs {
         {
             let mut template_data = template::Readme::from_data_releases(&releases, &profile)?;
             template_data.show_gantt_chart = !self.without_readme_gantt_chart;
+            template_data.show_series_end_of_life = !self.without_readme_end_of_life;
             template_data.show_gitlab_release_links = !self.without_gitlab_release_links;
             template_data.show_md_header = self.with_md_header;
             let rendered = tera.render("README.md", &Context::from_serialize(&template_data)?)?;
