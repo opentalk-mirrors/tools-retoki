@@ -3,7 +3,7 @@
 
 ---
 
-image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.89.0-bookworm
+image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.90.0-trixie
 
 lint:fmt:
   needs: []
