@@ -1,7 +1,8 @@
 ---
 source: tests/generate/mod.rs
 expression: input
-input_file: tests/test-result/.tmp73bmRn/components/controller.md
+input_file: tests/test-result/.tmpvA7aIQ/components/controller.md
+---
 ---
 sidebar_position: 1
 title: OpenTalk Controller Community Edition

@@ -120,11 +120,11 @@ fn test_generate_with_invalid_profile() {
     });
     let err = command.execute("tests/generate/releases.yml").unwrap_err();
 
-    assert_snapshot!(format!("{:?}", err), @r#"
+    assert_snapshot!(format!("{:?}", err), @r"
     Failed to read profile
 
     Caused by:
         components.web-frontend: unknown field `gitlab_url_kaputt`, expected `gitlab_url` or `container_base_url` at line 9 column 5
-    "#);
+    ");
     tmp_dir.close().expect("Removing tmp dir must work");
 }
