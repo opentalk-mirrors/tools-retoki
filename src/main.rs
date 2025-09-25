@@ -18,7 +18,7 @@ mod template;
 #[command(author, version, about)]
 struct Cli {
     /// The YAML file containing the structured release information.
-    #[clap(long, default_value = "releases.yml")]
+    #[clap(long, default_value = "releases.yml", env = "RETOKI_RELEASE_FILE")]
     release_file: PathBuf,
 
     #[command(subcommand)]
