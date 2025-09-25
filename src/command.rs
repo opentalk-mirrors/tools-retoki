@@ -72,7 +72,7 @@ impl Command {
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct ProfileArgs {
     /// The name of the profile that should be used for the release yaml
-    #[clap(short = 'p', long = "profile")]
+    #[clap(short = 'p', long = "profile", env("RETOKI_PROFILE"))]
     pub profile: String,
 
     /// The path to the directory containing the profile configurations. Defaults
