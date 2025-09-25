@@ -46,6 +46,9 @@ impl ListArgs {
 
             #[tabled(rename = "EOL")]
             pub is_eol: bool,
+
+            #[tabled(rename = "Support end")]
+            pub end_of_life: Date,
         }
 
         let mut all_series = Vec::new();
@@ -57,6 +60,7 @@ impl ListArgs {
                 series_number,
                 highest_release,
                 is_eol,
+                end_of_life: series.end_of_life,
             };
             all_series.push(info);
         }
