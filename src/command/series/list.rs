@@ -12,7 +12,7 @@ use time::{Date, OffsetDateTime};
 
 use crate::{
     command::utils::parse_date,
-    data::{SeriesNumber, read_release_file},
+    data::{ReleaseFileReadOptions, SeriesNumber, StripReleases, read_release_file_with_options},
     output_format::OutputFormat,
 };
 
@@ -25,15 +25,28 @@ pub struct ListArgs {
     /// The date that is used as the basis for calculating EOL values
     #[clap(long, value_parser = parse_date)]
     date: Option<Date>,
+
+    /// Don't list any prereleases.
+    #[clap(long)]
+    without_prereleases: bool,
 }
 
 impl ListArgs {
     pub fn execute<R: AsRef<Path>>(self, release_file: R) -> Result<()> {
-        let Self { format, date } = self;
+        let Self {
+            format,
+            date,
+            without_prereleases,
+        } = self;
 
         let date = date.unwrap_or_else(|| OffsetDateTime::now_utc().date());
 
-        let raw_data = read_release_file(release_file)?;
+        let strip_prereleases = without_prereleases.then_some(StripReleases::PreReleases);
+
+        let raw_data = read_release_file_with_options(
+            release_file,
+            ReleaseFileReadOptions { strip_prereleases },
+        )?;
 
         #[derive(Debug, Serialize, Tabled)]
         #[tabled(display(Option, "display::option", "-"))]
