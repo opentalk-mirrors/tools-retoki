@@ -12,6 +12,7 @@ use tabled::Tabled;
 
 use crate::{
     data::{ComponentIdentifier, ComponentVersion, SeriesNumber, read_release_file},
+    helper::tabled::display_components,
     output_format::OutputFormat,
 };
 
@@ -37,21 +38,6 @@ impl ShowArgs {
             .releases
             .get(version)
             .with_context(|| format!("Release {version} not found in series {series_number}"))?;
-
-        fn display_components(
-            components: &IndexMap<ComponentIdentifier, ComponentVersion>,
-        ) -> String {
-            components
-                .iter()
-                .map(|(identifier, version)| format!("{identifier}: {version}"))
-                .fold(String::new(), |a, b| {
-                    if a.is_empty() {
-                        b
-                    } else {
-                        a + ", " + b.as_str()
-                    }
-                })
-        }
 
         #[derive(Debug, Serialize, Tabled)]
         struct ReleaseInformation<'a> {

@@ -7,6 +7,7 @@ use anyhow::Result;
 use clap::{Args, Subcommand};
 
 mod list;
+mod show;
 
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct SeriesArgs {
@@ -24,12 +25,14 @@ impl SeriesArgs {
 #[derive(Clone, Debug, PartialEq, Eq, Subcommand)]
 pub enum SeriesCommand {
     List(list::ListArgs),
+    Show(show::ShowArgs),
 }
 
 impl SeriesCommand {
     pub fn execute<R: AsRef<Path>>(self, release_file: R) -> Result<()> {
         match self {
             SeriesCommand::List(args) => args.execute(release_file),
+            SeriesCommand::Show(args) => args.execute(release_file),
         }
     }
 }
