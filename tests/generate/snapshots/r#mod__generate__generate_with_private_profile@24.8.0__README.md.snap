@@ -1,7 +1,7 @@
 ---
 source: tests/generate/mod.rs
 expression: input
-input_file: tests/test-result/.tmpvA7aIQ/24.8.0/README.md
+input_file: tests/test-result/.tmpBM7FKx/24.8.0/README.md
 ---
 ---
 sidebar_position: 1
@@ -31,6 +31,7 @@ title: OpenTalk v24.8.0
 ## web-frontend v1.17.0
 
 ### Stability Improvements
+
 ---
 
 ## controller v0.16.0
