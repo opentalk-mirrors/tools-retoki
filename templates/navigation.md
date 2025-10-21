@@ -1,0 +1,27 @@
+* [Releases](README.md)
+{%- for serie in series | reverse %}
+{%- if not serie.is_end_of_life %}
+    * [{{ serie.version }}]({{ serie.version }}/README.md)
+        * [**Documentation**](../{{ serie.version }}/)
+        * Releases
+{%- for release in serie.releases | reverse %}
+            * [**v{{ release.version }}** ({{ release.date }})]({{ release.version }}/README.md)
+{%- endfor %}
+{%- endif -%}
+{%- endfor %}
+    * Older releases
+{%- for serie in series | reverse %}
+{%- if serie.is_end_of_life %}
+        * [{{ serie.version }}]({{ serie.version }}/README.md)
+            * [**Documentation**](../{{ serie.version }}/)
+            * Releases
+{%- for release in serie.releases | reverse %}
+                * [**v{{ release.version }}** ({{ release.date }})]({{ release.version }}/README.md)
+{%- endfor %}
+{%- endif -%}
+{%- endfor %}
+    * Components
+    {%- for component in components %}
+        * [{{ component.name }}](components/{{ component.identifier }}.md)
+    {%- endfor %}
+    * [Release Policy](policy.md)

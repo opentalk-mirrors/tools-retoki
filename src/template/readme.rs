@@ -3,6 +3,7 @@
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+use time::Date;
 
 use super::{Component, EmptyReleaseComponent, ReleaseSeries};
 use crate::data::{self, ProductName, Profile};
@@ -35,7 +36,11 @@ pub struct Readme {
 }
 
 impl Readme {
-    pub fn from_data_releases(releases: &data::Releases, profile: &Profile) -> Result<Self> {
+    pub fn from_data_releases(
+        releases: &data::Releases,
+        profile: &Profile,
+        date: Date,
+    ) -> Result<Self> {
         Ok(Self {
             product_name: releases.product_name.clone(),
             releases_page_header: releases.releases_page_header.clone(),
@@ -49,6 +54,7 @@ impl Readme {
                         &releases.components,
                         &profile.components,
                         &releases.component_categories,
+                        date,
                     )
                 })
                 .collect::<Result<_, _>>()?,

@@ -1,7 +1,7 @@
 ---
 source: tests/generate/mod.rs
 expression: input
-input_file: tests/test-result/.tmpvA7aIQ/components/web-frontend.md
+input_file: tests/test-result/.tmp6YB077/components/web-frontend.md
 ---
 ---
 sidebar_position: 0
@@ -11,6 +11,16 @@ title: Web-Frontend
 # Web-Frontend version history
 
 
+---
+
+# web-frontend v1.20.0
+
+
+(found in OpenTalk [**v25.0.0**](../25.0.0/README.md))
+
+## Changelog
+
+### New Features
 ---
 
 # web-frontend v1.17.2

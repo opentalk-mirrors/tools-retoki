@@ -42,6 +42,7 @@ impl ReleasePage {
         end_date: Date,
         sidebar_position: usize,
         show_md_header: bool,
+        date: Date,
     ) -> Result<Self> {
         let series_number = SeriesNumber::from(&version);
 
@@ -82,6 +83,7 @@ impl ReleasePage {
                 &releases.components,
                 &profile.components,
                 &releases.component_categories,
+                date,
             )?,
             release: Release::from_data_release(
                 version,

@@ -10,9 +10,11 @@ use std::{
 use anyhow::{Context as _, Result};
 use clap::Args;
 use tera::{Context, Tera};
+use time::{Date, OffsetDateTime};
 
 use super::ProfileArgs;
 use crate::{
+    command::utils::parse_date,
     data::{
         ReleaseFileReadOptions, StripReleases, read_profile_file, read_release_file_with_options,
     },
@@ -52,12 +54,20 @@ pub struct GenerateArgs {
 
     #[clap(flatten)]
     pub profile: ProfileArgs,
+
+    /// The date that is used as the basis for calculating if releases are EOL
+    #[clap(long, value_parser = parse_date)]
+    pub date: Option<Date>,
 }
 
 impl GenerateArgs {
     pub fn execute<R: AsRef<Path>>(self, release_file: R) -> Result<()> {
         let mut tera = Tera::default();
         tera.add_raw_template("README.md", include_str!("../../templates/README.md"))?;
+        tera.add_raw_template(
+            "navigation.md",
+            include_str!("../../templates/navigation.md"),
+        )?;
         tera.add_raw_template("release.md", include_str!("../../templates/release.md"))?;
         tera.add_raw_template(
             "release_series.md",
@@ -65,6 +75,9 @@ impl GenerateArgs {
         )?;
         tera.add_raw_template("component.md", include_str!("../../templates/component.md"))?;
 
+        let date = self
+            .date
+            .unwrap_or_else(|| OffsetDateTime::now_utc().date());
         let strip_releases = if self.without_prereleases {
             StripReleases::PreReleases
         } else {
@@ -89,13 +102,30 @@ impl GenerateArgs {
         let components_dir = create_and_canonicalize_dir(target_dir.join("components"))?;
 
         {
-            let mut template_data = template::Readme::from_data_releases(&releases, &profile)?;
+            let mut template_data =
+                template::Readme::from_data_releases(&releases, &profile, date)?;
             template_data.show_gantt_chart = !self.without_readme_gantt_chart;
             template_data.show_series_end_of_life = !self.without_readme_end_of_life;
             template_data.show_gitlab_release_links = !self.without_gitlab_release_links;
             template_data.show_md_header = self.with_md_header;
             let rendered = tera.render("README.md", &Context::from_serialize(&template_data)?)?;
-            let relative_path = "README.md";
+            let full_path = target_dir.join("README.md");
+            println!("Writing file {full_path:?}");
+            let mut file = File::create(&full_path)
+                .with_context(|| format!("Couldn't create file {full_path:?}"))?;
+            write!(file, "{rendered}")?;
+        }
+
+        {
+            let mut template_data =
+                template::Readme::from_data_releases(&releases, &profile, date)?;
+            template_data.show_gantt_chart = !self.without_readme_gantt_chart;
+            template_data.show_series_end_of_life = !self.without_readme_end_of_life;
+            template_data.show_gitlab_release_links = !self.without_gitlab_release_links;
+            template_data.show_md_header = self.with_md_header;
+            let rendered =
+                tera.render("navigation.md", &Context::from_serialize(&template_data)?)?;
+            let relative_path = "navigation.md";
             let full_path = target_dir.join(relative_path);
             println!("Writing file {full_path:?}");
             let mut file = File::create(&full_path)
@@ -118,6 +148,7 @@ impl GenerateArgs {
                     &releases.components,
                     &profile.components,
                     &releases.component_categories,
+                    date,
                 )?;
                 template_data.show_md_header = self.with_md_header;
                 template_data.show_series_end_of_life = !self.without_readme_end_of_life;
@@ -157,6 +188,7 @@ impl GenerateArgs {
                     end_date,
                     position,
                     self.with_md_header,
+                    date,
                 )?;
                 template_data.show_gitlab_release_links = !self.without_gitlab_release_links;
                 let rendered =

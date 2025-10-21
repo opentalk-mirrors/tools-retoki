@@ -1,0 +1,20 @@
+---
+source: tests/generate/mod.rs
+expression: input
+input_file: tests/test-result/.tmpGK4szW/navigation.md
+---
+* [Releases](README.md)
+    * [25.0](25.0/README.md)
+        * [**Documentation**](../25.0/)
+        * Releases
+            * [**v25.0.0** (2025-07-01)](25.0.0/README.md)
+    * Older releases
+        * [24.8](24.8/README.md)
+            * [**Documentation**](../24.8/)
+            * Releases
+                * [**v24.8.1** (2024-07-30)](24.8.1/README.md)
+                * [**v24.8.0** (2024-07-19)](24.8.0/README.md)
+    * Components
+        * [Web-Frontend](components/web-frontend.md)
+        * [OpenTalk Controller Community Edition](components/controller.md)
+    * [Release Policy](policy.md)

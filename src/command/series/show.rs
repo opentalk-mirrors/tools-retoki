@@ -29,7 +29,7 @@ pub struct ShowArgs {
     #[clap(long, default_value = "table")]
     format: OutputFormat,
 
-    /// The date that is used as the basis for calculating EOL values
+    /// The date that is used as the basis for calculating if releases are EOL
     #[clap(long, value_parser = parse_date)]
     date: Option<Date>,
 

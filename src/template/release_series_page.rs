@@ -4,6 +4,7 @@
 use anyhow::Result;
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
+use time::Date;
 
 use crate::{
     data::{
@@ -34,6 +35,7 @@ impl ReleaseSeriesPage {
         components: &IndexMap<ComponentIdentifier, data::Component>,
         component_profiles: &IndexMap<ComponentIdentifier, data::ComponentProfile>,
         component_categories: &IndexMap<ComponentCategoryIdentifier, ComponentCategory>,
+        date: Date,
     ) -> Result<Self> {
         let release_series = ReleaseSeries::from_data_release_series(
             version,
@@ -41,6 +43,7 @@ impl ReleaseSeriesPage {
             components,
             component_profiles,
             component_categories,
+            date,
         )?;
         Ok(Self {
             product_name,
