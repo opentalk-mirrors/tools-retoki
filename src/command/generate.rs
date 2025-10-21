@@ -58,6 +58,13 @@ pub struct GenerateArgs {
     /// The date that is used as the basis for calculating if releases are EOL
     #[clap(long, value_parser = parse_date)]
     pub date: Option<Date>,
+
+    /// The relative documentation base path pointing to where all versioned
+    /// documentation is placed relative to the root of the generated release
+    /// documentation, e.g. `../`. This is used for inserting relative links to
+    /// the documentation into the release information.
+    #[clap(long)]
+    pub with_relative_documentation_base_path: Option<String>,
 }
 
 impl GenerateArgs {
@@ -108,6 +115,8 @@ impl GenerateArgs {
             template_data.show_series_end_of_life = !self.without_readme_end_of_life;
             template_data.show_gitlab_release_links = !self.without_gitlab_release_links;
             template_data.show_md_header = self.with_md_header;
+            template_data.relative_documentation_base_path =
+                self.with_relative_documentation_base_path.clone();
             let rendered = tera.render("README.md", &Context::from_serialize(&template_data)?)?;
             let full_path = target_dir.join("README.md");
             println!("Writing file {full_path:?}");
@@ -152,6 +161,8 @@ impl GenerateArgs {
                 )?;
                 template_data.show_md_header = self.with_md_header;
                 template_data.show_series_end_of_life = !self.without_readme_end_of_life;
+                template_data.relative_documentation_base_path =
+                    self.with_relative_documentation_base_path.clone();
 
                 let release_series_dir = target_dir.join(format!("{series_number}"));
                 let rendered = tera.render(

@@ -33,6 +33,7 @@ fn test_generate_with_public_profile() {
             profile_path: None,
         },
         date: Some(date!(2025 - 01 - 01)),
+        with_relative_documentation_base_path: None,
     });
     command.execute("tests/generate/releases.yml").unwrap();
 
@@ -85,6 +86,7 @@ fn test_generate_with_private_profile() {
             profile_path: None,
         },
         date: Some(date!(2025 - 01 - 01)),
+        with_relative_documentation_base_path: Some("../".to_string()),
     });
     command.execute("tests/generate/releases.yml").unwrap();
 
@@ -131,6 +133,7 @@ fn test_generate_with_invalid_profile() {
             profile_path: None,
         },
         date: Some(date!(2025 - 01 - 01)),
+        with_relative_documentation_base_path: None,
     });
     let err = command.execute("tests/generate/releases.yml").unwrap_err();
 

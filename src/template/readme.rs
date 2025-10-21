@@ -33,6 +33,8 @@ pub struct Readme {
     pub show_gitlab_release_links: bool,
 
     pub show_md_header: bool,
+
+    pub relative_documentation_base_path: Option<String>,
 }
 
 impl Readme {
@@ -81,6 +83,7 @@ impl Readme {
             show_series_end_of_life: true,
             show_gitlab_release_links: true,
             show_md_header: false,
+            relative_documentation_base_path: None,
         })
     }
 }

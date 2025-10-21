@@ -1,7 +1,7 @@
 ---
 source: tests/generate/mod.rs
 expression: input
-input_file: tests/test-result/.tmpJDLXxJ/README.md
+input_file: tests/test-result/.tmp1c047y/README.md
 ---
 ---
 sidebar_position: 0
@@ -18,14 +18,16 @@ title: Release Bundles
 
 Supported until: 2026-01-01
 
-- [**v25.0.0** (2025-07-01)](25.0.0/README.md)
+* **Releases**
+    * [**v25.0.0** (2025-07-01)](25.0.0/README.md)
 
 ## 24.8
 
 Supported until: 2024-09-19
 
-- [**v24.8.1** (2024-07-30)](24.8.1/README.md)
-- [**v24.8.0** (2024-07-19)](24.8.0/README.md)
+* **Releases**
+    * [**v24.8.1** (2024-07-30)](24.8.1/README.md)
+    * [**v24.8.0** (2024-07-19)](24.8.0/README.md)
 
 
 # Component lookup table

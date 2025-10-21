@@ -1,7 +1,7 @@
 ---
 source: tests/generate/mod.rs
 expression: input
-input_file: tests/test-result/.tmp6YB077/25.0/README.md
+input_file: tests/test-result/.tmp8pF2sE/25.0/README.md
 ---
 ---
 title: OpenTalk v25.0
@@ -10,6 +10,8 @@ title: OpenTalk v25.0
 # OpenTalk v25.0
 
 Supported until: 2026-01-01
+
+[📚 Documentation](../../25.0/README.md){ .md-button .md-button--primary }
 
 ## Releases
 

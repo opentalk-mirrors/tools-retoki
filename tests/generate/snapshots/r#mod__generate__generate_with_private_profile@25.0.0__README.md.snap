@@ -1,7 +1,7 @@
 ---
 source: tests/generate/mod.rs
 expression: input
-input_file: tests/test-result/.tmp6YB077/25.0.0/README.md
+input_file: tests/test-result/.tmpoOVLiq/25.0.0/README.md
 ---
 ---
 sidebar_position: 0

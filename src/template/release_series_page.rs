@@ -25,6 +25,8 @@ pub struct ReleaseSeriesPage {
     pub show_md_header: bool,
 
     pub show_series_end_of_life: bool,
+
+    pub relative_documentation_base_path: Option<String>,
 }
 
 impl ReleaseSeriesPage {
@@ -50,6 +52,7 @@ impl ReleaseSeriesPage {
             release_series,
             show_md_header: false,
             show_series_end_of_life: true,
+            relative_documentation_base_path: None,
         })
     }
 }

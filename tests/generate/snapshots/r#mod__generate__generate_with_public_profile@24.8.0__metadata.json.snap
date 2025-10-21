@@ -1,7 +1,7 @@
 ---
 source: tests/generate/mod.rs
 expression: input
-input_file: tests/test-result/.tmpJDLXxJ/24.8.0/metadata.json
+input_file: tests/test-result/.tmp1c047y/24.8.0/metadata.json
 ---
 {
   "version": "24.8.0",
