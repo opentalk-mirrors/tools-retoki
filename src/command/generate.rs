@@ -17,7 +17,7 @@ use crate::{
         ReleaseFileReadOptions, StripReleases, read_profile_file, read_release_file_with_options,
     },
     release_metadata::ReleaseMetadata,
-    template,
+    template::{self, ReleaseSeriesPage},
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
@@ -59,6 +59,10 @@ impl GenerateArgs {
         let mut tera = Tera::default();
         tera.add_raw_template("README.md", include_str!("../../templates/README.md"))?;
         tera.add_raw_template("release.md", include_str!("../../templates/release.md"))?;
+        tera.add_raw_template(
+            "release_series.md",
+            include_str!("../../templates/release_series.md"),
+        )?;
         tera.add_raw_template("component.md", include_str!("../../templates/component.md"))?;
 
         let strip_releases = if self.without_prereleases {
@@ -100,11 +104,39 @@ impl GenerateArgs {
         }
 
         let mut position = 0;
-        for series in releases.series.values().rev() {
+        for (series_number, series) in releases.series.iter().rev() {
             let versions_with_padding = std::iter::once(None)
                 .chain(series.releases.iter().map(Some))
                 .chain(std::iter::once(None))
                 .collect::<Vec<_>>();
+
+            {
+                let mut template_data = ReleaseSeriesPage::from_data_release_series(
+                    series_number.clone(),
+                    releases.product_name.clone(),
+                    series,
+                    &releases.components,
+                    &profile.components,
+                    &releases.component_categories,
+                )?;
+                template_data.show_md_header = self.with_md_header;
+                template_data.show_series_end_of_life = !self.without_readme_end_of_life;
+
+                let release_series_dir = target_dir.join(format!("{series_number}"));
+                let rendered = tera.render(
+                    "release_series.md",
+                    &Context::from_serialize(&template_data)?,
+                )?;
+                let relative_path = "README.md";
+                std::fs::create_dir_all(target_dir.join(&release_series_dir))?;
+                {
+                    let full_path = release_series_dir.join(relative_path);
+                    println!("Writing file {full_path:?}");
+                    let mut file = File::create(&full_path)
+                        .with_context(|| format!("Couldn't create file {full_path:?}"))?;
+                    write!(file, "{rendered}")?;
+                }
+            }
 
             for entry in versions_with_padding.windows(3).rev() {
                 let previous = entry[0].map(|(v, r)| (v.clone(), r));

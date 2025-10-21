@@ -1,0 +1,21 @@
+---
+source: tests/generate/mod.rs
+expression: input
+input_file: tests/test-result/.tmpvwgp5B/24.8/README.md
+---
+---
+title: OpenTalk v24.8
+---
+
+# OpenTalk v24.8
+
+Supported until: 2024-09-19
+
+## Releases
+
+- [**v24.8.1** (2024-07-30)](../24.8.1/README.md)
+- [**v24.8.0** (2024-07-19)](../24.8.0/README.md)
+
+---
+
+Generation of this document was supported by [retoki](https://git.opentalk.dev/opentalk/tools/retoki).

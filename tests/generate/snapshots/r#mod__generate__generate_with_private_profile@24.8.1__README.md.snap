@@ -1,7 +1,7 @@
 ---
 source: tests/generate/mod.rs
 expression: input
-input_file: tests/test-result/.tmpBM7FKx/24.8.1/README.md
+input_file: tests/test-result/.tmpAIHg0S/24.8.1/README.md
 ---
 ---
 sidebar_position: 0
@@ -11,7 +11,7 @@ title: OpenTalk v24.8.1
 # OpenTalk v24.8.1
 
 - Release date: **2024-07-30**
-- Release series: [**24.8**](../README.md#248)
+- Release series: [**24.8**](../24.8/README.md)
 - Previous release: [**v24.8.0**](../24.8.0/README.md)
 
 ## Component versions
