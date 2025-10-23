@@ -14,7 +14,7 @@ version = "0.7.0"
 anyhow = "1.0.86"
 clap = { version = "4.5.7", features = ["derive", "env"] }
 derive_more = { version = "2.0.0", features = ["display", "from", "into"] }
-gitlab = "0.1608.0"
+gitlab = "0.1804.0"
 indexmap = { version = "2.2.6", features = ["serde"] }
 indicatif = { version = "0.18.0", features = ["rayon"] }
 owo-colors = "4.0.0"
