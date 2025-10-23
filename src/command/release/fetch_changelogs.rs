@@ -6,7 +6,7 @@ use std::path::Path;
 use anyhow::{Context, Result, bail};
 use clap::Args;
 use gitlab::{
-    Gitlab, ReleaseTag,
+    Gitlab,
     api::{Query, projects},
 };
 use indicatif::{MultiProgress, ProgressBar};
@@ -22,6 +22,12 @@ use crate::{
         read_profile_file, read_release_file, write_releases_file,
     },
 };
+
+#[derive(serde::Deserialize)]
+pub struct ReleaseTag {
+    tag_name: String,
+    description: String,
+}
 
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct FetchChangelogsArgs {
@@ -145,10 +151,8 @@ impl FetchChangelogsArgs {
         let releases: Vec<ReleaseTag> = endpoint.query(&gitlab)?;
 
         let release_tag = version.prefixed();
-        if let Some(ReleaseTag {
-            tag_name: _,
-            description,
-        }) = releases.into_iter().find(|r| r.tag_name == release_tag)
+        if let Some(ReleaseTag { description, .. }) =
+            releases.into_iter().find(|r| r.tag_name == release_tag)
         {
             bar.finish_with_message(format!(
                 "{} - Changelog for {component_identifier} v{version} fetched",
