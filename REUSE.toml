@@ -13,6 +13,7 @@ path = [
   ".commitlintrc.json",
   "CHANGELOG.md",
   "Cargo.lock",
+  "README.md",
   "renovate.json",
   "templates/**.md",
   "tests/**/snapshots/**.snap",
