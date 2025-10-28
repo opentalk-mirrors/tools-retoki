@@ -1,10 +1,9 @@
 ---
 source: tests/generate/mod.rs
 expression: input
-input_file: tests/test-result/.tmpoOVLiq/24.8.0/README.md
+input_file: tests/test-result/.tmpPJF1h8/24.8.0/README.md
 ---
 ---
-sidebar_position: 2
 title: OpenTalk v24.8.0
 ---
 

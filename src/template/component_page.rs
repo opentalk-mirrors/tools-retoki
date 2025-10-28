@@ -16,8 +16,6 @@ pub struct ComponentPage {
     pub component_identifier: ComponentIdentifier,
     pub releases: Vec<ComponentRelease>,
 
-    pub sidebar_position: usize,
-
     // TODO: this is an ugly workaround to get beautiful spacing for tables,
     // because tera whitespace control appears to not be providing what is needed
     // to control the number of spaces in the loop elements properly
@@ -33,7 +31,6 @@ impl ComponentPage {
         profile: &ComponentProfile,
         product_name: &ProductName,
         data_releases: &Releases,
-        sidebar_position: usize,
         show_md_header: bool,
     ) -> Self {
         let mut releases = component.releases.clone();
@@ -56,7 +53,6 @@ impl ComponentPage {
                 })
                 .collect(),
             space: " ".to_string(),
-            sidebar_position,
             show_md_header,
         }
     }

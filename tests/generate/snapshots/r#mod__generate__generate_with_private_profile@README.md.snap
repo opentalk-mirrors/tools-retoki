@@ -1,10 +1,9 @@
 ---
 source: tests/generate/mod.rs
 expression: input
-input_file: tests/test-result/.tmpfAQaCu/README.md
+input_file: tests/test-result/.tmpPJF1h8/README.md
 ---
 ---
-sidebar_position: 0
 title: Release Bundles
 ---
 

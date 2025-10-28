@@ -1,6 +1,5 @@
 {%- if show_md_header -%}
 ---
-sidebar_position: {{ sidebar_position }}
 title: {{ product_name }} v{{ version }}
 ---
 

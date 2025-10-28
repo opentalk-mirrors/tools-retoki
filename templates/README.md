@@ -1,6 +1,5 @@
 {%- if show_md_header -%}
 ---
-sidebar_position: 0
 title: Release Bundles
 ---
 
