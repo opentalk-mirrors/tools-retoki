@@ -187,7 +187,7 @@ impl Endpoint for GroupMilestones<'_> {
         format!("groups/{}/milestones", self.group).into()
     }
 
-    fn parameters(&self) -> QueryParams {
+    fn parameters(&self) -> QueryParams<'_> {
         let mut params = QueryParams::default();
 
         let _ = params.push_opt("state", self.state);
@@ -231,7 +231,7 @@ impl Endpoint for Issues<'_> {
         format!("groups/{}/issues", urlencoding::encode(self.group)).into()
     }
 
-    fn parameters(&self) -> QueryParams {
+    fn parameters(&self) -> QueryParams<'_> {
         let mut params = QueryParams::default();
 
         let _ = params
