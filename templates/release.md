@@ -1,6 +1,5 @@
 {%- if show_md_header -%}
 ---
-sidebar_position: {{ sidebar_position }}
 title: {{ product_name }} v{{ version }}
 ---
 
@@ -8,7 +7,7 @@ title: {{ product_name }} v{{ version }}
 # {{ product_name }} v{{ version }}
 
 - Release date: **{{ date }}**
-- Release series: [**{{ series.version }}**](../README.md#{{ series.markdown_anchor }})
+- Release series: [**{{ series.version }}**](../{{ series.version }}/README.md)
 {%- if previous %}
 - Previous release: [**v{{ previous }}**](../{{ previous }}/README.md)
 {%- endif %}

@@ -16,6 +16,7 @@ pub struct ReleaseSeries {
     pub end_of_life: Date,
     pub releases: Vec<Release>,
     pub markdown_anchor: String,
+    pub is_end_of_life: bool,
 }
 
 impl ReleaseSeries {
@@ -25,6 +26,7 @@ impl ReleaseSeries {
         components: &IndexMap<ComponentIdentifier, data::Component>,
         component_profiles: &IndexMap<ComponentIdentifier, data::ComponentProfile>,
         component_categories: &IndexMap<ComponentCategoryIdentifier, data::ComponentCategory>,
+        date: Date,
     ) -> Result<Self> {
         let markdown_anchor = version
             .to_string()
@@ -35,6 +37,8 @@ impl ReleaseSeries {
             .chain(release_series.releases.iter().map(Some))
             .chain(std::iter::once(None))
             .collect::<Vec<_>>();
+
+        let is_end_of_life = release_series.end_of_life < date;
 
         Ok(Self {
             version: version.clone(),
@@ -69,6 +73,7 @@ impl ReleaseSeries {
                 })
                 .collect::<Result<_, anyhow::Error>>()?,
             markdown_anchor,
+            is_end_of_life,
         })
     }
 }

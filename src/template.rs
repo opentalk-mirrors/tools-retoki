@@ -10,6 +10,7 @@ mod release;
 mod release_component;
 mod release_page;
 mod release_series;
+mod release_series_page;
 
 pub use component::Component;
 pub use component_page::ComponentPage;
@@ -20,3 +21,4 @@ pub use release::Release;
 pub use release_component::ReleaseComponent;
 pub use release_page::ReleasePage;
 pub use release_series::ReleaseSeries;
+pub use release_series_page::ReleaseSeriesPage;

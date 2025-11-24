@@ -1,6 +1,5 @@
 {%- if show_md_header -%}
 ---
-sidebar_position: 0
 title: Release Bundles
 ---
 
@@ -32,9 +31,13 @@ gantt
 ## {{ serie.version }}
 {% if show_series_end_of_life %}
 Supported until: {{ serie.end_of_life }}
-{% endif -%}
-{% for release in serie.releases | reverse %}
-- [**v{{ release.version }}** ({{ release.date }})]({{ release.version }}/README.md)
+{% endif %}
+{%- if relative_documentation_base_path %}
+[📚 Documentation]({{ relative_documentation_base_path }}{{ serie.version }}/README.md){ .md-button .md-button--primary }
+{% endif %}
+* **Releases**
+{%- for release in serie.releases | reverse %}
+    * [**v{{ release.version }}** ({{ release.date }})]({{ release.version }}/README.md)
 {%- endfor %}
 {% endfor %}
 

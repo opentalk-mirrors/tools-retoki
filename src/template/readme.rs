@@ -3,6 +3,7 @@
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+use time::Date;
 
 use super::{Component, EmptyReleaseComponent, ReleaseSeries};
 use crate::data::{self, ProductName, Profile};
@@ -32,10 +33,16 @@ pub struct Readme {
     pub show_gitlab_release_links: bool,
 
     pub show_md_header: bool,
+
+    pub relative_documentation_base_path: Option<String>,
 }
 
 impl Readme {
-    pub fn from_data_releases(releases: &data::Releases, profile: &Profile) -> Result<Self> {
+    pub fn from_data_releases(
+        releases: &data::Releases,
+        profile: &Profile,
+        date: Date,
+    ) -> Result<Self> {
         Ok(Self {
             product_name: releases.product_name.clone(),
             releases_page_header: releases.releases_page_header.clone(),
@@ -49,6 +56,7 @@ impl Readme {
                         &releases.components,
                         &profile.components,
                         &releases.component_categories,
+                        date,
                     )
                 })
                 .collect::<Result<_, _>>()?,
@@ -75,6 +83,7 @@ impl Readme {
             show_series_end_of_life: true,
             show_gitlab_release_links: true,
             show_md_header: false,
+            relative_documentation_base_path: None,
         })
     }
 }

@@ -6,6 +6,7 @@ use std::fs;
 use insta::{assert_debug_snapshot, assert_snapshot};
 use retoki::command::{Command, ProfileArgs, generate::GenerateArgs};
 use tempfile::tempdir_in;
+use time::macros::date;
 
 use crate::for_all_files;
 
@@ -31,6 +32,8 @@ fn test_generate_with_public_profile() {
             profile: "public".to_string(),
             profile_path: None,
         },
+        date: Some(date!(2025 - 01 - 01)),
+        with_relative_documentation_base_path: None,
     });
     command.execute("tests/generate/releases.yml").unwrap();
 
@@ -45,9 +48,14 @@ fn test_generate_with_public_profile() {
         "24.8.0/metadata.json",
         "24.8.1/README.md",
         "24.8.1/metadata.json",
+        "24.8/README.md",
+        "25.0.0/README.md",
+        "25.0.0/metadata.json",
+        "25.0/README.md",
         "README.md",
         "components/controller.md",
         "components/web-frontend.md",
+        "navigation.md",
     ]
     "#);
 
@@ -77,6 +85,8 @@ fn test_generate_with_private_profile() {
             profile: "private".to_string(),
             profile_path: None,
         },
+        date: Some(date!(2025 - 01 - 01)),
+        with_relative_documentation_base_path: Some("../".to_string()),
     });
     command.execute("tests/generate/releases.yml").unwrap();
 
@@ -91,9 +101,14 @@ fn test_generate_with_private_profile() {
         "24.8.0/metadata.json",
         "24.8.1/README.md",
         "24.8.1/metadata.json",
+        "24.8/README.md",
+        "25.0.0/README.md",
+        "25.0.0/metadata.json",
+        "25.0/README.md",
         "README.md",
         "components/controller.md",
         "components/web-frontend.md",
+        "navigation.md",
     ]
     "#);
     tmp_dir.close().expect("Removing tmp dir must work");
@@ -117,6 +132,8 @@ fn test_generate_with_invalid_profile() {
             profile: "invalid".to_string(),
             profile_path: None,
         },
+        date: Some(date!(2025 - 01 - 01)),
+        with_relative_documentation_base_path: None,
     });
     let err = command.execute("tests/generate/releases.yml").unwrap_err();
 

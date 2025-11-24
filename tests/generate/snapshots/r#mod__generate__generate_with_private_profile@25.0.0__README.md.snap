@@ -1,0 +1,36 @@
+---
+source: tests/generate/mod.rs
+expression: input
+input_file: tests/test-result/.tmpPJF1h8/25.0.0/README.md
+---
+---
+title: OpenTalk v25.0.0
+---
+
+# OpenTalk v25.0.0
+
+- Release date: **2025-07-01**
+- Release series: [**25.0**](../25.0/README.md)
+
+## Component versions
+
+| Category | Component | Version |
+| -------- | --------- | ------- |
+| **Frontend** | [**web-frontend**](../components/web-frontend.md) |[v1.20.0](https://git.opentalk.dev/opentalk/frontend/web/web-app/-/releases/v1.20.0)|
+| **Services** | [**controller**](../components/controller.md) |[v0.18.0](https://git.opentalk.dev/opentalk/backend/services/controller/-/releases/v0.18.0)|
+
+---
+
+## web-frontend v1.20.0
+
+### New Features
+
+---
+
+## controller v0.18.0
+
+### New Features
+
+---
+
+Generation of this document was supported by [retoki](https://git.opentalk.dev/opentalk/tools/retoki).

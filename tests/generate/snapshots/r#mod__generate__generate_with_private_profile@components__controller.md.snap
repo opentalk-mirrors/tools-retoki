@@ -1,16 +1,25 @@
 ---
 source: tests/generate/mod.rs
 expression: input
-input_file: tests/test-result/.tmpvA7aIQ/components/controller.md
+input_file: tests/test-result/.tmpPJF1h8/components/controller.md
 ---
 ---
-sidebar_position: 1
 title: OpenTalk Controller Community Edition
 ---
 
 # OpenTalk Controller Community Edition version history
 
 
+---
+
+# controller v0.18.0
+
+
+(found in OpenTalk [**v25.0.0**](../25.0.0/README.md))
+
+## Changelog
+
+### New Features
 ---
 
 # controller v0.16.1

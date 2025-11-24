@@ -1,10 +1,9 @@
 ---
 source: tests/generate/mod.rs
 expression: input
-input_file: tests/test-result/.tmpvA7aIQ/README.md
+input_file: tests/test-result/.tmpPJF1h8/README.md
 ---
 ---
-sidebar_position: 0
 title: Release Bundles
 ---
 
@@ -14,18 +13,31 @@ title: Release Bundles
 
 
 
+## 25.0
+
+Supported until: 2026-01-01
+
+[📚 Documentation](../25.0/README.md){ .md-button .md-button--primary }
+
+* **Releases**
+    * [**v25.0.0** (2025-07-01)](25.0.0/README.md)
+
 ## 24.8
 
 Supported until: 2024-09-19
 
-- [**v24.8.1** (2024-07-30)](24.8.1/README.md)
-- [**v24.8.0** (2024-07-19)](24.8.0/README.md)
+[📚 Documentation](../24.8/README.md){ .md-button .md-button--primary }
+
+* **Releases**
+    * [**v24.8.1** (2024-07-30)](24.8.1/README.md)
+    * [**v24.8.0** (2024-07-19)](24.8.0/README.md)
 
 
 # Component lookup table
 
 | Release |  [web-frontend](components/web-frontend.md) | [controller](components/controller.md) |
 | ------- | ---------- | ---------- |
+| [**v25.0.0**](25.0.0/README.md) | [v1.20.0](https://git.opentalk.dev/opentalk/frontend/web/web-app/-/releases/v1.20.0) | [v0.18.0](https://git.opentalk.dev/opentalk/backend/services/controller/-/releases/v0.18.0) |
 | [**v24.8.1**](24.8.1/README.md) | [v1.17.2](https://git.opentalk.dev/opentalk/frontend/web/web-app/-/releases/v1.17.2) | [v0.16.1](https://git.opentalk.dev/opentalk/backend/services/controller/-/releases/v0.16.1) |
 | [**v24.8.0**](24.8.0/README.md) | [v1.17.0](https://git.opentalk.dev/opentalk/frontend/web/web-app/-/releases/v1.17.0) | [v0.16.0](https://git.opentalk.dev/opentalk/backend/services/controller/-/releases/v0.16.0) |
 

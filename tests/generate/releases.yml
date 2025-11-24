@@ -7,6 +7,14 @@ product_name: OpenTalk
 releases_page_header: |
   ## Release Announcements
 series:
+  '25.0':
+    end_of_life: 2026-01-01
+    releases:
+      25.0.0:
+        date: 2025-07-01
+        components:
+          web-frontend: 1.20.0
+          controller: 0.18.0
   '24.8':
     end_of_life: 2024-09-19
     releases:
@@ -42,6 +50,9 @@ components:
     name: Web-Frontend
     category: frontend
     releases:
+      1.20.0:
+        changelog: |-
+          ### New Features
       1.17.2:
         changelog: |-
           ### Internal2
@@ -64,6 +75,9 @@ components:
     name: OpenTalk Controller Community Edition
     category: services
     releases:
+      0.18.0:
+        changelog: |-
+          ### New Features
       0.16.1:
         changelog: |-
           ### Bug fixes
