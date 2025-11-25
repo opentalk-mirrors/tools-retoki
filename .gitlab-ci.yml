@@ -197,6 +197,8 @@ package:container-mr:
       --force
 
 package:container-build:
+  needs:
+    - build
   rules:
     - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+.*$/
     - if: $CI_PIPELINE_SOURCE == "pipeline"
