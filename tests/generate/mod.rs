@@ -28,6 +28,7 @@ fn test_generate_with_public_profile() {
         without_gitlab_release_links: false,
         with_release_metadata_files: true,
         with_md_header: true,
+        with_next_release: true,
         profile: ProfileArgs {
             profile: "public".to_string(),
             profile_path: None,
@@ -81,6 +82,7 @@ fn test_generate_with_private_profile() {
         without_gitlab_release_links: false,
         with_release_metadata_files: true,
         with_md_header: true,
+        with_next_release: false,
         profile: ProfileArgs {
             profile: "private".to_string(),
             profile_path: None,
@@ -128,6 +130,7 @@ fn test_generate_with_invalid_profile() {
         without_gitlab_release_links: false,
         with_release_metadata_files: true,
         with_md_header: true,
+        with_next_release: false,
         profile: ProfileArgs {
             profile: "invalid".to_string(),
             profile_path: None,

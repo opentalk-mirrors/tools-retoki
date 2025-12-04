@@ -54,6 +54,10 @@ pub struct GenerateArgs {
     #[clap(long)]
     pub with_md_header: bool,
 
+    /// Add an entry for the next release to the navigation.
+    #[clap(long)]
+    pub with_next_release: bool,
+
     #[clap(flatten)]
     pub profile: ProfileArgs,
 
@@ -185,6 +189,7 @@ impl GenerateArgs {
         template_data.show_series_end_of_life = !self.without_readme_end_of_life;
         template_data.show_gitlab_release_links = !self.without_gitlab_release_links;
         template_data.show_md_header = self.with_md_header;
+        template_data.show_next_release = self.with_next_release;
         let rendered = tera.render("navigation.md", &Context::from_serialize(&template_data)?)?;
         let target_dir = create_and_canonicalize_dir(&self.target_dir)?;
         let full_path = target_dir.join("navigation.md");

@@ -8,9 +8,10 @@ use clap::{Parser, ValueEnum};
 use serde::Serialize;
 use tabled::{Table, Tabled, settings::Style};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Parser, ValueEnum)]
+#[derive(Default, Clone, Copy, Debug, PartialEq, Eq, Parser, ValueEnum)]
 pub enum OutputFormat {
     /// Output the data in table format
+    #[default]
     Table,
 
     /// Output the data in JSON format
@@ -18,12 +19,6 @@ pub enum OutputFormat {
 
     /// Output the data in JSONL format (one JSON entity per line)
     Jsonl,
-}
-
-impl Default for OutputFormat {
-    fn default() -> Self {
-        Self::Table
-    }
 }
 
 impl FromStr for OutputFormat {
