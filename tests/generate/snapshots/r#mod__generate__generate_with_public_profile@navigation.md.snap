@@ -1,13 +1,15 @@
 ---
 source: tests/generate/mod.rs
 expression: input
-input_file: tests/test-result/.tmp1c047y/navigation.md
+input_file: tests/test-result/.tmpDBU33Y/navigation.md
 ---
 * [Releases](README.md)
     * [25.0](25.0/README.md)
         * [**Documentation**](../25.0/)
         * Releases
             * [**v25.0.0** (2025-07-01)](25.0.0/README.md)
+    * Next release
+        * [**Documentation**](../next/)
     * Older releases
         * [24.8](24.8/README.md)
             * [**Documentation**](../24.8/)

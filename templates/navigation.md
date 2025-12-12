@@ -9,6 +9,10 @@
 {%- endfor %}
 {%- endif -%}
 {%- endfor %}
+{%- if show_next_release %}
+    * Next release
+        * [**Documentation**](../next/)
+{%- endif %}
     * Older releases
 {%- for serie in series | reverse %}
 {%- if serie.is_end_of_life %}
