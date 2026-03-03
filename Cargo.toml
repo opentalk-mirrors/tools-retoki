@@ -29,6 +29,6 @@ derive_more = { version = "2.0.0", features = [
   "display",
   "into",
 ] }
-mockall = "0.13.0"
+mockall = "0.14.0"
 pretty_assertions = "1.4.0"
 strip-ansi-escapes = "0.2.0"
