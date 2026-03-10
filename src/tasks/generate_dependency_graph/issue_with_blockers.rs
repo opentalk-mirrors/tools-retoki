@@ -69,7 +69,7 @@ impl IssueWithBlockers {
             false
         });
 
-        self.write_dependencies(out, true);
+        self.write_dependencies(out, &mut BTreeSet::new(), true);
 
         const OPEN_STYLE: &str = "";
         const CLOSED_STYLE: &str = "fill:#669";
@@ -108,23 +108,41 @@ impl IssueWithBlockers {
         String::from_utf8(diagram_buffer).expect("diagram export must be valid utf-8")
     }
 
-    fn write_dependencies(&self, out: &mut dyn Output, prepend_newline: bool) {
-        let _ = self
+    fn write_dependencies(
+        &self,
+        out: &mut dyn Output,
+        found_dependencies: &mut BTreeSet<(String, String)>,
+        prepend_newline: bool,
+    ) {
+        let blocked_identifier = self.issue.mermaid_identifier();
+
+        let blocking_issues: Vec<_> = self
             .blocking_issues
             .iter()
-            .fold(true, |is_first_output, blocker| {
+            .filter_map(|blocker| {
+                let blocker_identifier = blocker.issue.mermaid_identifier();
+                found_dependencies
+                    .insert((blocker_identifier.clone(), blocked_identifier.clone()))
+                    .then_some((blocker, blocker.issue.mermaid_identifier()))
+            })
+            .collect();
+
+        _ = blocking_issues.into_iter().fold(
+            true,
+            |is_first_output, (blocker, blocker_identifier)| {
                 if prepend_newline && is_first_output {
                     out.println(&format_args!(""));
                 }
 
                 out.println(&format_args!(
                     "{} --> {}",
-                    blocker.issue.mermaid_identifier(),
-                    self.issue.mermaid_identifier(),
+                    blocker_identifier, blocked_identifier,
                 ));
-                blocker.write_dependencies(out, false);
+
+                blocker.write_dependencies(out, found_dependencies, false);
                 false
-            });
+            },
+        );
     }
 
     fn issues_set(&self) -> BTreeSet<&Issue> {
