@@ -3,7 +3,7 @@
 
 ---
 
-image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.94.0-trixie
+image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.95.0-trixie
 
 variables:
   KANIKO_IMAGE: git.opentalk.dev:5050/opentalk/opentalk-devops/containers/kaniko:debug-1.25.2
