@@ -12,7 +12,7 @@ anyhow = "1.0.102"
 clap = { version = "4.5.13", features = ["derive", "env"] }
 config = { version = "0.15.22", default-features = false, features = ["toml"] }
 derive_builder = "0.20.0"
-gitlab = "0.1710.0"
+gitlab = "0.1811.0"
 http = "1.1.0"
 itertools = "0.14.0"
 jiff = { version = "0.2.0", features = ["serde"] }
