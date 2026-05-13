@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: Wolfgang Silbermayr <w.silbermayr@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
+use config::{Config as ConfigBuilder, Environment, File, FileFormat, Source};
 use serde::{Deserialize, Serialize};
 use snafu::{ResultExt as _, Whatever};
 use url::Url;
@@ -13,29 +14,25 @@ pub(crate) struct Config {
     pub gitlab_token: String,
     pub release_label: String,
 }
+impl Config {
+    pub(crate) fn load() -> Result<Self, Whatever> {
+        Self::from_sources(
+            File::new("relbo", FileFormat::Toml).required(false),
+            Environment::with_prefix("RELBO"),
+        )
+    }
 
-mod figment_impls {
-    use figment::{
-        providers::{Env, Format as _, Toml},
-        Error, Figment, Provider,
-    };
-
-    use super::*;
-
-    impl Config {
-        // The error variant is in a box since the error type is at least 208 bytes.
-        fn from<T: Provider>(provider: T) -> Result<Self, Box<Error>> {
-            Figment::from(provider).extract().map_err(Box::new)
-        }
-
-        pub(crate) fn figment() -> Figment {
-            Figment::new()
-                .merge(Toml::file("relbo.toml"))
-                .merge(Env::prefixed("RELBO_"))
-        }
-
-        pub(crate) fn load() -> Result<Self, Whatever> {
-            Self::from(Self::figment()).whatever_context("couldn't load config")
-        }
+    fn from_sources<F, E>(file: F, env: E) -> Result<Self, Whatever>
+    where
+        F: Source + Send + Sync + 'static,
+        E: Source + Send + Sync + 'static,
+    {
+        ConfigBuilder::builder()
+            .add_source(file)
+            .add_source(env)
+            .build()
+            .whatever_context("couldn't load config")?
+            .try_deserialize()
+            .whatever_context("couldn't deserialize config")
     }
 }

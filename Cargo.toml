@@ -9,8 +9,8 @@ version = "0.1.0"
 
 [dependencies]
 clap = { version = "4.5.13", features = ["derive", "env"] }
+config = { version = "0.15.22", default-features = false, features = ["toml"] }
 derive_builder = "0.20.0"
-figment = { version = "0.10.19", features = ["env", "toml"] }
 gitlab = "0.1710.0"
 http = "1.1.0"
 itertools = "0.14.0"
