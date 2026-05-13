@@ -8,6 +8,7 @@ name = "relbo"
 version = "0.1.0"
 
 [dependencies]
+anyhow = "1.0.102"
 clap = { version = "4.5.13", features = ["derive", "env"] }
 config = { version = "0.15.22", default-features = false, features = ["toml"] }
 derive_builder = "0.20.0"
@@ -18,7 +19,7 @@ jiff = { version = "0.2.0", features = ["serde"] }
 owo-colors = "4.0.0"
 semver = { version = "1.0.23", features = ["serde"] }
 serde = { version = "1.0.204", features = ["derive"] }
-snafu = "0.9.0"
+thiserror = "2.0.18"
 url = { version = "2.5.2", features = ["serde"] }
 urlencoding = "2"
 

@@ -4,8 +4,17 @@
 
 use config::{Config as ConfigBuilder, Environment, File, FileFormat, Source};
 use serde::{Deserialize, Serialize};
-use snafu::{ResultExt as _, Whatever};
+use thiserror::Error;
 use url::Url;
+
+#[derive(Debug, Error)]
+pub(crate) enum ConfigError {
+    #[error("couldn't load config")]
+    Load(#[source] config::ConfigError),
+
+    #[error("couldn't deserialize config")]
+    Deserialize(#[source] config::ConfigError),
+}
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub(crate) struct Config {
@@ -14,15 +23,16 @@ pub(crate) struct Config {
     pub gitlab_token: String,
     pub release_label: String,
 }
+
 impl Config {
-    pub(crate) fn load() -> Result<Self, Whatever> {
+    pub(crate) fn load() -> Result<Self, ConfigError> {
         Self::from_sources(
             File::new("relbo", FileFormat::Toml).required(false),
             Environment::with_prefix("RELBO"),
         )
     }
 
-    fn from_sources<F, E>(file: F, env: E) -> Result<Self, Whatever>
+    fn from_sources<F, E>(file: F, env: E) -> Result<Self, ConfigError>
     where
         F: Source + Send + Sync + 'static,
         E: Source + Send + Sync + 'static,
@@ -31,9 +41,9 @@ impl Config {
             .add_source(file)
             .add_source(env)
             .build()
-            .whatever_context("couldn't load config")?
+            .map_err(ConfigError::Load)?
             .try_deserialize()
-            .whatever_context("couldn't deserialize config")
+            .map_err(ConfigError::Deserialize)
     }
 }
 
@@ -127,8 +137,8 @@ mod tests {
         assert_eq!(config.release_label, "r");
     }
 
-    fn report(err: Whatever) -> String {
-        snafu::Report::from_error(err).to_string()
+    fn report(err: ConfigError) -> String {
+        format!("{:?}", anyhow::Error::from(err))
     }
 
     #[test]
@@ -146,8 +156,8 @@ mod tests {
         insta::assert_snapshot!(report(err), @r#"
         couldn't deserialize config
 
-        Caused by this error:
-          1: missing configuration field "release_label"
+        Caused by:
+            missing configuration field "release_label"
         "#);
     }
 
@@ -166,8 +176,8 @@ mod tests {
         insta::assert_snapshot!(report(err), @r#"
         couldn't deserialize config
 
-        Caused by this error:
-          1: relative URL without a base: "not a url" for key `gitlab_url`
+        Caused by:
+            relative URL without a base: "not a url" for key `gitlab_url`
         "#);
     }
 }

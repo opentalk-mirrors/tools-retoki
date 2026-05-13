@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: EUPL-1.2
 
 use clap::{Args, Parser};
-use snafu::Whatever;
 
 use crate::{Command, Config};
 
@@ -24,7 +23,7 @@ pub(crate) struct CommonArgs {
 }
 
 impl Cli {
-    pub(crate) fn run(&self, config: &Config) -> Result<(), Whatever> {
+    pub(crate) fn run(&self, config: &Config) -> anyhow::Result<()> {
         self.command.run(&self.common, config)
     }
 }

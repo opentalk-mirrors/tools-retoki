@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: EUPL-1.2
 
 use clap::Subcommand;
-use snafu::Whatever;
 
 use self::ci::CiArgs;
 use crate::{cli::CommonArgs, Config};
@@ -17,7 +16,7 @@ pub(crate) enum Command {
 }
 
 impl Command {
-    pub(crate) fn run(&self, common_args: &CommonArgs, config: &Config) -> Result<(), Whatever> {
+    pub(crate) fn run(&self, common_args: &CommonArgs, config: &Config) -> anyhow::Result<()> {
         match self {
             Self::Ci(args) => args.run(common_args, config),
         }

@@ -7,7 +7,6 @@ use std::io::stdout;
 use clap::Args;
 use jiff::Timestamp;
 use owo_colors::OwoColorize as _;
-use snafu::Whatever;
 use url::Url;
 
 use crate::{
@@ -29,7 +28,7 @@ pub(crate) struct CiArgs {
 }
 
 impl CiArgs {
-    pub(crate) fn run(&self, common_args: &CommonArgs, config: &Config) -> Result<(), Whatever> {
+    pub(crate) fn run(&self, common_args: &CommonArgs, config: &Config) -> anyhow::Result<()> {
         let gitlab_service = GitlabService::connect(
             config.gitlab_url.clone(),
             config.gitlab_token.clone(),
@@ -55,7 +54,7 @@ impl CiArgs {
         out: &mut dyn Output,
         dry_run: bool,
         base_url: &Url,
-    ) -> Result<(), Whatever> {
+    ) -> anyhow::Result<()> {
         out.println(&format_args!(
             "{}",
             "TASK: Listing overdue milestones…"

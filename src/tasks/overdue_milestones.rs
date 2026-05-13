@@ -4,7 +4,6 @@
 
 use jiff::Timestamp;
 use owo_colors::OwoColorize as _;
-use snafu::Whatever;
 
 use crate::{
     output::Output,
@@ -16,7 +15,7 @@ pub(crate) fn list_overdue_milestones(
     at: Timestamp,
     release_label: &str,
     out: &mut dyn Output,
-) -> Result<(), Whatever> {
+) -> anyhow::Result<()> {
     let overdue_milestones =
         vcs_service.get_overdue_milestones_with_release_issues(at, release_label)?;
 

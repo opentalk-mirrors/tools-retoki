@@ -33,7 +33,6 @@
 )]
 
 use clap::Parser;
-use snafu::Whatever;
 
 use crate::{cli::Cli, command::Command, config::Config};
 
@@ -45,8 +44,7 @@ mod output;
 mod tasks;
 mod vcs_service;
 
-#[snafu::report]
-fn main() -> Result<(), Whatever> {
+fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     let config = Config::load()?;

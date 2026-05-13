@@ -2,9 +2,9 @@
 // SPDX-FileCopyrightText: Wolfgang Silbermayr <w.silbermayr@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
+use anyhow::bail;
 use itertools::Itertools as _;
 use owo_colors::OwoColorize as _;
-use snafu::{whatever, Whatever};
 use url::Url;
 
 use crate::{
@@ -42,7 +42,7 @@ impl<'a> DependencyGraphUpdater<'a> {
         }
     }
 
-    pub fn apply(mut self) -> Result<(), Whatever> {
+    pub fn apply(mut self) -> anyhow::Result<()> {
         let milestones = self.vcs_service.get_milestones()?;
 
         for milestone in milestones {
@@ -52,7 +52,7 @@ impl<'a> DependencyGraphUpdater<'a> {
         Ok(())
     }
 
-    fn update_milestone_issues(&mut self, milestone: Milestone) -> Result<(), Whatever> {
+    fn update_milestone_issues(&mut self, milestone: Milestone) -> anyhow::Result<()> {
         let mut milestone_header = Some(
             format!("Milestone {}", milestone.title.green())
                 .bold()
@@ -79,7 +79,7 @@ impl<'a> DependencyGraphUpdater<'a> {
         &mut self,
         issue: Issue,
         section_header: &mut Option<String>,
-    ) -> Result<(), Whatever> {
+    ) -> anyhow::Result<()> {
         let issue_ref = format!("{}#{}", issue.project.path_with_namespace, issue.iid)
             .blue()
             .to_string();
@@ -154,7 +154,7 @@ impl<'a> DependencyGraphUpdater<'a> {
     }
 }
 
-fn get_dependency_graph_markers(s: &str) -> Result<Option<(usize, usize)>, Whatever> {
+fn get_dependency_graph_markers(s: &str) -> anyhow::Result<Option<(usize, usize)>> {
     let enumerated_lines = s.lines().enumerate();
 
     let mut start_markers = enumerated_lines.clone().filter(|(_, l)| *l == START_MARKER);
@@ -162,22 +162,22 @@ fn get_dependency_graph_markers(s: &str) -> Result<Option<(usize, usize)>, Whate
 
     let start_marker = start_markers.next();
     if start_markers.next().is_some() {
-        whatever!("Found multiple start markers, aborting");
+        bail!("Found multiple start markers, aborting");
     }
 
     let end_marker = end_markers.next();
     if end_markers.next().is_some() {
-        whatever!("Found multiple end markers, aborting");
+        bail!("Found multiple end markers, aborting");
     }
 
     match (start_marker, end_marker) {
         (Some((start_line, _)), Some((end_line, _))) if start_line > end_line => {
-            whatever!("Found end line before start line, aborting");
+            bail!("Found end line before start line, aborting");
         }
         (Some((start_line, _)), Some((end_line, _))) => Ok(Some((start_line, end_line))),
         (None, None) => Ok(None),
         _ => {
-            whatever!("Inconsistent start and end markers, aborting");
+            bail!("Inconsistent start and end markers, aborting");
         }
     }
 }

@@ -4,10 +4,10 @@
 
 use std::collections::BTreeMap;
 
+use anyhow::Context as _;
 use gitlab::api::ParamValue;
 use jiff::{civil::Date, Timestamp};
 use serde::{Deserialize, Serialize};
-use snafu::{OptionExt, Whatever};
 use url::Url;
 
 use crate::vcs_service;
@@ -84,7 +84,7 @@ impl Issue {
         projects: &BTreeMap<u64, Project>,
         gitlab_group: &str,
         linked_issues: Vec<vcs_service::LinkedIssue>,
-    ) -> Result<vcs_service::Issue, Whatever> {
+    ) -> anyhow::Result<vcs_service::Issue> {
         let Self {
             id,
             iid,
@@ -96,7 +96,7 @@ impl Issue {
         } = self.clone();
         let project = projects
             .get(&project_id)
-            .with_whatever_context(|| {
+            .with_context(|| {
                 format!(
                     "couldn't find project {} in downloaded projects",
                     self.project_id
@@ -204,7 +204,7 @@ impl LinkedItem {
         &self,
         projects: &BTreeMap<u64, Project>,
         gitlab_group: &str,
-    ) -> Result<Option<vcs_service::LinkedIssue>, Whatever> {
+    ) -> anyhow::Result<Option<vcs_service::LinkedIssue>> {
         let Self {
             link_type,
             item: IssueOrEpic::Issue(issue),

@@ -9,13 +9,13 @@ use std::{
     collections::{BTreeMap, BTreeSet},
 };
 
+use anyhow::Context as _;
 use derive_builder::Builder;
 use gitlab::{
     api::{common::NameOrId, issues::IssueState, Endpoint, Query as _, QueryParams},
     Gitlab,
 };
 use http::Method;
-use snafu::{ResultExt, Whatever};
 use url::Url;
 
 use self::api::{LinkedItem, MilestoneState};
@@ -30,30 +30,28 @@ pub(crate) struct GitlabService {
 }
 
 impl GitlabService {
-    pub(crate) fn connect(url: Url, token: String, group: String) -> Result<Self, Whatever> {
+    pub(crate) fn connect(url: Url, token: String, group: String) -> anyhow::Result<Self> {
         let host = url
             .as_str()
             .trim_start_matches(&format!("{}://", url.scheme()));
         let client = Gitlab::new(host, token)
-            .with_whatever_context(|_e| format!("failed to create gitlab client for {}", host))?;
+            .with_context(|| format!("failed to create gitlab client for {}", host))?;
 
         Ok(Self { group, client })
     }
 
-    fn get_projects(&self, project_ids: BTreeSet<u64>) -> Result<BTreeMap<u64, Project>, Whatever> {
+    fn get_projects(&self, project_ids: BTreeSet<u64>) -> anyhow::Result<BTreeMap<u64, Project>> {
         let mut projects = BTreeMap::new();
         for project_id in project_ids {
             let endpoint = gitlab::api::projects::Project::builder()
                 .project(project_id)
                 .build()
-                .with_whatever_context(|_| {
-                    format!("failed to build endpoint for project {project_id}")
-                })?;
+                .with_context(|| format!("failed to build endpoint for project {project_id}"))?;
             let _ = projects.insert(
                 project_id,
                 endpoint
                     .query(&self.client)
-                    .with_whatever_context(|_| format!("failed to fetch project {project_id}"))?,
+                    .with_context(|| format!("failed to fetch project {project_id}"))?,
             );
         }
 
@@ -62,17 +60,16 @@ impl GitlabService {
 }
 
 impl VcsService for GitlabService {
-    fn get_milestones(&self) -> Result<Vec<vcs_service::Milestone>, Whatever> {
+    fn get_milestones(&self) -> anyhow::Result<Vec<vcs_service::Milestone>> {
         let endpoint = GroupMilestones::builder()
             .group(&self.group)
             .state(Some(MilestoneState::Active))
             .build()
-            .whatever_context("couldn't build group milestones endpoint")?;
+            .context("couldn't build group milestones endpoint")?;
 
-        let milestones: Vec<Milestone> =
-            endpoint.query(&self.client).with_whatever_context(|_e| {
-                format!("couldn't get milestones for group {}", self.group)
-            })?;
+        let milestones: Vec<Milestone> = endpoint
+            .query(&self.client)
+            .with_context(|| format!("couldn't get milestones for group {}", self.group))?;
 
         Ok(milestones.into_iter().map(From::from).collect())
     }
@@ -81,15 +78,15 @@ impl VcsService for GitlabService {
         &self,
         milestone: &str,
         label: &str,
-    ) -> Result<Vec<vcs_service::Issue>, Whatever> {
+    ) -> anyhow::Result<Vec<vcs_service::Issue>> {
         let endpoint = Issues::builder(&self.group)
             .milestone(Some(milestone))
             .label(Some(label))
             .state(Some(IssueState::Opened))
             .build()
-            .whatever_context("couldn't build project issues endpoint")?;
+            .context("couldn't build project issues endpoint")?;
 
-        let issues: Vec<Issue> = endpoint.query(&self.client).with_whatever_context(|_e| {
+        let issues: Vec<Issue> = endpoint.query(&self.client).with_context(|| {
             format!("couldn't get issues for milestone {milestone} with label {label}")
         })?;
 
@@ -103,24 +100,23 @@ impl VcsService for GitlabService {
                 let linked_issues = self.get_linked_issues(&i.project_id.to_string(), i.iid)?;
                 i.to_vcs_service_issue(&projects, &self.group, linked_issues)
             })
-            .collect::<Result<Vec<_>, Whatever>>()
+            .collect::<anyhow::Result<Vec<_>>>()
     }
 
     fn get_linked_issues(
         &self,
         project: &str,
         issue_id: u64,
-    ) -> Result<Vec<vcs_service::LinkedIssue>, Whatever> {
+    ) -> anyhow::Result<Vec<vcs_service::LinkedIssue>> {
         let endpoint = LinkedItems::builder()
             .project(NameOrId::Name(project.into()))
             .issue(issue_id)
             .build()
-            .whatever_context("couldn't build linked issues endpoint")?;
+            .context("couldn't build linked issues endpoint")?;
 
-        let linked_items: Vec<LinkedItem> =
-            endpoint.query(&self.client).with_whatever_context(|_e| {
-                format!("couldn't get linked issues for issue {issue_id} in project {project}")
-            })?;
+        let linked_items: Vec<LinkedItem> = endpoint.query(&self.client).with_context(|| {
+            format!("couldn't get linked issues for issue {issue_id} in project {project}")
+        })?;
 
         let project_ids = linked_items
             .iter()
@@ -138,7 +134,7 @@ impl VcsService for GitlabService {
                 i.to_vcs_service_linked_issue(&projects, &self.group)
                     .transpose()
             })
-            .collect::<Result<Vec<_>, Whatever>>()
+            .collect::<anyhow::Result<Vec<_>>>()
     }
 
     fn update_issue_description(
@@ -146,15 +142,15 @@ impl VcsService for GitlabService {
         project: &str,
         issue_id: u64,
         description: &str,
-    ) -> Result<(), Whatever> {
+    ) -> anyhow::Result<()> {
         let endpoint = gitlab::api::projects::issues::EditIssue::builder()
             .project(project)
             .issue(issue_id)
             .description(description)
             .build()
-            .whatever_context("couldn't build issue editing endpoint")?;
+            .context("couldn't build issue editing endpoint")?;
 
-        let _: Issue = endpoint.query(&self.client).with_whatever_context(|_e| {
+        let _: Issue = endpoint.query(&self.client).with_context(|| {
             format!("couldn't update description for issue {issue_id} in project {project}")
         })?;
         Ok(())
