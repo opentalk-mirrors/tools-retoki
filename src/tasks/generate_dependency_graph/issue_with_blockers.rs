@@ -4,7 +4,6 @@
 
 use std::collections::BTreeSet;
 
-use snafu::Whatever;
 use url::Url;
 
 use crate::{
@@ -23,7 +22,7 @@ impl IssueWithBlockers {
         vcs_service: &dyn VcsService,
         issue: Issue,
         max_depth: usize,
-    ) -> Result<IssueWithBlockers, Whatever> {
+    ) -> anyhow::Result<IssueWithBlockers> {
         if max_depth == 0 {
             return Ok(IssueWithBlockers {
                 issue,

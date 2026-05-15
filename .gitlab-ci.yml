@@ -1,7 +1,23 @@
 # SPDX-FileCopyrightText: OpenTalk Team <mail@opentalk.eu>
 # SPDX-FileCopyrightText: Wolfgang Silbermayr <w.silbermayr@opentalk.eu>
 # SPDX-License-Identifier: EUPL-1.2
-
+---
+spec:
+  inputs:
+    release_version:
+      description: |
+        Version number, e.g. `1.2.3`. Must be in format `<major>.<minor>.<patch>`.
+        Keep at `0.0.0` unless you're in the process of creating a release.
+      type: string
+      regex: ^([0]|([1-9]\d*))\.([0]|([1-9]\d*))\.([0]|([1-9]\d*))$
+      default: 0.0.0
+    release_issue:
+      description: |
+        The number of an issue which should be closed by a release MR created by this pipeline.
+        Keep empty or unset unless you're in the process of creating a release.
+      type: string
+      regex: ^\d*$
+      default: ''
 ---
 image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.93.0-bookworm
 
@@ -15,20 +31,29 @@ image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.93.0-bookworm
     - if: $CI_PIPELINE_SOURCE == 'schedule'
 
 stages:
+  - build
   - lint
   - test
-  - build
+  - trigger
+  - package
+  - release
 
-lint:commit:
-  image: node:lts-alpine
-  stage: lint
-  rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-  before_script:
-    - apk add --no-cache git
-    - npm install -g @commitlint/cli @commitlint/config-conventional
-  script:
-    - npx commitlint --from $CI_MERGE_REQUEST_DIFF_BASE_SHA --to HEAD --verbose
+include:
+  - project: opentalk/ci/templates/collect-commit-evidence
+    ref: v2
+    file: .gitlab-ci-template.yml
+  - project: opentalk/ci/templates/common-lint
+    ref: v1
+    file: .gitlab-ci-template.yml
+  - project: opentalk/ci/templates/release-creation
+    inputs:
+      version: $[[ inputs.release_version ]]
+      issue: $[[ inputs.release_issue]]
+    ref: v1
+    file: .gitlab-ci-template.yml
+  - project: opentalk/ci/templates/changelog
+    ref: v2
+    file: .gitlab-ci-template.yml
 
 lint:fmt:
   stage: lint
@@ -66,42 +91,6 @@ lint:unnecessary_dependencies:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
   before_script: if ! cargo machete --version; then cargo install cargo-machete; fi
   script: cargo machete --with-metadata
-
-lint:yaml:
-  stage: lint
-  <<: *default_job_condition
-  before_script:
-    - apt-get update && apt-get install -y yamllint
-  script: yamllint .
-
-lint:markdown:
-  stage: lint
-  <<: *default_job_condition
-  image: registry.gitlab.com/pipeline-components/markdownlint:latest
-  script:
-    - mdl --style .markdown_style.rb  --warnings .
-
-lint:licensing:
-  stage: lint
-  <<: *default_job_condition
-  image:
-    name: fsfe/reuse:latest
-    entrypoint: ['']
-  script:
-    - reuse lint
-
-lint:shellcheck:
-  stage: lint
-  <<: *default_job_condition
-  before_script:
-    - apt-get update && apt-get install -y shellcheck
-  script:
-    - git ls-files --exclude='*.sh' --ignored -c -z | xargs -0r shellcheck
-
-lint:toml:
-  stage: lint
-  <<: *default_job_condition
-  script: taplo fmt --check
 
 test:cargo_test:
   stage: test

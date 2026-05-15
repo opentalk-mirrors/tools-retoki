@@ -2,26 +2,26 @@
 // SPDX-FileCopyrightText: Wolfgang Silbermayr <w.silbermayr@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
+use anyhow::Context as _;
 use jiff::{civil::Date, Timestamp, Zoned};
 use semver::Version;
-use snafu::{ResultExt as _, Whatever};
 
 #[cfg_attr(test, mockall::automock)]
 pub(crate) trait VcsService {
-    fn get_milestones(&self) -> Result<Vec<Milestone>, Whatever>;
+    fn get_milestones(&self) -> anyhow::Result<Vec<Milestone>>;
 
     fn get_open_issues_with_milestone_and_label(
         &self,
         milestone: &str,
         label: &str,
-    ) -> Result<Vec<Issue>, Whatever>;
+    ) -> anyhow::Result<Vec<Issue>>;
 
     fn get_overdue_milestones_with_release_issues(
         &self,
         at: Timestamp,
         release_label: &str,
-    ) -> Result<Vec<OverdueMilestone>, Whatever> {
-        let at = at.in_tz("UTC").whatever_context("invalid timestamp")?;
+    ) -> anyhow::Result<Vec<OverdueMilestone>> {
+        let at = at.in_tz("UTC").context("invalid timestamp")?;
 
         let milestones = self.get_milestones()?;
 
@@ -52,15 +52,14 @@ pub(crate) trait VcsService {
         Ok(overdue_milestones_with_release_issues)
     }
 
-    fn get_linked_issues(&self, project: &str, issue_id: u64)
-        -> Result<Vec<LinkedIssue>, Whatever>;
+    fn get_linked_issues(&self, project: &str, issue_id: u64) -> anyhow::Result<Vec<LinkedIssue>>;
 
     fn update_issue_description(
         &self,
         project: &str,
         issue_id: u64,
         description: &str,
-    ) -> Result<(), Whatever>;
+    ) -> anyhow::Result<()>;
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
