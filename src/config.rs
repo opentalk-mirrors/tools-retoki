@@ -18,10 +18,32 @@ pub(crate) enum ConfigError {
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub(crate) struct Config {
+    /// Base URL of the GitLab instance to talk to.
+    #[serde(default = "default_gitlab_url")]
     pub gitlab_url: Url,
+
+    /// GitLab group under which the managed projects live.
+    #[serde(default = "default_gitlab_group")]
     pub gitlab_group: String,
+
+    /// Personal or project access token used to authenticate against GitLab.
     pub gitlab_token: String,
+
+    /// Label used to mark issues that are used to manage the release process.
+    #[serde(default = "default_release_label")]
     pub release_label: String,
+}
+
+fn default_gitlab_url() -> Url {
+    Url::parse("https://git.opentalk.dev").expect("hard-coded URL is valid")
+}
+
+fn default_gitlab_group() -> String {
+    "opentalk".to_string()
+}
+
+fn default_release_label() -> String {
+    "Release".to_string()
 }
 
 impl Config {
@@ -29,10 +51,15 @@ impl Config {
         Self::from_sources(
             File::new("relbo", FileFormat::Toml).required(false),
             Environment::with_prefix("RELBO"),
+            std::env::var("GITLAB_TOKEN").ok(),
         )
     }
 
-    fn from_sources<F, E>(file: F, env: E) -> Result<Self, ConfigError>
+    fn from_sources<F, E>(
+        file: F,
+        env: E,
+        gitlab_token: Option<String>,
+    ) -> Result<Self, ConfigError>
     where
         F: Source + Send + Sync + 'static,
         E: Source + Send + Sync + 'static,
@@ -40,6 +67,8 @@ impl Config {
         ConfigBuilder::builder()
             .add_source(file)
             .add_source(env)
+            .set_override_option("gitlab_token", gitlab_token)
+            .map_err(ConfigError::Load)?
             .build()
             .map_err(ConfigError::Load)?
             .try_deserialize()
@@ -70,7 +99,8 @@ mod tests {
         "#;
 
         let config =
-            Config::from_sources(File::from_str(toml, FileFormat::Toml), empty_env()).unwrap();
+            Config::from_sources(File::from_str(toml, FileFormat::Toml), empty_env(), None)
+                .unwrap();
 
         assert_eq!(
             config,
@@ -107,7 +137,8 @@ mod tests {
             .collect(),
         ));
 
-        let config = Config::from_sources(File::from_str(toml, FileFormat::Toml), env).unwrap();
+        let config =
+            Config::from_sources(File::from_str(toml, FileFormat::Toml), env, None).unwrap();
 
         assert_eq!(config.gitlab_token, "from-env");
         assert_eq!(config.release_label, "hotfix");
@@ -130,7 +161,7 @@ mod tests {
             .collect(),
         ));
 
-        let config = Config::from_sources(File::from_str("", FileFormat::Toml), env).unwrap();
+        let config = Config::from_sources(File::from_str("", FileFormat::Toml), env, None).unwrap();
 
         assert_eq!(config.gitlab_group, "g");
         assert_eq!(config.gitlab_token, "t");
@@ -144,20 +175,17 @@ mod tests {
     #[test]
     fn missing_required_field_errors() {
         let toml = r#"
-            gitlab_url = "https://gitlab.example.com/"
-            gitlab_group = "my-group"
-            gitlab_token = "secret"
-            # release_label intentionally missing
+            # gitlab_token is required if it's not set in the environment
         "#;
 
-        let err =
-            Config::from_sources(File::from_str(toml, FileFormat::Toml), empty_env()).unwrap_err();
+        let err = Config::from_sources(File::from_str(toml, FileFormat::Toml), empty_env(), None)
+            .unwrap_err();
 
         insta::assert_snapshot!(report(err), @r#"
         couldn't deserialize config
 
         Caused by:
-            missing configuration field "release_label"
+            missing configuration field "gitlab_token"
         "#);
     }
 
@@ -170,8 +198,8 @@ mod tests {
             release_label = "release"
         "#;
 
-        let err =
-            Config::from_sources(File::from_str(toml, FileFormat::Toml), empty_env()).unwrap_err();
+        let err = Config::from_sources(File::from_str(toml, FileFormat::Toml), empty_env(), None)
+            .unwrap_err();
 
         insta::assert_snapshot!(report(err), @r#"
         couldn't deserialize config
