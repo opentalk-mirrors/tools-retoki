@@ -70,4 +70,3 @@ create_tags() {
 }
 
 create_tags "$@"
-

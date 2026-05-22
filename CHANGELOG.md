@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2026-05-22
+
+[0.10.0]: https://git.opentalk.dev/opentalk/tools/retoki/-/compare/v0.9.0...v0.10.0
+
+### 📦 Dependencies
+
+- (deps) Lock file maintenance ([!409](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/409), [!417](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/417), [!418](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/418))
+- (deps) Update git.opentalk.dev:5050/opentalk/backend/containers/rust docker tag to v1.94.0 ([!408](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/408))
+- (deps) Update git.opentalk.dev:5050/opentalk/backend/containers/rust docker tag to v1.95.0 ([!415](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/415))
+
+### ⚙ Miscellaneous
+
+- Update project setup ([!421](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/421))
+
+### Ci
+
+- Use changelog template ([!412](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/412))
+
 ## [0.8.0] - 2024-10-23
 [0.8.0]: https://git.opentalk.dev/opentalk/tools/retoki/-/compare/v0.7.0...v0.8.0
 
