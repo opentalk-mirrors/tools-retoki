@@ -7,6 +7,8 @@
 //! *post-release* of the base version rather than a real pre-release. Any
 //! other non-empty `pre` (e.g. `0.16.1-rc.1`) is a real pre-release.
 
+use std::cmp::Ordering;
+
 use semver::{Prerelease, Version};
 
 /// Classification of a [`Prerelease`] identifier.
@@ -37,4 +39,23 @@ pub fn pre_kind(pre: &Prerelease) -> PreKind {
 /// Returns `true` iff `version` is a real pre-release.
 pub fn is_prerelease(version: &Version) -> bool {
     pre_kind(&version.pre) == PreKind::Real
+}
+
+/// Compare two [`Version`]s using [`PreKind`]-aware ordering.
+pub fn cmp(a: &Version, b: &Version) -> Ordering {
+    (a.major, a.minor, a.patch)
+        .cmp(&(b.major, b.minor, b.patch))
+        .then_with(|| cmp_pre(&a.pre, &b.pre))
+}
+
+fn cmp_pre(a: &Prerelease, b: &Prerelease) -> Ordering {
+    match (pre_kind(a), pre_kind(b)) {
+        (PreKind::Numeric, PreKind::Numeric) => {
+            let na: u64 = a.as_str().parse().expect("numeric pre parses as u64");
+            let nb: u64 = b.as_str().parse().expect("numeric pre parses as u64");
+            na.cmp(&nb)
+        }
+        (ka, kb) if ka == kb => a.cmp(b),
+        (ka, kb) => ka.cmp(&kb),
+    }
 }

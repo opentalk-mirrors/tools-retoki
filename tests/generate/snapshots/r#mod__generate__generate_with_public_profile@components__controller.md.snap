@@ -1,7 +1,7 @@
 ---
 source: tests/generate/mod.rs
 expression: input
-input_file: tests/test-result/.tmpCIvJ7V/components/controller.md
+input_file: tests/test-result/.tmpS9m2ui/components/controller.md
 ---
 ---
 title: OpenTalk Controller Community Edition
@@ -22,23 +22,23 @@ title: OpenTalk Controller Community Edition
 ### New Features
 ---
 
-# controller v0.16.1
+# controller v0.16.1-1
 
 
 (found in OpenTalk [**v24.8.1**](../24.8.1/README.md))
 
 ## Changelog
 
-### Bug fixes
+### Ci
 ---
 
-# controller v0.16.1-1
+# controller v0.16.1
 
 
 
 ## Changelog
 
-### Ci
+### Bug fixes
 ---
 
 # controller v0.16.0

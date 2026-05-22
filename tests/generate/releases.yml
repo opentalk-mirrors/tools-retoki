@@ -39,7 +39,7 @@ series:
         date: 2024-07-30
         components:
           web-frontend: 1.17.2
-          controller: 0.16.1
+          controller: 0.16.1-1
 component_categories:
   frontend:
     name: Frontend

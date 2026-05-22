@@ -1,10 +1,10 @@
 ---
 source: tests/generate/mod.rs
 expression: input
-input_file: tests/test-result/.tmp2prhcz/24.8.1/metadata.json
+input_file: tests/test-result/.tmpsUbSza/24.8.2/metadata.json
 ---
 {
-  "version": "24.8.1",
+  "version": "24.8.2",
   "components": {
     "controller": {
       "version": "0.16.1-1"
