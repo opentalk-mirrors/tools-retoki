@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
+# SPDX-License-Identifier: EUPL-1.2
+---
+
+ignores:
+  - CHANGELOG.md
+  - templates/
+  - target/
+config:
+  default: true
+  MD004:
+    style: dash
+  MD007:
+    indent: 4
+  MD029:
+    style: ordered
+  MD033:
+    allowed_elements:
+      - swagger-ui
+  MD024: false
+  MD041: false
+  MD013: false
+  MD046: false
+  MD055: false
+  MD057: false
+  MD025: false

@@ -5,7 +5,7 @@ unexpectedly.
 
 ## Setup
 
-```
+```sh
 cargo install cargo-insta
 ```
 

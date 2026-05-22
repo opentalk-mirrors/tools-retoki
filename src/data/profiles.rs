@@ -6,7 +6,8 @@ use serde::{Deserialize, Serialize};
 
 use super::ComponentIdentifier;
 
-/// A profile allows to specify additional, context dependent information for [`crate::data::Releases`].
+/// A profile allows to specify additional, context dependent information for
+/// [`crate::data::Releases`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Profile {

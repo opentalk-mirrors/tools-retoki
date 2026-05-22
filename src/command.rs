@@ -38,19 +38,20 @@ pub enum Command {
 
     /// Compare the `releases.yml` file with another `releases.yml` file
     ///
-    /// This will print to stdout one line for each release that is found in either of the `releases.yml` files
+    /// This will print to stdout one line for each release that is found in either of the
+    /// `releases.yml` files
     ///
     /// A release was added from the other to the current `releases.yml` file:
-    /// + <version>
+    /// `+ <version>`
     ///
     /// A release was removed from the other to the current `releases.yml` file:
-    /// - <version>
+    /// `- <version>`
     ///
     /// A release is present in both `releases.yml` files and was unchanged:
-    /// = <version>
+    /// `= <version>`
     ///
     /// A release is present in both `releases.yml` files and was changed:
-    /// ~ <version>
+    /// `~ <version>`
     #[clap(verbatim_doc_comment)]
     Compare(CompareArgs),
 }
