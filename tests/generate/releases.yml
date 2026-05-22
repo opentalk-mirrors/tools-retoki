@@ -84,6 +84,9 @@ components:
       0.16.1-rc.1:
         changelog: |-
           ### Ci
+      0.16.1-1:
+        changelog: |-
+          ### Ci
       0.16.0:
         changelog: |-
           ### Docs
