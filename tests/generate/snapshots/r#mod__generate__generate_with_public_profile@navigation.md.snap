@@ -1,7 +1,7 @@
 ---
 source: tests/generate/mod.rs
 expression: input
-input_file: tests/test-result/.tmpDBU33Y/navigation.md
+input_file: tests/test-result/.tmpS9m2ui/navigation.md
 ---
 * [Releases](README.md)
     * [25.0](25.0/README.md)

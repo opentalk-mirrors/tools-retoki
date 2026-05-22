@@ -11,7 +11,6 @@ use super::{
     ComponentCategoryIdentifier, ComponentName, ComponentRelease, ComponentVersion,
     releases::StripReleases,
 };
-use crate::helper::releases::is_obsolete_prerelease;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -71,13 +70,13 @@ impl Component {
             .filter(|(version, _release)| match strip_releases {
                 StripReleases::ObsoletePreReleases => {
                     if let ComponentVersion::Semver(version) = version {
-                        return !is_obsolete_prerelease(&releases, version);
+                        return !strip_releases.is_obsolete_prerelease(&releases, version);
                     }
                     true
                 }
                 StripReleases::PreReleases => {
                     if let ComponentVersion::Semver(version) = version {
-                        return version.pre.is_empty();
+                        return !strip_releases.is_prerelease(version);
                     }
                     true
                 }

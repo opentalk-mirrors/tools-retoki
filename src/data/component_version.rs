@@ -1,14 +1,14 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use std::fmt::Display;
+use std::{cmp::Ordering, fmt::Display};
 
 use semver::Version;
 use serde::{Deserialize, Serialize};
 
-use super::SeriesNumber;
+use super::{SeriesNumber, prerelease};
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum ComponentVersion {
     Semver(Version),
@@ -44,5 +44,30 @@ impl Display for ComponentVersion {
             Self::SeriesNumber(series_number) => series_number.fmt(f),
             Self::Other(other) => other.fmt(f),
         }
+    }
+}
+
+impl Ord for ComponentVersion {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match (self, other) {
+            (Self::Semver(a), Self::Semver(b)) => prerelease::cmp(a, b),
+            (Self::SeriesNumber(a), Self::SeriesNumber(b)) => a.cmp(b),
+            (Self::Other(a), Self::Other(b)) => a.cmp(b),
+            _ => variant_rank(self).cmp(&variant_rank(other)),
+        }
+    }
+}
+
+impl PartialOrd for ComponentVersion {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+fn variant_rank(v: &ComponentVersion) -> u8 {
+    match v {
+        ComponentVersion::Semver(_) => 0,
+        ComponentVersion::SeriesNumber(_) => 1,
+        ComponentVersion::Other(_) => 2,
     }
 }

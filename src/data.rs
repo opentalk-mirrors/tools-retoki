@@ -9,6 +9,7 @@ mod component_identifier;
 mod component_name;
 mod component_release;
 mod component_version;
+mod prerelease;
 mod product_name;
 mod profiles;
 mod release;

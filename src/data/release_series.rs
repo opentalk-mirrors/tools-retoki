@@ -9,7 +9,6 @@ use serde::{Deserialize, Serialize};
 use time::Date;
 
 use super::{Release, releases::StripReleases};
-use crate::helper::releases::is_obsolete_prerelease;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -28,9 +27,9 @@ impl ReleaseSeries {
             .into_iter()
             .filter(|(version, _release)| match strip_releases {
                 StripReleases::ObsoletePreReleases => {
-                    !is_obsolete_prerelease(&all_releases, version)
+                    !strip_releases.is_obsolete_prerelease(&all_releases, version)
                 }
-                StripReleases::PreReleases => version.pre.is_empty(),
+                StripReleases::PreReleases => !strip_releases.is_prerelease(version),
             })
             .collect();
         Self { releases, ..self }

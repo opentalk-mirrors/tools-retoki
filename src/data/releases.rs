@@ -9,16 +9,38 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     Component, ComponentCategory, ComponentCategoryIdentifier, ComponentIdentifier,
-    ComponentVersion, ProductName, Release, ReleaseSeries, SeriesNumber,
+    ComponentVersion, ProductName, Release, ReleaseSeries, SeriesNumber, prerelease,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy)]
 pub enum StripReleases {
     /// Strip obsolete pre-releases (those where a final release is available)
     ObsoletePreReleases,
 
-    /// Strip all pre-releleases
+    /// Strip all pre-releases
     PreReleases,
+}
+
+impl StripReleases {
+    pub(crate) fn is_prerelease(&self, version: &Version) -> bool {
+        prerelease::is_prerelease(version)
+    }
+
+    pub(crate) fn is_obsolete_prerelease(
+        &self,
+        all_releases: &BTreeSet<Version>,
+        version: &Version,
+    ) -> bool {
+        if !self.is_prerelease(version) {
+            return false;
+        }
+        all_releases.iter().any(|v| {
+            v.major == version.major
+                && v.minor == version.minor
+                && v.patch == version.patch
+                && !prerelease::is_prerelease(v)
+        })
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
