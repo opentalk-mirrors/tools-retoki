@@ -12,7 +12,6 @@ use super::ComponentIdentifier;
 #[serde(deny_unknown_fields)]
 pub struct Profile {
     pub profile_name: String,
-
     pub components: IndexMap<ComponentIdentifier, ComponentProfile>,
 }
 
@@ -24,4 +23,8 @@ pub struct ComponentProfile {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub container_base_url: Option<String>,
+
+    /// List of component identifiers that must be released before this component
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub blocked_by: Option<Vec<ComponentIdentifier>>,
 }
