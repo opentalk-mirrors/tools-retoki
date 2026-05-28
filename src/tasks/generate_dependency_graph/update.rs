@@ -10,7 +10,7 @@ use url::Url;
 use crate::{
     output::Output,
     tasks::generate_dependency_graph::issue_with_blockers::IssueWithBlockers,
-    vcs_service::{Issue, Milestone, VcsService},
+    vcs_service::{Issue, VcsService},
 };
 
 const START_MARKER: &str = "<!-- DEPENDENCY_GRAPH_START -->";
@@ -43,29 +43,16 @@ impl<'a> DependencyGraphUpdater<'a> {
     }
 
     pub fn apply(mut self) -> anyhow::Result<()> {
-        let milestones = self.vcs_service.get_milestones()?;
-
-        for milestone in milestones {
-            self.update_milestone_issues(milestone)?;
-        }
-
-        Ok(())
-    }
-
-    fn update_milestone_issues(&mut self, milestone: Milestone) -> anyhow::Result<()> {
-        let mut milestone_header = Some(
-            format!("Milestone {}", milestone.title.green())
-                .bold()
-                .underline()
-                .to_string(),
-        );
         let issues = self
             .vcs_service
-            .get_open_issues_with_milestone_and_label(&milestone.title, self.release_label)?;
+            .get_open_issues_with_label(self.release_label)?;
+
+        let mut section_header = Some("Release tickets".green().bold().underline().to_string());
 
         for issue in issues {
-            self.update_issue(issue, &mut milestone_header)?;
+            self.update_issue(issue, &mut section_header)?;
         }
+
         Ok(())
     }
 
