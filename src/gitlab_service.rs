@@ -74,6 +74,30 @@ impl VcsService for GitlabService {
         Ok(milestones.into_iter().map(From::from).collect())
     }
 
+    fn get_open_issues_with_label(&self, label: &str) -> anyhow::Result<Vec<vcs_service::Issue>> {
+        let endpoint = Issues::builder(&self.group)
+            .label(Some(label))
+            .state(Some(IssueState::Opened))
+            .build()
+            .context("couldn't build project issues endpoint")?;
+
+        let issues: Vec<Issue> = endpoint
+            .query(&self.client)
+            .with_context(|| format!("couldn't get issues with label {label}"))?;
+
+        let project_ids = issues.iter().map(|i| i.project_id).collect();
+
+        let projects = self.get_projects(project_ids)?;
+
+        issues
+            .into_iter()
+            .map(|i| {
+                let linked_issues = self.get_linked_issues(&i.project_id.to_string(), i.iid)?;
+                i.to_vcs_service_issue(&projects, &self.group, linked_issues)
+            })
+            .collect::<anyhow::Result<Vec<_>>>()
+    }
+
     fn get_open_issues_with_milestone_and_label(
         &self,
         milestone: &str,

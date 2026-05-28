@@ -10,6 +10,8 @@ use semver::Version;
 pub(crate) trait VcsService {
     fn get_milestones(&self) -> anyhow::Result<Vec<Milestone>>;
 
+    fn get_open_issues_with_label(&self, label: &str) -> anyhow::Result<Vec<Issue>>;
+
     fn get_open_issues_with_milestone_and_label(
         &self,
         milestone: &str,
