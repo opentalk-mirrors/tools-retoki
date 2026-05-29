@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-05-29
+
+### 🚀 New features
+
+- Document blocking relation between components ([!427](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/427))
+
+### 📦 Dependencies
+
+- (deps) Lock file maintenance ([!424](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/424))
+- (deps) Update pre-commit hook embarkstudios/cargo-deny to v0.19.7 ([!422](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/422))
+- (deps) Update pre-commit hook alessandrojcm/commitlint-pre-commit-hook to v9.25.0 ([!423](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/423))
+- (deps) Update pre-commit hook embarkstudios/cargo-deny to v0.19.8 ([!425](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/425))
+- (deps) Update git.opentalk.dev:5050/opentalk/backend/containers/rust docker tag to v1.96.0 ([!426](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/426))
+
 ## [0.10.0] - 2026-05-22
 
 [0.10.0]: https://git.opentalk.dev/opentalk/tools/retoki/-/compare/v0.9.0...v0.10.0
