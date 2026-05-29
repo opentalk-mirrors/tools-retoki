@@ -4,4 +4,5 @@
 FROM debian:trixie-slim
 
 COPY target/release/retoki /usr/local/bin/retoki
+RUN retoki --version
 RUN apt-get --update install --assume-yes git jq just

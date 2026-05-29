@@ -4,6 +4,7 @@
 # Compiled files
 target/
 **/target/
+!target/release/retoki
 
 # IDE/editor files
 *.rs.bk
