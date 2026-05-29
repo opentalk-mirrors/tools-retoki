@@ -19,7 +19,7 @@ spec:
       regex: ^\d*$
       default: ''
 ---
-image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.93.0-bookworm
+image: git.opentalk.dev:5050/opentalk/backend/containers/rust:1.96.0-bookworm
 
 .default_job_condition: &default_job_condition
   needs: []
