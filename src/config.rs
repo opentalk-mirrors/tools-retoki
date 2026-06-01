@@ -43,7 +43,7 @@ fn default_gitlab_group() -> String {
 }
 
 fn default_release_label() -> String {
-    "Release".to_string()
+    "release-ticket".to_string()
 }
 
 impl Config {
