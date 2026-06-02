@@ -4,6 +4,7 @@
 
 use std::collections::BTreeSet;
 
+use rayon::iter::{IntoParallelIterator as _, ParallelIterator as _};
 use url::Url;
 
 use crate::{
@@ -34,7 +35,7 @@ impl IssueWithBlockers {
 
         let blocking_issues = vcs_service
             .get_linked_issues(&issue.project.path_with_namespace, issue.iid)?
-            .into_iter()
+            .into_par_iter()
             .filter(|link| link.link_type == IssueLinkType::IsBlockedBy)
             .map(|link| Self::load_from_vcs_service(vcs_service, link.issue, remaining_depth))
             .collect::<Result<_, _>>()?;
