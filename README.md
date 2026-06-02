@@ -2,10 +2,10 @@
 
 Generate release documentation for OpenTalk.
 
-This tool will collect release notes from all components making up a OpenTalk product release.
+This tool will collect release notes from all components making up an OpenTalk product release.
 A product release version consists of multiple component versions.
 
-Creating a release is done following these steps:
+Creating a release is done by following these steps:
 
 1. add the new product release to the `release.yaml`
     e.g. in the example `release.yaml` 2.8.0 would be a product release.
