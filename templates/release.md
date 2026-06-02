@@ -22,6 +22,15 @@ title: {{ product_name }} v{{ version }}
 {{ release_notes -}}
 {%- endif %}
 
+{%- if tickets | length > 0 %}
+
+## Changelog
+
+{% for ticket in tickets -%}
+* {{ ticket.title }} ([ticket#{{ticket.iid}}]({{ticket.web_url}}))
+{% endfor %}
+{%- endif %}
+
 ## Component versions
 
 | Category | Component | Version |

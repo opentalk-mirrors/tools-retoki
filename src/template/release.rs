@@ -10,7 +10,9 @@ use serde::{Deserialize, Serialize};
 use time::Date;
 
 use super::{ComponentRelease, ReleaseComponent};
-use crate::data::{self, ComponentCategory, ComponentCategoryIdentifier, ComponentIdentifier};
+use crate::data::{
+    self, ComponentCategory, ComponentCategoryIdentifier, ComponentIdentifier, ProductTicket,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -21,6 +23,7 @@ pub struct Release {
     pub date: Date,
     pub end_date: Date,
     pub release_notes: Option<String>,
+    pub tickets: Vec<ProductTicket>,
     pub components: Vec<ReleaseComponent>,
     pub components_by_identifier: BTreeMap<ComponentIdentifier, ReleaseComponent>,
     pub component_releases: BTreeMap<ComponentIdentifier, Vec<ComponentRelease>>,
@@ -77,6 +80,7 @@ impl Release {
             date: release.date,
             end_date,
             release_notes: release.release_notes.clone(),
+            tickets: release.tickets.clone(),
             components: {
                 let mut categorized = component_categories
                     .keys()

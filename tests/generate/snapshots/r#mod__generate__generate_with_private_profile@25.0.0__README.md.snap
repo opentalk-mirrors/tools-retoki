@@ -1,7 +1,7 @@
 ---
 source: tests/generate/mod.rs
 expression: input
-input_file: tests/test-result/.tmpPcfmT6/25.0.0/README.md
+input_file: tests/test-result/.tmpwKk2TV/25.0.0/README.md
 ---
 ---
 title: OpenTalk v25.0.0
@@ -11,6 +11,12 @@ title: OpenTalk v25.0.0
 
 - Release date: **2025-07-01**
 - Release series: [**25.0**](../25.0/README.md)
+
+## Changelog
+
+* Ticket 0 ([ticket#123](https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ))
+* Ticket 1 ([ticket#124](https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ))
+
 
 ## Component versions
 
