@@ -61,6 +61,7 @@ impl GitlabService {
 }
 
 impl VcsService for GitlabService {
+    #[tracing::instrument(level = "info", skip(self), err)]
     fn get_milestones(&self) -> anyhow::Result<Vec<vcs_service::Milestone>> {
         let endpoint = GroupMilestones::builder()
             .group(&self.group)
@@ -75,6 +76,7 @@ impl VcsService for GitlabService {
         Ok(milestones.into_iter().map(From::from).collect())
     }
 
+    #[tracing::instrument(level = "info", skip(self), err)]
     fn get_open_issues_with_label(&self, label: &str) -> anyhow::Result<Vec<vcs_service::Issue>> {
         let endpoint = Issues::builder(&self.group)
             .label(Some(label))
@@ -99,6 +101,7 @@ impl VcsService for GitlabService {
             .collect::<anyhow::Result<Vec<_>>>()
     }
 
+    #[tracing::instrument(level = "info", skip(self), err)]
     fn get_open_issues_with_milestone_and_label(
         &self,
         milestone: &str,
@@ -128,6 +131,7 @@ impl VcsService for GitlabService {
             .collect::<anyhow::Result<Vec<_>>>()
     }
 
+    #[tracing::instrument(level = "info", skip(self), err)]
     fn get_linked_issues(
         &self,
         project: &str,
@@ -162,6 +166,7 @@ impl VcsService for GitlabService {
             .collect::<anyhow::Result<Vec<_>>>()
     }
 
+    #[tracing::instrument(level = "info", skip(self), err)]
     fn update_issue_description(
         &self,
         project: &str,

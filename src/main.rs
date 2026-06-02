@@ -16,6 +16,8 @@
 )]
 
 use clap::Parser;
+use tracing_indicatif::IndicatifLayer;
+use tracing_subscriber::{fmt, layer::SubscriberExt as _, util::SubscriberInitExt as _, EnvFilter};
 
 use crate::{cli::Cli, command::Command, config::Config};
 
@@ -30,7 +32,21 @@ mod vcs_service;
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
+    init_tracing();
+
     let config = Config::load()?;
 
     cli.run(&config)
+}
+
+fn init_tracing() {
+    let indicatif_layer = IndicatifLayer::new();
+    let filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("relbo=info,warn"));
+
+    tracing_subscriber::registry()
+        .with(filter)
+        .with(fmt::layer().with_writer(indicatif_layer.get_stderr_writer()))
+        .with(indicatif_layer)
+        .init();
 }
