@@ -11,7 +11,7 @@ Creating a release is done following these steps:
     e.g. in the example `release.yaml` 2.8.0 would be a product release.
 
 2. fetch changelogs
-    `GITLAB_TOKEN=(cat ~/.gitlab_token) retoki release 2.8.0 fetch-changelogs --profile internal`
+    `GITLAB_TOKEN=$(cat ~/.gitlab_token) retoki release 2.8.0 fetch-changelogs --profile internal`
 
     This will query the changelogs from the gitlab release entries of the components.
 
