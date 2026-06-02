@@ -34,3 +34,11 @@ insta = "1.47.2"
 mockall = "0.14.0"
 pretty_assertions = "1.4.0"
 strip-ansi-escapes = "0.2.0"
+
+[lints.clippy]
+fallible_impl_from = "warn"
+fn_params_excessive_bools = "warn"
+indexing_slicing = "warn"
+must_use_candidate = "warn"
+unneeded_field_pattern = "warn"
+wildcard_enum_match_arm = "warn"
