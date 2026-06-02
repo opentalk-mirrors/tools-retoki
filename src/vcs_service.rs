@@ -4,10 +4,11 @@
 
 use anyhow::Context as _;
 use jiff::{civil::Date, Timestamp, Zoned};
+use rayon::iter::{IntoParallelIterator as _, ParallelIterator as _};
 use semver::Version;
 
 #[cfg_attr(test, mockall::automock)]
-pub(crate) trait VcsService {
+pub(crate) trait VcsService: Send + Sync {
     fn get_milestones(&self) -> anyhow::Result<Vec<Milestone>>;
 
     fn get_open_issues_with_label(&self, label: &str) -> anyhow::Result<Vec<Issue>>;
@@ -36,22 +37,22 @@ pub(crate) trait VcsService {
             })
             .collect::<Vec<_>>();
 
-        let mut overdue_milestones_with_release_issues = Vec::new();
-
-        for (id, title, overdue_since) in overdue_milestones {
-            let issues = self.get_open_issues_with_milestone_and_label(&title, release_label)?;
-
-            overdue_milestones_with_release_issues.push(OverdueMilestone {
-                milestone: Milestone {
-                    id,
-                    title,
-                    due_date: Some(overdue_since.date()),
-                },
-                overdue_since: overdue_since.timestamp(),
-                issues,
-            });
-        }
-        Ok(overdue_milestones_with_release_issues)
+        overdue_milestones
+            .into_par_iter()
+            .map(|(id, title, overdue_since)| {
+                let issues =
+                    self.get_open_issues_with_milestone_and_label(&title, release_label)?;
+                Ok(OverdueMilestone {
+                    milestone: Milestone {
+                        id,
+                        title,
+                        due_date: Some(overdue_since.date()),
+                    },
+                    overdue_since: overdue_since.timestamp(),
+                    issues,
+                })
+            })
+            .collect()
     }
 
     fn get_linked_issues(&self, project: &str, issue_id: u64) -> anyhow::Result<Vec<LinkedIssue>>;

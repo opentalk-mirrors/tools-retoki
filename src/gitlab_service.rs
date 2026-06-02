@@ -16,6 +16,7 @@ use gitlab::{
     Gitlab,
 };
 use http::Method;
+use rayon::iter::{IntoParallelIterator, ParallelIterator as _};
 use url::Url;
 
 use self::api::{LinkedItem, MilestoneState};
@@ -41,21 +42,21 @@ impl GitlabService {
     }
 
     fn get_projects(&self, project_ids: BTreeSet<u64>) -> anyhow::Result<BTreeMap<u64, Project>> {
-        let mut projects = BTreeMap::new();
-        for project_id in project_ids {
-            let endpoint = gitlab::api::projects::Project::builder()
-                .project(project_id)
-                .build()
-                .with_context(|| format!("failed to build endpoint for project {project_id}"))?;
-            let _ = projects.insert(
-                project_id,
-                endpoint
+        project_ids
+            .into_par_iter()
+            .map(|project_id| {
+                let endpoint = gitlab::api::projects::Project::builder()
+                    .project(project_id)
+                    .build()
+                    .with_context(|| {
+                        format!("failed to build endpoint for project {project_id}")
+                    })?;
+                let project: Project = endpoint
                     .query(&self.client)
-                    .with_context(|| format!("failed to fetch project {project_id}"))?,
-            );
-        }
-
-        Ok(projects)
+                    .with_context(|| format!("failed to fetch project {project_id}"))?;
+                Ok((project_id, project))
+            })
+            .collect()
     }
 }
 
@@ -90,7 +91,7 @@ impl VcsService for GitlabService {
         let projects = self.get_projects(project_ids)?;
 
         issues
-            .into_iter()
+            .into_par_iter()
             .map(|i| {
                 let linked_issues = self.get_linked_issues(&i.project_id.to_string(), i.iid)?;
                 i.to_vcs_service_issue(&projects, &self.group, linked_issues)
@@ -119,7 +120,7 @@ impl VcsService for GitlabService {
         let projects = self.get_projects(project_ids)?;
 
         issues
-            .into_iter()
+            .into_par_iter()
             .map(|i| {
                 let linked_issues = self.get_linked_issues(&i.project_id.to_string(), i.iid)?;
                 i.to_vcs_service_issue(&projects, &self.group, linked_issues)
