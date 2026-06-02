@@ -11,6 +11,7 @@ mod component_release;
 mod component_version;
 mod prerelease;
 mod product_name;
+mod product_ticket;
 mod profiles;
 mod release;
 mod release_series;
@@ -30,6 +31,7 @@ pub use file::{
     write_releases_file,
 };
 pub use product_name::ProductName;
+pub use product_ticket::ProductTicket;
 pub use profiles::{ComponentProfile, Profile};
 pub use release::Release;
 pub use release_series::ReleaseSeries;

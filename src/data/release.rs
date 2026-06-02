@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use time::Date;
 
 use super::{ComponentIdentifier, ComponentVersion};
+use crate::data::ProductTicket;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -15,4 +16,7 @@ pub struct Release {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub release_notes: Option<String>,
+
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub tickets: Vec<ProductTicket>,
 }

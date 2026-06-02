@@ -15,7 +15,12 @@ Creating a release is done following these steps:
 
     This will query the changelogs from the gitlab release entries of the components.
 
-3. generate documentation
+3. fetch product tickets
+    `GITLAB_TOKEN=$(cat ~/.gitlab_token) retoki fetch-product-tickets --product-version 2.8.0`
+
+    This will query the product changelog from all product work items with the `release-2.8.0` tag.
+
+4. generate documentation
     `retoki generate --profile internal`
 
     Render the release documentation.

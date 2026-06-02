@@ -1,0 +1,94 @@
+// SPDX-License-Identifier: EUPL-1.2
+// SPDX-FileCopyrightText: OpenTalk Team <mail@opentalk.eu>
+
+use std::path::Path;
+
+use anyhow::Context;
+use clap::Args;
+use gitlab::{
+    Gitlab,
+    api::{Query, projects},
+};
+use semver::Version;
+use url::Url;
+
+use crate::data::{ProductTicket, SeriesNumber, read_release_file, write_releases_file};
+
+const DEFAULT_PRODUCT_REPO_URL: &str = "https://git.opentalk.dev/opentalk/product/tickets";
+const RELEASE_LABEL_PREFIX: &str = "release-";
+
+#[derive(Debug, Clone, PartialEq, Eq, Args)]
+pub struct FetchProductTicketsArgs {
+    /// The GitLab access token. This token requires at least `api:read` capabilities.
+    #[clap(long, env = "GITLAB_TOKEN")]
+    pub gitlab_token: String,
+
+    /// The product release version
+    #[clap(long)]
+    product_version: Version,
+
+    #[clap(long, default_value = DEFAULT_PRODUCT_REPO_URL)]
+    product_repo: Url,
+}
+
+impl FetchProductTicketsArgs {
+    pub fn execute<R: AsRef<Path>>(self, release_file: R) -> anyhow::Result<()> {
+        let mut releases = read_release_file(&release_file)?;
+        let series_nr = SeriesNumber::from(&self.product_version);
+        let release = releases
+            .series
+            .get_mut(&series_nr)
+            .with_context(|| format!("Release series {series_nr} not found"))?
+            .releases
+            .get_mut(&self.product_version)
+            .with_context(|| {
+                format!(
+                    "Release {} not found in series {series_nr}",
+                    self.product_version
+                )
+            })?;
+
+        release.tickets = self.fetch_product_tickets()?;
+
+        write_releases_file(release_file, releases)
+    }
+
+    fn fetch_product_tickets(&self) -> anyhow::Result<Vec<ProductTicket>> {
+        let product_repo_url: Url = DEFAULT_PRODUCT_REPO_URL.parse()?;
+        let host = product_repo_url
+            .host_str()
+            .with_context(|| format!("No host part found in url {DEFAULT_PRODUCT_REPO_URL}"))?;
+        let gitlab = Gitlab::new(host, &self.gitlab_token)?;
+
+        let label = release_label(&self.product_version);
+        let project = product_repo_url.path().trim_matches('/');
+
+        let endpoint = projects::issues::Issues::builder()
+            .project(project)
+            .label(label)
+            .build()?;
+
+        endpoint.query(&gitlab).context("Failed to fetch tickets")
+    }
+}
+
+fn release_label(version: &Version) -> String {
+    format!("{RELEASE_LABEL_PREFIX}{version}")
+}
+
+#[cfg(test)]
+mod tests {
+    use url::Url;
+
+    use super::DEFAULT_PRODUCT_REPO_URL;
+
+    #[test]
+    fn product_url_is_valid() {
+        let url: Url = DEFAULT_PRODUCT_REPO_URL
+            .parse()
+            .expect("Default product repo URL must be valid");
+
+        assert!(url.host().is_some());
+        assert!(!url.path().is_empty());
+    }
+}
