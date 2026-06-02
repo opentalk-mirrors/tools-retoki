@@ -8,22 +8,22 @@ A product release version consists of multiple component versions.
 Creating a release is done by following these steps:
 
 1. add the new product release to the `release.yaml`
-    e.g. in the example `release.yaml` 2.8.0 would be a product release.
+   e.g. in the example `release.yaml` 2.8.0 would be a product release.
 
 2. fetch changelogs
-    `GITLAB_TOKEN=$(cat ~/.gitlab_token) retoki release 2.8.0 fetch-changelogs --profile internal`
+   `GITLAB_TOKEN=$(cat ~/.gitlab_token) retoki release 2.8.0 fetch-changelogs --profile internal`
 
-    This will query the changelogs from the gitlab release entries of the components.
+   This will query the changelogs from the gitlab release entries of the components.
 
 3. fetch product tickets
-    `GITLAB_TOKEN=$(cat ~/.gitlab_token) retoki fetch-product-tickets --product-version 2.8.0`
+   `GITLAB_TOKEN=$(cat ~/.gitlab_token) retoki fetch-product-tickets --product-version 2.8.0`
 
-    This will query the product changelog from all product work items with the `release-2.8.0` tag.
+   This will query the product changelog from all product work items with the `release-2.8.0` tag.
 
 4. generate documentation
-    `retoki generate --profile internal`
+   `retoki generate --profile internal`
 
-    Render the release documentation.
+   Render the release documentation.
 
 ## Example `release.yaml`
 
