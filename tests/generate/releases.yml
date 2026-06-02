@@ -15,6 +15,18 @@ series:
         components:
           web-frontend: 1.20.0
           controller: 0.18.0
+        tickets:
+          - title: Ticket 0
+            iid: 123
+            web_url: https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ
+            labels:
+              - release-25.0.0
+              - some-other-label
+          - title: Ticket 1
+            iid: 124
+            web_url: https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ
+            labels:
+              - release-25.0.0
   '24.8':
     end_of_life: 2024-09-19
     releases:

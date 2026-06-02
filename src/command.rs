@@ -10,10 +10,12 @@ use self::{
     compare::CompareArgs, component::ComponentArgs, edit::EditArgs, generate::GenerateArgs,
     release::ReleaseArgs, series::SeriesArgs,
 };
+use crate::command::fetch_product_tickets::FetchProductTicketsArgs;
 
 pub mod compare;
 pub mod component;
 pub mod edit;
+pub mod fetch_product_tickets;
 pub mod generate;
 pub mod release;
 pub mod series;
@@ -54,6 +56,8 @@ pub enum Command {
     /// `~ <version>`
     #[clap(verbatim_doc_comment)]
     Compare(CompareArgs),
+
+    FetchProductTickets(FetchProductTicketsArgs),
 }
 
 impl Command {
@@ -65,6 +69,7 @@ impl Command {
             Command::Series(args) => args.execute(release_file),
             Command::Edit(args) => args.execute(release_file),
             Command::Compare(args) => args.execute(release_file),
+            Command::FetchProductTickets(args) => args.execute(release_file),
         }
     }
 }
