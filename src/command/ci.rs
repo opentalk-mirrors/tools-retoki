@@ -18,7 +18,7 @@ use crate::{
         generate_dependency_graph::DependencyGraphUpdater,
         overdue_milestones::list_overdue_milestones,
     },
-    vcs_service::VcsService,
+    vcs_service::{VcsService, VcsServiceExt as _},
 };
 
 #[derive(Clone, Debug, Args)]
@@ -33,7 +33,8 @@ impl CiArgs {
             config.gitlab_url.clone(),
             config.gitlab_token.clone(),
             config.gitlab_group.clone(),
-        )?;
+        )?
+        .dry_run_if(common_args.dry_run);
 
         let at = self.faketime.unwrap_or_else(Timestamp::now);
 
