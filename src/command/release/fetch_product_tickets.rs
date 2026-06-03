@@ -23,45 +23,36 @@ pub struct FetchProductTicketsArgs {
     #[clap(long, env = "GITLAB_TOKEN")]
     pub gitlab_token: String,
 
-    /// The product release version
-    #[clap(long)]
-    product_version: Version,
-
     #[clap(long, default_value = DEFAULT_PRODUCT_REPO_URL)]
     product_repo: Url,
 }
 
 impl FetchProductTicketsArgs {
-    pub fn execute<R: AsRef<Path>>(self, release_file: R) -> anyhow::Result<()> {
+    pub fn execute<R: AsRef<Path>>(self, release_file: R, version: &Version) -> anyhow::Result<()> {
         let mut releases = read_release_file(&release_file)?;
-        let series_nr = SeriesNumber::from(&self.product_version);
+        let series_nr = SeriesNumber::from(version);
         let release = releases
             .series
             .get_mut(&series_nr)
             .with_context(|| format!("Release series {series_nr} not found"))?
             .releases
-            .get_mut(&self.product_version)
-            .with_context(|| {
-                format!(
-                    "Release {} not found in series {series_nr}",
-                    self.product_version
-                )
-            })?;
+            .get_mut(version)
+            .with_context(|| format!("Release {version} not found in series {series_nr}"))?;
 
-        release.tickets = self.fetch_product_tickets()?;
+        release.tickets = self.fetch_product_tickets(version)?;
 
         write_releases_file(release_file, releases)
     }
 
-    fn fetch_product_tickets(&self) -> anyhow::Result<Vec<ProductTicket>> {
-        let product_repo_url: Url = DEFAULT_PRODUCT_REPO_URL.parse()?;
-        let host = product_repo_url
+    fn fetch_product_tickets(&self, version: &Version) -> anyhow::Result<Vec<ProductTicket>> {
+        let host = self
+            .product_repo
             .host_str()
-            .with_context(|| format!("No host part found in url {DEFAULT_PRODUCT_REPO_URL}"))?;
+            .with_context(|| format!("No host part found in url {}", self.product_repo))?;
         let gitlab = Gitlab::new(host, &self.gitlab_token)?;
 
-        let label = release_label(&self.product_version);
-        let project = product_repo_url.path().trim_matches('/');
+        let label = release_label(version);
+        let project = self.product_repo.path().trim_matches('/');
 
         let endpoint = projects::issues::Issues::builder()
             .project(project)
