@@ -8,9 +8,11 @@ use clap::{Args, Subcommand};
 use semver::Version;
 
 mod fetch_changelogs;
+mod fetch_product_tickets;
 mod show;
 
 pub use fetch_changelogs::FetchChangelogsArgs;
+pub use fetch_product_tickets::FetchProductTicketsArgs;
 
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct ReleaseArgs {
@@ -36,6 +38,11 @@ pub enum ReleaseCommand {
     ///
     /// Requires the GITLAB_TOKEN environment variable to be set
     FetchChangelogs(FetchChangelogsArgs),
+
+    /// Fetch the product tickets for a release from the product tickets repository
+    ///
+    /// Requires the GITLAB_TOKEN environment variable to be set
+    FetchProductTickets(FetchProductTicketsArgs),
 }
 
 impl ReleaseCommand {
@@ -43,6 +50,7 @@ impl ReleaseCommand {
         match self {
             ReleaseCommand::Show(args) => args.execute(release_file, version),
             ReleaseCommand::FetchChangelogs(args) => args.execute(release_file, version),
+            ReleaseCommand::FetchProductTickets(args) => args.execute(release_file, version),
         }
     }
 }
