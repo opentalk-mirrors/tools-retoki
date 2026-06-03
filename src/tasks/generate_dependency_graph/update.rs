@@ -109,16 +109,9 @@ impl<'a> DependencyGraphUpdater<'a> {
         let overall_description = before.chain(diagram_string.lines()).chain(after).join("\n");
 
         if &overall_description == description {
-            if self.dry_run {
-                self.out.println(&format_args!(
-                        "- {issue_ref}: No changes required in description. Running in DRY-RUN mode, issue description would remain unchanged:",
-                    ));
-                self.out.println(&format_args!("{}", overall_description));
-            } else {
-                self.out.println(&format_args!(
-                    "- {issue_ref}: No changes required in description",
-                ));
-            }
+            self.out.println(&format_args!(
+                "- {issue_ref}: No changes required in description",
+            ));
             return Ok(());
         }
 
@@ -127,7 +120,6 @@ impl<'a> DependencyGraphUpdater<'a> {
                 "- {issue_ref}: Running in DRY-RUN mode, issue description would be updated to:",
             ));
             self.out.println(&format_args!("{}", overall_description));
-            return Ok(());
         }
 
         self.vcs_service.update_issue_description(
@@ -135,8 +127,6 @@ impl<'a> DependencyGraphUpdater<'a> {
             issue.iid,
             &overall_description,
         )?;
-        self.out
-            .println(&format_args!("- {issue_ref}: Description updated.",));
         Ok(())
     }
 }
