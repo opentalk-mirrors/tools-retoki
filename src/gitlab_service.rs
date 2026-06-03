@@ -19,9 +19,9 @@ use http::Method;
 use rayon::iter::{IntoParallelIterator, ParallelIterator as _};
 use url::Url;
 
-use self::api::{LinkedItem, MilestoneState};
+use self::api::LinkedItem;
 use crate::{
-    gitlab_service::api::{Issue, Milestone, Project},
+    gitlab_service::api::{Issue, Project},
     vcs_service::{self, VcsService},
 };
 
@@ -62,21 +62,6 @@ impl GitlabService {
 
 impl VcsService for GitlabService {
     #[tracing::instrument(level = "info", skip(self), err)]
-    fn get_milestones(&self) -> anyhow::Result<Vec<vcs_service::Milestone>> {
-        let endpoint = GroupMilestones::builder()
-            .group(&self.group)
-            .state(Some(MilestoneState::Active))
-            .build()
-            .context("couldn't build group milestones endpoint")?;
-
-        let milestones: Vec<Milestone> = endpoint
-            .query(&self.client)
-            .with_context(|| format!("couldn't get milestones for group {}", self.group))?;
-
-        Ok(milestones.into_iter().map(From::from).collect())
-    }
-
-    #[tracing::instrument(level = "info", skip(self), err)]
     fn get_open_issues_with_label(&self, label: &str) -> anyhow::Result<Vec<vcs_service::Issue>> {
         let endpoint = Issues::builder(&self.group)
             .label(Some(label))
@@ -87,36 +72,6 @@ impl VcsService for GitlabService {
         let issues: Vec<Issue> = endpoint
             .query(&self.client)
             .with_context(|| format!("couldn't get issues with label {label}"))?;
-
-        let project_ids = issues.iter().map(|i| i.project_id).collect();
-
-        let projects = self.get_projects(project_ids)?;
-
-        issues
-            .into_par_iter()
-            .map(|i| {
-                let linked_issues = self.get_linked_issues(&i.project_id.to_string(), i.iid)?;
-                i.to_vcs_service_issue(&projects, &self.group, linked_issues)
-            })
-            .collect::<anyhow::Result<Vec<_>>>()
-    }
-
-    #[tracing::instrument(level = "info", skip(self), err)]
-    fn get_open_issues_with_milestone_and_label(
-        &self,
-        milestone: &str,
-        label: &str,
-    ) -> anyhow::Result<Vec<vcs_service::Issue>> {
-        let endpoint = Issues::builder(&self.group)
-            .milestone(Some(milestone))
-            .label(Some(label))
-            .state(Some(IssueState::Opened))
-            .build()
-            .context("couldn't build project issues endpoint")?;
-
-        let issues: Vec<Issue> = endpoint.query(&self.client).with_context(|| {
-            format!("couldn't get issues for milestone {milestone} with label {label}")
-        })?;
 
         let project_ids = issues.iter().map(|i| i.project_id).collect();
 
@@ -184,41 +139,6 @@ impl VcsService for GitlabService {
             format!("couldn't update description for issue {issue_id} in project {project}")
         })?;
         Ok(())
-    }
-}
-
-#[derive(Debug, Builder, Clone)]
-struct GroupMilestones<'a> {
-    #[builder(setter(into))]
-    group: NameOrId<'a>,
-
-    /// Filter milestones based on state
-    #[builder(default)]
-    state: Option<MilestoneState>,
-}
-
-impl<'a> GroupMilestones<'a> {
-    /// Create a builder for the endpoint.
-    pub fn builder() -> GroupMilestonesBuilder<'a> {
-        GroupMilestonesBuilder::default()
-    }
-}
-
-impl Endpoint for GroupMilestones<'_> {
-    fn method(&self) -> Method {
-        Method::GET
-    }
-
-    fn endpoint(&self) -> Cow<'static, str> {
-        format!("groups/{}/milestones", self.group).into()
-    }
-
-    fn parameters(&self) -> QueryParams<'_> {
-        let mut params = QueryParams::default();
-
-        let _ = params.push_opt("state", self.state);
-
-        params
     }
 }
 

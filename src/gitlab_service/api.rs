@@ -5,67 +5,9 @@
 use std::collections::BTreeMap;
 
 use anyhow::Context as _;
-use gitlab::api::ParamValue;
-use jiff::{civil::Date, Timestamp};
 use serde::{Deserialize, Serialize};
-use url::Url;
 
 use crate::vcs_service;
-
-#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub(crate) struct Milestone {
-    pub id: usize,
-    pub iid: usize,
-    pub group_id: usize,
-    pub title: String,
-    pub description: String,
-    pub due_date: Option<Date>,
-    pub start_date: Option<Date>,
-    pub state: MilestoneState,
-    pub updated_at: Timestamp,
-    pub created_at: Timestamp,
-    pub expired: bool,
-    pub web_url: Url,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub(crate) enum MilestoneState {
-    Active,
-    Closed,
-}
-
-impl MilestoneState {
-    const fn as_str(self) -> &'static str {
-        match self {
-            Self::Active => "active",
-            Self::Closed => "closed",
-        }
-    }
-}
-
-impl ParamValue<'static> for MilestoneState {
-    fn as_value(&self) -> std::borrow::Cow<'static, str> {
-        self.as_str().into()
-    }
-}
-
-impl From<Milestone> for vcs_service::Milestone {
-    fn from(
-        Milestone {
-            id,
-            title,
-            due_date,
-            ..
-        }: Milestone,
-    ) -> Self {
-        Self {
-            id,
-            title,
-            due_date,
-        }
-    }
-}
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub(crate) struct Issue {
