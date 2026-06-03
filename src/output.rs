@@ -13,9 +13,3 @@ impl<W: Write> Output for W {
         let _ = writeln!(self, "{}", value);
     }
 }
-
-#[cfg(test)]
-mod dummy_output;
-
-#[cfg(test)]
-pub(crate) use dummy_output::DummyOutput;
