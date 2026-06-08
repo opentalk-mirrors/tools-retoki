@@ -194,6 +194,9 @@ mod tests {
             description: Some("This is the issue description".to_string()),
             state: IssueState::Opened,
             linked_issues: vec![],
+            web_url: base_url
+                .join("my/project/-/issues/0")
+                .expect("base url must be joinable with project path"),
         };
 
         let tree = IssueWithBlockers {
@@ -235,6 +238,9 @@ my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_bla
             description: Some("This is the issue description".to_string()),
             state: IssueState::Closed,
             linked_issues: vec![],
+            web_url: base_url
+                .join("my/project/-/issues/0")
+                .expect("base url must be joinable with project path"),
         };
 
         let issue_b = Issue {
@@ -246,6 +252,9 @@ my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_bla
             description: Some("This is the issue description".to_string()),
             state: IssueState::Closed,
             linked_issues: vec![],
+            web_url: base_url
+                .join("my/project/-/issues/1")
+                .expect("base url must be joinable with project path"),
         };
 
         let issue_c = Issue {
@@ -257,6 +266,9 @@ my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_bla
             description: Some("This is the issue description".to_string()),
             state: IssueState::Closed,
             linked_issues: vec![],
+            web_url: base_url
+                .join("my/project/-/issues/3")
+                .expect("base url must be joinable with project path"),
         };
 
         let issue_d = Issue {
@@ -268,6 +280,9 @@ my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_bla
             description: Some("This is the issue description".to_string()),
             state: IssueState::Opened,
             linked_issues: vec![],
+            web_url: base_url
+                .join("my/project/-/issues/4")
+                .expect("base url must be joinable with project path"),
         };
 
         let tree = IssueWithBlockers {

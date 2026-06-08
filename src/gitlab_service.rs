@@ -9,7 +9,7 @@ use std::{
     collections::{BTreeMap, BTreeSet},
 };
 
-use anyhow::Context as _;
+use anyhow::{bail, Context as _};
 use derive_builder::Builder;
 use gitlab::{
     api::{common::NameOrId, issues::IssueState, Endpoint, Query as _, QueryParams},
@@ -44,19 +44,17 @@ impl GitlabService {
     fn get_projects(&self, project_ids: BTreeSet<u64>) -> anyhow::Result<BTreeMap<u64, Project>> {
         project_ids
             .into_par_iter()
-            .map(|project_id| {
-                let endpoint = gitlab::api::projects::Project::builder()
-                    .project(project_id)
-                    .build()
-                    .with_context(|| {
-                        format!("failed to build endpoint for project {project_id}")
-                    })?;
-                let project: Project = endpoint
-                    .query(&self.client)
-                    .with_context(|| format!("failed to fetch project {project_id}"))?;
-                Ok((project_id, project))
-            })
+            .map(|id| Ok((id, self.get_project(id)?)))
             .collect()
+    }
+
+    fn get_project(&self, id: u64) -> anyhow::Result<Project> {
+        gitlab::api::projects::Project::builder()
+            .project(id)
+            .build()
+            .with_context(|| format!("failed to build endpoint for project {id}"))?
+            .query(&self.client)
+            .with_context(|| format!("failed to fetch project {id}"))
     }
 }
 
@@ -139,6 +137,100 @@ impl VcsService for GitlabService {
             format!("couldn't update description for issue {issue_id} in project {project}")
         })?;
         Ok(())
+    }
+
+    #[tracing::instrument(level = "info", skip(self), err)]
+    fn get_open_issue_with_title(
+        &self,
+        project: &str,
+        title: &str,
+    ) -> anyhow::Result<Option<vcs_service::Issue>> {
+        let endpoint = gitlab::api::projects::issues::Issues::builder()
+            .project(project)
+            .state(IssueState::Opened)
+            .search(title)
+            .search_in(gitlab::api::projects::issues::IssueSearchScope::Title)
+            .build()
+            .context("couldn't build project issues search endpoint")?;
+
+        let issues: Vec<Issue> = endpoint.query(&self.client).with_context(|| {
+            format!("couldn't search open issues in project {project} for title {title:?}")
+        })?;
+
+        let Some(issue) = issues.into_iter().find(|i| i.title == title) else {
+            return Ok(None);
+        };
+
+        let projects = self.get_projects([issue.project_id].into_iter().collect())?;
+        let linked_issues = self.get_linked_issues(project, issue.iid)?;
+        Ok(Some(issue.to_vcs_service_issue(
+            &projects,
+            &self.group,
+            linked_issues,
+        )?))
+    }
+
+    #[tracing::instrument(level = "info", skip(self, description, labels), err)]
+    fn create_issue(
+        &self,
+        project: &str,
+        title: &str,
+        description: &str,
+        labels: &[&str],
+    ) -> anyhow::Result<vcs_service::Issue> {
+        let endpoint = gitlab::api::projects::issues::CreateIssue::builder()
+            .project(project)
+            .title(title)
+            .description(description)
+            .labels(labels.iter().copied())
+            .build()
+            .context("couldn't build issue creation endpoint")?;
+
+        let issue: Issue = endpoint
+            .query(&self.client)
+            .with_context(|| format!("couldn't create issue in project {project}"))?;
+
+        let project = self.get_project(issue.project_id)?;
+        issue.to_vcs_service_issue(
+            &BTreeMap::from_iter([(issue.project_id, project)]),
+            &self.group,
+            vec![],
+        )
+    }
+
+    #[tracing::instrument(level = "info", skip(self), err)]
+    fn get_raw_file(&self, project: &str, path: &str) -> anyhow::Result<Option<String>> {
+        let endpoint = gitlab::api::projects::repository::files::FileRaw::builder()
+            .project(project)
+            .file_path(path)
+            .ref_("HEAD")
+            .build()
+            .context("couldn't build repository file endpoint")?;
+
+        match gitlab::api::raw(endpoint).query(&self.client) {
+            Ok(bytes) => {
+                let text = String::from_utf8(bytes)
+                    .with_context(|| format!("issue template {path} is not valid UTF-8"))?;
+                Ok(Some(text))
+            }
+            Err(gitlab::api::ApiError::GitlabWithStatus { status, .. })
+                if status == http::StatusCode::NOT_FOUND =>
+            {
+                Ok(None)
+            }
+            Err(e) => Err(anyhow::Error::new(e).context(format!(
+                "couldn't fetch issue template {path} from project {project}"
+            ))),
+        }
+    }
+
+    fn project_path_from_url(&self, url: &Url) -> anyhow::Result<String> {
+        let path = url.path().trim_matches('/');
+        if path.is_empty() {
+            bail!("URL {url} has an empty path");
+        }
+
+        Ok(path.to_owned())
     }
 }
 
