@@ -24,7 +24,13 @@ version = 2
 yanked = "deny"
 # A list of advisory IDs to ignore. Note that ignored advisories will still
 # output a note when they are encountered.
-ignore = []
+ignore = [
+  #       reqwest v0.13.4
+  #       └── gitlab v0.1811.0
+  #           └── relbo v0.1.0
+  # error[unmaintained]: proc-macro-error2 is unmaintained
+  "RUSTSEC-2026-0173",
+]
 # Threshold for security vulnerabilities, any vulnerability with a CVSS score
 # lower than the range specified will be ignored. Note that ignored advisories
 # will still output a note when they are encountered.
@@ -43,7 +49,15 @@ version = 2
 # List of explictly allowed licenses
 # See https://spdx.org/licenses/ for list of possible licenses
 # [possible values: any SPDX 3.11 short identifier (+ optional exception)].
-allow = ["Apache-2.0", "BSD-3-Clause", "EUPL-1.2", "ISC", "MIT", "Unicode-3.0"]
+allow = [
+  "Apache-2.0",
+  "BSD-3-Clause",
+  "CDLA-Permissive-2.0",
+  "EUPL-1.2",
+  "ISC",
+  "MIT",
+  "Unicode-3.0",
+]
 # The confidence threshold for detecting a license from license text.
 # The higher the value, the more closely the license text must be to the
 # canonical license text of a valid SPDX license file.
@@ -109,7 +123,9 @@ allow = []
 deny = []
 # Certain crates/versions that will be skipped when doing duplicate detection.
 skip = [
+  { name = "gitlab", version = "0.1804" },
   { name = "heck", version = "0.4" },
+  { name = "reqwest", version = "0.12" },
   { name = "syn", version = "1" },
   { name = "thiserror", version = "1" },
   { name = "thiserror-impl", version = "1" },

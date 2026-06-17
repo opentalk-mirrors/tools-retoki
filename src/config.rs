@@ -2,6 +2,8 @@
 // SPDX-FileCopyrightText: Wolfgang Silbermayr <w.silbermayr@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
+use std::path::PathBuf;
+
 use config::{Config as ConfigBuilder, Environment, File, FileFormat, Source};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -32,6 +34,19 @@ pub(crate) struct Config {
     /// Label used to mark issues that are used to manage the release process.
     #[serde(default = "default_release_label")]
     pub release_label: String,
+
+    /// Full path (group/project) of the GitLab project that tracks product releases.
+    #[serde(default = "default_release_repo")]
+    pub release_repo: String,
+
+    /// Filesystem path to the `releases.yml` file describing component versions.
+    #[serde(default = "default_releases_yml_path")]
+    pub releases_yml_path: PathBuf,
+
+    /// Name of the retoki release profile to load alongside `releases.yml`.
+    /// The profile file is resolved as `<releases_yml_dir>/retoki-profiles/<release_profile>.yml`.
+    #[serde(default = "default_release_profile")]
+    pub release_profile: String,
 }
 
 fn default_gitlab_url() -> Url {
@@ -44,6 +59,18 @@ fn default_gitlab_group() -> String {
 
 fn default_release_label() -> String {
     "release-ticket".to_string()
+}
+
+fn default_release_repo() -> String {
+    "opentalk/product-releases".to_string()
+}
+
+fn default_releases_yml_path() -> PathBuf {
+    "./releases.yml".parse().expect("hard-coded path is valid")
+}
+
+fn default_release_profile() -> String {
+    "internal".to_string()
 }
 
 impl Config {
@@ -96,6 +123,9 @@ mod tests {
             gitlab_group = "my-group"
             gitlab_token = "secret"
             release_label = "release"
+            release_repo = "opentalk/product-releases"
+            releases_yml_path = "./releases/releases.yml"
+            release_profile = "internal"
         "#;
 
         let config =
@@ -109,6 +139,9 @@ mod tests {
                 gitlab_group: "my-group".to_owned(),
                 gitlab_token: "secret".to_owned(),
                 release_label: "release".to_owned(),
+                release_repo: "opentalk/product-releases".to_owned(),
+                releases_yml_path: "./releases/releases.yml".parse().expect("Invalid path"),
+                release_profile: "internal".to_owned(),
             }
         );
     }

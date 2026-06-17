@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 
 use anyhow::Context as _;
 use serde::{Deserialize, Serialize};
+use url::Url;
 
 use crate::vcs_service;
 
@@ -18,6 +19,7 @@ pub(crate) struct Issue {
     pub project_id: u64,
     pub references: IssueReferences,
     pub state: IssueState,
+    pub web_url: Url,
 }
 
 impl Issue {
@@ -35,6 +37,7 @@ impl Issue {
             project_id,
             references,
             state,
+            web_url,
         } = self.clone();
         let project = projects
             .get(&project_id)
@@ -58,6 +61,7 @@ impl Issue {
                 .to_string(),
             state: state.into(),
             linked_issues,
+            web_url,
         })
     }
 }

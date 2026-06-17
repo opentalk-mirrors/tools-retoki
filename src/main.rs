@@ -26,7 +26,9 @@ mod command;
 mod config;
 mod gitlab_service;
 mod output;
+mod releases;
 mod tasks;
+mod templates;
 mod vcs_service;
 
 fn main() -> anyhow::Result<()> {
