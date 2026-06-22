@@ -6,7 +6,8 @@ use std::path::PathBuf;
 use anyhow::Result;
 use clap::Parser;
 use command::Command;
-use tracing_subscriber::EnvFilter;
+use tracing_indicatif::IndicatifLayer;
+use tracing_subscriber::{EnvFilter, layer::SubscriberExt as _, util::SubscriberInitExt as _};
 
 mod command;
 mod data;
@@ -40,8 +41,15 @@ fn init_tracing() {
     let env_filter =
         EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("retoki=info"));
 
-    tracing_subscriber::fmt()
-        .with_env_filter(env_filter)
-        .with_target(false)
+    let indicatif_layer = IndicatifLayer::new();
+    tracing_subscriber::registry()
+        .with(env_filter)
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_target(false)
+                .without_time()
+                .with_writer(indicatif_layer.get_stderr_writer()),
+        )
+        .with(indicatif_layer)
         .init();
 }

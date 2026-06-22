@@ -12,6 +12,8 @@ use clap::Args;
 use semver::Version;
 use tera::{Context, Tera};
 use time::{Date, OffsetDateTime};
+use tracing::info_span;
+use tracing_indicatif::span_ext::IndicatifSpanExt as _;
 
 use super::ProfileArgs;
 use crate::{
@@ -20,6 +22,7 @@ use crate::{
         Component, ComponentIdentifier, Profile, Release, ReleaseFileReadOptions, ReleaseSeries,
         Releases, SeriesNumber, StripReleases, read_profile_file, read_release_file_with_options,
     },
+    helper::progress,
     release_metadata::ReleaseMetadata,
     template::{self, ReleaseSeriesPage},
 };
@@ -113,8 +116,30 @@ impl GenerateArgs {
         )
         .context("Failed to read profile")?;
 
+        let total_release_series = releases.series.len() as u64;
+        let total_releases = releases
+            .series
+            .values()
+            .map(|series| series.releases.len() as u64)
+            .sum::<u64>();
+        let total_components = releases.components.len() as u64;
+        let mut total_outputs = 2 + total_release_series + total_releases + total_components;
+        if self.with_release_metadata_files {
+            total_outputs += total_releases;
+        }
+
+        let progress_span = info_span!("generate_progress");
+        progress::start(
+            &progress_span,
+            Some(total_outputs),
+            "Rendering release documentation",
+            Some("Finished rendering release documentation"),
+        );
+
         self.render_readme_md(&tera, &releases, &profile, date)?;
+        progress_span.pb_inc(1);
         self.render_navigation_md(&tera, &releases, &profile, date)?;
+        progress_span.pb_inc(1);
 
         for (number, series) in releases.series.iter().rev() {
             let versions_with_padding = std::iter::once(None)
@@ -122,11 +147,8 @@ impl GenerateArgs {
                 .chain(std::iter::once(None))
                 .collect::<Vec<_>>();
 
-            {
-                self.render_release_series_readme_md(
-                    &tera, &releases, &profile, number, series, date,
-                )?;
-            }
+            self.render_release_series_readme_md(&tera, &releases, &profile, number, series, date)?;
+            progress_span.pb_inc(1);
 
             for entry in versions_with_padding.windows(3).rev() {
                 let previous = entry[0].map(|(v, r)| (v.clone(), r));
@@ -145,11 +167,18 @@ impl GenerateArgs {
                     },
                     date,
                 )?;
+
+                if self.with_release_metadata_files {
+                    progress_span.pb_inc(2);
+                } else {
+                    progress_span.pb_inc(1);
+                }
             }
         }
 
         for (identifier, component) in releases.components.iter() {
             self.render_component_md(&tera, &releases, &profile, identifier, component)?;
+            progress_span.pb_inc(1);
         }
 
         tracing::info!(target_dir = %self.target_dir.display(), "Finished generation");

@@ -10,9 +10,13 @@ use gitlab::{
     api::{Query, projects},
 };
 use semver::Version;
+use tracing::info_span;
 use url::Url;
 
-use crate::data::{ProductTicket, SeriesNumber, read_release_file, write_releases_file};
+use crate::{
+    data::{ProductTicket, SeriesNumber, read_release_file, write_releases_file},
+    helper::progress,
+};
 
 const DEFAULT_PRODUCT_REPO_URL: &str = "https://git.opentalk.dev/opentalk/product/tickets";
 const RELEASE_LABEL_PREFIX: &str = "release-";
@@ -33,6 +37,14 @@ impl FetchProductTicketsArgs {
             release_file = %release_file.as_ref().display(),
             release = %version,
             "Fetching product tickets"
+        );
+
+        let progress_span = info_span!("fetch_product_tickets_progress");
+        progress::start(
+            &progress_span,
+            None,
+            "Querying product tickets from GitLab",
+            Some("Finished querying product tickets"),
         );
 
         let mut releases = read_release_file(&release_file)?;
