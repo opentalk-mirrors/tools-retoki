@@ -29,6 +29,12 @@ pub struct FetchProductTicketsArgs {
 
 impl FetchProductTicketsArgs {
     pub fn execute<R: AsRef<Path>>(self, release_file: R, version: &Version) -> anyhow::Result<()> {
+        tracing::info!(
+            release_file = %release_file.as_ref().display(),
+            release = %version,
+            "Fetching product tickets"
+        );
+
         let mut releases = read_release_file(&release_file)?;
         let series_nr = SeriesNumber::from(version);
         let release = releases
@@ -40,6 +46,8 @@ impl FetchProductTicketsArgs {
             .with_context(|| format!("Release {version} not found in series {series_nr}"))?;
 
         release.tickets = self.fetch_product_tickets(version)?;
+
+        tracing::info!(release = %version, tickets = release.tickets.len(), "Fetched product tickets");
 
         write_releases_file(release_file, releases)
     }

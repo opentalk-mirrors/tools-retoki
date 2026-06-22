@@ -31,6 +31,8 @@ time = { version = "0.3.36", features = [
   "serde-human-readable",
   "serde-well-known",
 ] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter", "fmt"] }
 url = "2.5.2"
 
 [dev-dependencies]

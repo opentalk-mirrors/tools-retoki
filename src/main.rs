@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use anyhow::Result;
 use clap::Parser;
 use command::Command;
+use tracing_subscriber::EnvFilter;
 
 mod command;
 mod data;
@@ -26,9 +27,21 @@ struct Cli {
 }
 
 fn main() -> Result<()> {
+    init_tracing();
+
     let Cli {
         release_file,
         command,
     } = Cli::parse();
     command.execute(release_file)
+}
+
+fn init_tracing() {
+    let env_filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("retoki=info"));
+
+    tracing_subscriber::fmt()
+        .with_env_filter(env_filter)
+        .with_target(false)
+        .init();
 }

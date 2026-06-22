@@ -41,6 +41,12 @@ pub struct FetchChangelogsArgs {
 
 impl FetchChangelogsArgs {
     pub fn execute<R: AsRef<Path>>(self, release_file: R, version: &Version) -> Result<()> {
+        tracing::info!(
+            release_file = %release_file.as_ref().display(),
+            release = %version,
+            "Fetching changelogs"
+        );
+
         let mut releases = read_release_file(&release_file)?;
         let profile = read_profile_file(
             &release_file,
@@ -91,7 +97,7 @@ impl FetchChangelogsArgs {
         // Collect errors and count successes
         let successful = res.into_iter().fold(0usize, |mut count, item| {
             if let Err(e) = item {
-                eprintln!("{}", e.to_string().red());
+                tracing::error!(error = %e, "Failed to fetch changelog");
             } else {
                 count += 1;
             }
@@ -100,11 +106,10 @@ impl FetchChangelogsArgs {
 
         write_releases_file(&release_file, releases)?;
 
-        println!();
-        println!(
-            "Changelogs in {} has been {}",
-            release_file.as_ref().to_string_lossy().bold(),
-            format!("updated for {successful} projects").green()
+        tracing::info!(
+            release_file = %release_file.as_ref().display(),
+            successful,
+            "Changelogs updated"
         );
 
         Ok(())
