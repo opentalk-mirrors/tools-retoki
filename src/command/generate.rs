@@ -12,6 +12,8 @@ use clap::Args;
 use semver::Version;
 use tera::{Context, Tera};
 use time::{Date, OffsetDateTime};
+use tracing::info_span;
+use tracing_indicatif::span_ext::IndicatifSpanExt as _;
 
 use super::ProfileArgs;
 use crate::{
@@ -20,6 +22,7 @@ use crate::{
         Component, ComponentIdentifier, Profile, Release, ReleaseFileReadOptions, ReleaseSeries,
         Releases, SeriesNumber, StripReleases, read_profile_file, read_release_file_with_options,
     },
+    helper::progress,
     release_metadata::ReleaseMetadata,
     template::{self, ReleaseSeriesPage},
 };
@@ -75,6 +78,8 @@ pub struct GenerateArgs {
 
 impl GenerateArgs {
     pub fn execute<R: AsRef<Path>>(self, release_file: R) -> Result<()> {
+        tracing::info!(release_file = %release_file.as_ref().display(), "Starting generation");
+
         let mut tera = Tera::default();
         tera.add_raw_template("README.md", include_str!("../../templates/README.md"))?;
         tera.add_raw_template(
@@ -111,8 +116,30 @@ impl GenerateArgs {
         )
         .context("Failed to read profile")?;
 
+        let total_release_series = releases.series.len() as u64;
+        let total_releases = releases
+            .series
+            .values()
+            .map(|series| series.releases.len() as u64)
+            .sum::<u64>();
+        let total_components = releases.components.len() as u64;
+        let mut total_outputs = 2 + total_release_series + total_releases + total_components;
+        if self.with_release_metadata_files {
+            total_outputs += total_releases;
+        }
+
+        let progress_span = info_span!("generate_progress");
+        progress::start(
+            &progress_span,
+            Some(total_outputs),
+            "Rendering release documentation",
+            Some("Finished rendering release documentation"),
+        );
+
         self.render_readme_md(&tera, &releases, &profile, date)?;
+        progress_span.pb_inc(1);
         self.render_navigation_md(&tera, &releases, &profile, date)?;
+        progress_span.pb_inc(1);
 
         for (number, series) in releases.series.iter().rev() {
             let versions_with_padding = std::iter::once(None)
@@ -120,11 +147,8 @@ impl GenerateArgs {
                 .chain(std::iter::once(None))
                 .collect::<Vec<_>>();
 
-            {
-                self.render_release_series_readme_md(
-                    &tera, &releases, &profile, number, series, date,
-                )?;
-            }
+            self.render_release_series_readme_md(&tera, &releases, &profile, number, series, date)?;
+            progress_span.pb_inc(1);
 
             for entry in versions_with_padding.windows(3).rev() {
                 let previous = entry[0].map(|(v, r)| (v.clone(), r));
@@ -143,12 +167,21 @@ impl GenerateArgs {
                     },
                     date,
                 )?;
+
+                if self.with_release_metadata_files {
+                    progress_span.pb_inc(2);
+                } else {
+                    progress_span.pb_inc(1);
+                }
             }
         }
 
         for (identifier, component) in releases.components.iter() {
             self.render_component_md(&tera, &releases, &profile, identifier, component)?;
+            progress_span.pb_inc(1);
         }
+
+        tracing::info!(target_dir = %self.target_dir.display(), "Finished generation");
 
         Ok(())
     }
@@ -170,7 +203,7 @@ impl GenerateArgs {
         let rendered = tera.render("README.md", &Context::from_serialize(&template_data)?)?;
         let target_dir = create_and_canonicalize_dir(&self.target_dir)?;
         let full_path = target_dir.join("README.md");
-        println!("Writing file {full_path:?}");
+        tracing::debug!(path = %full_path.display(), "Writing file");
         let mut file = File::create(&full_path)
             .with_context(|| format!("Couldn't create file {full_path:?}"))?;
         write!(file, "{rendered}")?;
@@ -193,7 +226,7 @@ impl GenerateArgs {
         let rendered = tera.render("navigation.md", &Context::from_serialize(&template_data)?)?;
         let target_dir = create_and_canonicalize_dir(&self.target_dir)?;
         let full_path = target_dir.join("navigation.md");
-        println!("Writing file {full_path:?}");
+        tracing::debug!(path = %full_path.display(), "Writing file");
         let mut file = File::create(&full_path)
             .with_context(|| format!("Couldn't create file {full_path:?}"))?;
         write!(file, "{rendered}")?;
@@ -232,7 +265,7 @@ impl GenerateArgs {
 
         std::fs::create_dir_all(target_dir.join(&release_series_dir))?;
         let full_path = release_series_dir.join("README.md");
-        println!("Writing file {full_path:?}");
+        tracing::debug!(path = %full_path.display(), "Writing file");
         let mut file = File::create(&full_path)
             .with_context(|| format!("Couldn't create file {full_path:?}"))?;
         write!(file, "{rendered}")?;
@@ -275,7 +308,7 @@ impl GenerateArgs {
 
         {
             let full_path = release_dir.join("README.md");
-            println!("Writing file {full_path:?}");
+            tracing::debug!(path = %full_path.display(), "Writing file");
             let mut file = File::create(&full_path)
                 .with_context(|| format!("Couldn't create file {full_path:?}"))?;
             write!(file, "{rendered}")?;
@@ -284,7 +317,7 @@ impl GenerateArgs {
         if self.with_release_metadata_files {
             let release_metadata = ReleaseMetadata::from_data_release(releases, version.clone())?;
             let full_path = release_dir.join("metadata.json");
-            println!("Writing file {full_path:?}");
+            tracing::debug!(path = %full_path.display(), "Writing file");
             let file = File::create(&full_path)
                 .with_context(|| format!("Couldn't create file {full_path:?}"))?;
             serde_json::to_writer_pretty(file, &release_metadata)?;
@@ -321,7 +354,7 @@ impl GenerateArgs {
         let components_dir = create_and_canonicalize_dir(target_dir.join("components"))?;
         let relative_path = components_dir.join(format!("{}.md", identifier));
         let full_path = target_dir.join(&relative_path);
-        println!("Writing file {full_path:?}");
+        tracing::debug!(path = %full_path.display(), "Writing file");
         let mut file = File::create(&full_path)
             .with_context(|| format!("Couldn't create file: {full_path:?}"))?;
         write!(file, "{rendered}")?;

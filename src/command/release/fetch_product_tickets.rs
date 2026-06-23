@@ -10,9 +10,13 @@ use gitlab::{
     api::{Query, projects},
 };
 use semver::Version;
+use tracing::info_span;
 use url::Url;
 
-use crate::data::{ProductTicket, SeriesNumber, read_release_file, write_releases_file};
+use crate::{
+    data::{ProductTicket, SeriesNumber, read_release_file, write_releases_file},
+    helper::progress,
+};
 
 const DEFAULT_PRODUCT_REPO_URL: &str = "https://git.opentalk.dev/opentalk/product/tickets";
 const RELEASE_LABEL_PREFIX: &str = "release-";
@@ -29,6 +33,20 @@ pub struct FetchProductTicketsArgs {
 
 impl FetchProductTicketsArgs {
     pub fn execute<R: AsRef<Path>>(self, release_file: R, version: &Version) -> anyhow::Result<()> {
+        tracing::info!(
+            release_file = %release_file.as_ref().display(),
+            release = %version,
+            "Fetching product tickets"
+        );
+
+        let progress_span = info_span!("fetch_product_tickets_progress");
+        progress::start(
+            &progress_span,
+            None,
+            "Querying product tickets from GitLab",
+            Some("Finished querying product tickets"),
+        );
+
         let mut releases = read_release_file(&release_file)?;
         let series_nr = SeriesNumber::from(version);
         let release = releases
@@ -40,6 +58,8 @@ impl FetchProductTicketsArgs {
             .with_context(|| format!("Release {version} not found in series {series_nr}"))?;
 
         release.tickets = self.fetch_product_tickets(version)?;
+
+        tracing::info!(release = %version, tickets = release.tickets.len(), "Fetched product tickets");
 
         write_releases_file(release_file, releases)
     }

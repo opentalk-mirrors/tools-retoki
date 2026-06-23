@@ -17,7 +17,6 @@ derive_more = { version = "2.0.0", features = ["display", "from", "into"] }
 gitlab = "0.1804.0"
 indexmap = { version = "2.2.6", features = ["serde"] }
 indicatif = { version = "0.18.0", features = ["rayon"] }
-owo-colors = "4.0.0"
 rayon = "1.10.0"
 semver = { version = "1.0.23", features = ["serde"] }
 serde = { version = "1.0.203", features = ["derive"] }
@@ -31,6 +30,9 @@ time = { version = "0.3.36", features = [
   "serde-human-readable",
   "serde-well-known",
 ] }
+tracing = "0.1.41"
+tracing-indicatif = "0.3.14"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter", "fmt"] }
 url = "2.5.2"
 
 [dev-dependencies]

@@ -117,7 +117,7 @@ test:cargo_test:
     - cargo llvm-cov report --doctests --cobertura --output-path target/llvm-cov-target/cobertura.xml
     - cargo llvm-cov report --summary-only
   variables:
-    RUST_LOG: opentalk=trace
+    RUST_LOG: retoki=trace
 
 build:
   stage: build

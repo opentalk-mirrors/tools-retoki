@@ -5,7 +5,6 @@ use std::path::Path;
 
 use anyhow::{Context, Result};
 use clap::Args;
-use owo_colors::OwoColorize;
 
 use crate::data::{
     ReleaseFileReadOptions, Releases, StripReleases, read_release_file_with_options,
@@ -40,11 +39,9 @@ impl EditArgs {
         write_releases_file(&release_file, raw_data)
             .context("Failed to write release configuration")?;
 
-        println!();
-        println!(
-            "Release file {} has been {}",
-            release_file.as_ref().to_string_lossy().bold(),
-            "updated".green()
+        tracing::info!(
+            release_file = %release_file.as_ref().display(),
+            "Release file updated"
         );
 
         Ok(())
