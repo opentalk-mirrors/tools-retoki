@@ -14,6 +14,17 @@ use crate::data::{
     self, ComponentCategory, ComponentCategoryIdentifier, ComponentIdentifier, ProductTicket,
 };
 
+/// Returns `true` if the component is marked as private in the profile and must
+/// therefore be excluded from any generated documentation.
+fn is_private(
+    component_profiles: &IndexMap<ComponentIdentifier, data::ComponentProfile>,
+    identifier: &ComponentIdentifier,
+) -> bool {
+    component_profiles
+        .get(identifier)
+        .is_some_and(|profile| profile.private)
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Release {
@@ -45,6 +56,9 @@ impl Release {
         let mut component_releases = BTreeMap::new();
 
         for (component_identifier, component_version) in &release.components {
+            if is_private(component_profiles, component_identifier) {
+                continue;
+            }
             let previous = changelog_base
                 .iter()
                 .flat_map(|(_, release)| release.components.get(component_identifier))
@@ -87,6 +101,9 @@ impl Release {
                     .map(|identifier| (identifier.clone(), Vec::new()))
                     .collect::<IndexMap<ComponentCategoryIdentifier, Vec<ReleaseComponent>>>();
                 for (identifier, version) in &release.components {
+                    if is_private(component_profiles, identifier) {
+                        continue;
+                    }
                     let component = components
                         .get(identifier)
                         .with_context(|| format!("Couldn't find component {identifier:?}"))?;
@@ -117,6 +134,7 @@ impl Release {
             components_by_identifier: release
                 .components
                 .iter()
+                .filter(|(identifier, _)| !is_private(component_profiles, identifier))
                 .map(|(identifier, version)| {
                     let component = components
                         .get(identifier)

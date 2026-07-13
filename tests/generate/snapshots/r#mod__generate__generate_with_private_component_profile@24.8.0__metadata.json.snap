@@ -1,0 +1,16 @@
+---
+source: tests/generate/mod.rs
+expression: input
+input_file: tests/test-result/.tmpVV7HDh/24.8.0/metadata.json
+---
+{
+  "version": "24.8.0",
+  "components": {
+    "controller": {
+      "version": "0.16.0"
+    },
+    "web-frontend": {
+      "version": "1.17.0"
+    }
+  }
+}

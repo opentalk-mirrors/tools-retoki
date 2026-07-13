@@ -62,23 +62,27 @@ impl Readme {
                     )
                 })
                 .collect::<Result<_, _>>()?,
-            components: releases
-                .components
-                .iter()
-                .map(|(identifier, component)| {
-                    let profile = profile.components.get(identifier).with_context(|| {
-                        format!(
-                            "Missing `{}` component in `{}` profile",
-                            identifier, profile.profile_name
-                        )
-                    })?;
-                    Ok(Component::from_data_component(
+            components: {
+                let mut components = Vec::new();
+                for (identifier, component) in releases.components.iter() {
+                    let component_profile =
+                        profile.components.get(identifier).with_context(|| {
+                            format!(
+                                "Missing `{}` component in `{}` profile",
+                                identifier, profile.profile_name
+                            )
+                        })?;
+                    if component_profile.private {
+                        continue;
+                    }
+                    components.push(Component::from_data_component(
                         identifier.clone(),
                         component,
-                        profile,
-                    ))
-                })
-                .collect::<anyhow::Result<Vec<_>>>()?,
+                        component_profile,
+                    ));
+                }
+                components
+            },
             space: " ".to_string(),
             empty_release_component: EmptyReleaseComponent::default(),
             show_gantt_chart: true,

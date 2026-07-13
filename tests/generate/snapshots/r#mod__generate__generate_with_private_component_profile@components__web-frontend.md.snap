@@ -1,0 +1,51 @@
+---
+source: tests/generate/mod.rs
+expression: input
+input_file: tests/test-result/.tmpVV7HDh/components/web-frontend.md
+---
+---
+title: Web-Frontend
+---
+
+# Web-Frontend version history
+
+
+---
+
+# web-frontend v1.20.0
+
+
+(found in OpenTalk [**v25.0.0**](../25.0.0/README.md))
+
+## Changelog
+
+### New Features
+---
+
+# web-frontend v1.17.2
+
+
+(found in OpenTalk [**v24.8.1**](../24.8.1/README.md))
+
+## Changelog
+
+### Internal2
+---
+
+# web-frontend v1.17.1
+
+
+
+## Changelog
+
+### Internal1
+---
+
+# web-frontend v1.17.0
+
+
+(found in OpenTalk [**v24.8.0**](../24.8.0/README.md))
+
+## Changelog
+
+### Stability Improvements

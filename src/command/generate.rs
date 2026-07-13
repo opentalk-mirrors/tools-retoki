@@ -340,6 +340,13 @@ impl GenerateArgs {
                 identifier, profile.profile_name
             )
         })?;
+        if component_profile.private {
+            tracing::debug!(
+                component = %identifier,
+                "Skipping private component page",
+            );
+            return Ok(());
+        }
         let template_data = template::ComponentPage::from_data_component(
             identifier,
             component,

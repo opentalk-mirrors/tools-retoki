@@ -1,0 +1,34 @@
+---
+source: tests/generate/mod.rs
+expression: input
+input_file: tests/test-result/.tmpVV7HDh/24.8.1/README.md
+---
+---
+title: OpenTalk v24.8.1
+---
+
+# OpenTalk v24.8.1
+
+- Release date: **2024-07-30**
+- Release series: [**24.8**](../24.8/README.md)
+- Previous release: [**v24.8.0**](../24.8.0/README.md)
+
+## Component versions
+
+| Category | Component | Version |
+| -------- | --------- | ------- |
+| **Frontend** | [**web-frontend**](../components/web-frontend.md) |[v1.17.2](https://git.opentalk.dev/opentalk/frontend/web/web-app/-/releases/v1.17.2)|
+
+---
+
+## web-frontend v1.17.2
+
+### Internal2
+
+## web-frontend v1.17.1
+
+### Internal1
+
+---
+
+Generation of this document was supported by [retoki](https://git.opentalk.dev/opentalk/tools/retoki).
