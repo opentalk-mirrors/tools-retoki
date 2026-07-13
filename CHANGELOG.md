@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2026-07-13
+
+[0.13.0]: https://git.opentalk.dev/opentalk/tools/retoki/-/compare/v0.12.0...v0.13.0
+
+### 🚀 New features
+
+- Add `fetch-product-tickets` subcommand ([!433](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/433), [#37](https://git.opentalk.dev/opentalk/tools/retoki/-/issues/37))
+- Render product changelog ([!433](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/433), [#38](https://git.opentalk.dev/opentalk/tools/retoki/-/issues/38))
+- Move the fetch product ticket command to the release subcommand ([!434](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/434))
+- Switch to tracing ([!440](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/440))
+- Use tracing-indicatif ([!440](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/440))
+- Private components ([!449](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/449))
+
+### 🐛 Bug fixes
+
+- (docs) Add missing `$` in command substitution ([!433](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/433))
+- (docs) Fix grammar ([!433](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/433))
+- (docs) Fix formatting ([!433](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/433))
+
+### 📦 Dependencies
+
+- (deps) Lock file maintenance ([!432](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/432))
+- (deps) Update rust crate tabled to 0.21.0 ([!431](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/431))
+- (deps) Ignore unmaintained advisory ([!440](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/440))
+- (deps) Update rust crate anyhow to v1.0.103 ([!442](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/442))
+- (deps) Update rust crate time to v0.3.52 ([!438](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/438))
+- (deps) Update rust crate indicatif to v0.18.6 ([!444](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/444))
+- (deps) Update rust crate tera to v2 ([!443](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/443))
+- (deps) Update pre-commit hook alessandrojcm/commitlint-pre-commit-hook to v9.26.0 ([!441](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/441))
+- (deps) Update pre-commit hook embarkstudios/cargo-deny to v0.19.9 ([!439](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/439))
+- (deps) Update pre-commit hook embarkstudios/cargo-deny to v0.20.2 ([!448](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/448))
+- (deps) Update git.opentalk.dev:5050/opentalk/backend/containers/rust docker tag to v1.97.0 ([!447](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/447))
+- (deps) Update pre-commit hook davidanson/markdownlint-cli2 to v0.23.0 ([!435](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/435))
+- (deps) Lock file maintenance ([!435](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/435))
+
 ## [0.12.0] - 2026-05-29
 
 ### 🐛 Bug fixes
