@@ -27,4 +27,8 @@ pub struct ComponentProfile {
     /// List of component identifiers that must be released before this component
     #[serde(skip_serializing_if = "Option::is_none")]
     pub blocked_by: Option<Vec<ComponentIdentifier>>,
+
+    /// The component will be excluded from any documentation
+    #[serde(default)]
+    pub private: bool,
 }
