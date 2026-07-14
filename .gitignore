@@ -3,6 +3,7 @@
 
 /target
 *.DS_Store
+relbo.toml
 
 # Insta tests
 tests/**/test-result/

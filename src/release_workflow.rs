@@ -1,0 +1,690 @@
+// SPDX-License-Identifier: EUPL-1.2
+// SPDX-FileCopyrightText: OpenTalk Team <mail@opentalk.eu>
+
+use std::path::{Path, PathBuf};
+
+use anyhow::Context;
+use indexmap::IndexMap;
+use semver::Version;
+use time::{Date, OffsetDateTime};
+
+use crate::{
+    bot_templates::{CategoryData, ComponentData},
+    data::{
+        Component, ComponentIdentifier, ComponentProfile, ComponentVersion, Profile, Release,
+        ReleaseSeries, SeriesNumber, read_profile_file, read_release_file, write_releases_file,
+    },
+    vcs_service::{Issue, IssueLinkType, LinkedIssue, VcsService},
+};
+
+#[derive(Debug)]
+pub(crate) struct ReleasesBuilder {
+    dry_run: bool,
+}
+
+impl ReleasesBuilder {
+    #[must_use]
+    pub fn new() -> Self {
+        Self { dry_run: false }
+    }
+
+    #[must_use]
+    pub fn dry_run(mut self, dry_run: bool) -> Self {
+        self.dry_run = dry_run;
+        self
+    }
+
+    pub fn load(self, path: PathBuf, profile_name: &str) -> anyhow::Result<Releases> {
+        let releases = read_release_file(&path)
+            .with_context(|| format!("Failed to read release file at {}", path.display()))?;
+        let profile = read_profile_file(&path, profile_name, None::<&Path>).with_context(|| {
+            format!(
+                "Failed to read profile {profile_name} alongside release file at {}",
+                path.display()
+            )
+        })?;
+
+        Ok(Releases {
+            releases,
+            profile,
+            path,
+            dry_run: self.dry_run,
+        })
+    }
+}
+
+pub(crate) struct ReleasesEditor<'a> {
+    inner: &'a mut Releases,
+}
+
+impl ReleasesEditor<'_> {
+    pub fn get_or_insert_from_previous(&mut self, version: Version) -> anyhow::Result<Release> {
+        self.inner.get_or_insert_from_previous(version)
+    }
+}
+
+#[must_use = "edits are not persisted until you call `.save()` (use `.discard()` to drop them)"]
+pub(crate) struct Staged<'a, T> {
+    releases: &'a mut Releases,
+    value: T,
+}
+
+impl<T> Staged<'_, T> {
+    /// Persist the changes and return the closure's value.
+    pub fn save(self) -> anyhow::Result<T> {
+        self.releases.save()?;
+        Ok(self.value)
+    }
+
+    /// Keep the changes in memory only.
+    #[expect(unused)]
+    pub fn discard(self) -> T {
+        self.value
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct Releases {
+    releases: crate::data::Releases,
+    profile: Profile,
+    path: PathBuf,
+    dry_run: bool,
+}
+
+impl Releases {
+    pub fn edit<T>(
+        &mut self,
+        f: impl FnOnce(&mut ReleasesEditor) -> anyhow::Result<T>,
+    ) -> anyhow::Result<Staged<'_, T>> {
+        let value = f(&mut ReleasesEditor { inner: self })?;
+
+        Ok(Staged {
+            releases: self,
+            value,
+        })
+    }
+
+    /// Return the highest released version less than `version`.
+    /// Pre-releases are included, so seeding a stable release after a beta
+    /// picks up the beta's components.
+    #[must_use]
+    pub fn previous_release(&self, version: &Version) -> Option<&Release> {
+        self.releases
+            .series
+            .values()
+            .flat_map(|s| s.releases.iter())
+            .filter(|(v, _)| *v < version)
+            .max_by_key(|(v, _)| *v)
+            .map(|(_, release)| release)
+    }
+
+    /// Insert a new release entry for `version` based on the previous release's components.
+    fn insert_new_from_previous(&mut self, version: Version) -> &Release {
+        let components = self.previous_release(&version).map(|release| release.components.clone()).unwrap_or_else(|| {
+           tracing::warn!("No previous release exists before {version}. You'll have to add the components manually.");
+           Default::default()
+        });
+        let series_nr = SeriesNumber::from(&version);
+        let today = OffsetDateTime::now_utc().date();
+        let series = self
+            .releases
+            .series
+            .entry(series_nr)
+            .or_insert_with(|| ReleaseSeries {
+                end_of_life: end_of_month(today),
+                releases: Default::default(),
+            });
+
+        series
+            .releases
+            .entry(version)
+            .insert_entry(Release {
+                date: today,
+                components,
+                release_notes: None,
+                tickets: Vec::new(),
+            })
+            .into_mut()
+    }
+
+    fn get_or_insert_from_previous(&mut self, version: Version) -> anyhow::Result<Release> {
+        let series_nr = SeriesNumber::from(&version);
+
+        if let Some(release) = self
+            .releases
+            .series
+            .get(&series_nr)
+            .and_then(|s| s.releases.get(&version))
+        {
+            return Ok(release.clone());
+        }
+
+        Ok(self.insert_new_from_previous(version).clone())
+    }
+
+    pub fn category_data(
+        &self,
+        version: &Version,
+        release: &Release,
+        linked_issues: &[LinkedIssue],
+        vcs: &dyn VcsService,
+    ) -> impl Iterator<Item = CategoryData> {
+        let previous_release = self.previous_release(version);
+        let mut categories = IndexMap::new();
+
+        for (component_id, component_version) in &release.components {
+            let (component_name, category) = self
+                .releases
+                .components
+                .get(component_id)
+                .map(|Component { name, category, .. }| (name.to_string(), category.clone()))
+                .unwrap_or_else(|| (component_id.to_string(), "uncategorized".to_owned().into()));
+
+            let data = build_component_data(
+                component_id,
+                component_name,
+                component_version,
+                self.profile.components.get(component_id),
+                previous_release,
+                linked_issues,
+                vcs,
+            );
+            categories
+                .entry(category.clone())
+                .or_insert_with(|| CategoryData {
+                    name: category.to_string(),
+                    components: Vec::new(),
+                })
+                .components
+                .push(data);
+        }
+
+        categories.into_values()
+    }
+
+    fn save(&self) -> anyhow::Result<()> {
+        if self.dry_run {
+            return Ok(());
+        }
+
+        write_releases_file(&self.path, self.releases.clone())
+            .with_context(|| format!("couldn't write releases file at {}", self.path.display()))
+    }
+}
+
+fn build_component_data(
+    id: &ComponentIdentifier,
+    name: String,
+    version: &ComponentVersion,
+    profile: Option<&ComponentProfile>,
+    previous_release: Option<&Release>,
+    linked_issues: &[LinkedIssue],
+    vcs: &dyn VcsService,
+) -> ComponentData {
+    let prefixed = version.prefixed();
+    let gitlab_url = profile.and_then(|profile| profile.gitlab_url.clone());
+    let ticket_url = resolve_ticket_url(&name, &prefixed, gitlab_url.as_ref(), linked_issues, vcs);
+    ComponentData {
+        name,
+        version: prefixed,
+        has_changed: has_component_changed(id, version, previous_release),
+        gitlab_url,
+        ticket_url,
+    }
+}
+
+fn has_component_changed(
+    id: &ComponentIdentifier,
+    version: &ComponentVersion,
+    previous_release: Option<&Release>,
+) -> bool {
+    let Some(previous_release) = previous_release else {
+        return false;
+    };
+
+    previous_release
+        .components
+        .get(id)
+        .is_none_or(|previous_version| previous_version != version)
+}
+
+fn resolve_ticket_url(
+    component_name: &str,
+    component_version: &str,
+    gitlab_url: Option<&String>,
+    linked_issues: &[LinkedIssue],
+    vcs: &dyn VcsService,
+) -> Option<String> {
+    let raw = gitlab_url?;
+    let url = raw
+        .parse()
+        .inspect_err(|err| {
+            tracing::error!(%err, %raw, "Failed to parse project URL");
+        })
+        .ok()?;
+    let project_path = vcs
+        .project_path_from_url(&url)
+        .inspect_err(|err| {
+            tracing::error!(%err, %url, "Failed to get project path from URL");
+        })
+        .ok()?;
+
+    find_release_issue(
+        component_name,
+        component_version,
+        &project_path,
+        linked_issues,
+    )
+    .map(|issue| issue.web_url.to_string())
+}
+
+fn find_release_issue<'a>(
+    component_name: &str,
+    version: &str,
+    project_path: &str,
+    linked_issues: &'a [LinkedIssue],
+) -> Option<&'a Issue> {
+    // Trying to find the release issue by title isn't ideal, but this reflects our current workflow
+    // and doesn't require additional metadata (that we currently don't have).
+    let expected_title = build_release_title(component_name, version);
+    let mut candidates = linked_issues
+        .iter()
+        .filter(|linked| linked.link_type == IssueLinkType::IsBlockedBy)
+        .map(|linked| &linked.issue)
+        .filter(|issue| issue.project.path_with_namespace == project_path);
+
+    // First look for an exact title match...
+    if let Some(exact) = candidates
+        .clone()
+        .find(|issue| issue.title == expected_title)
+    {
+        return Some(exact);
+    }
+
+    // ...then fall back to a fuzzy match on the version substring.
+    let fuzzy = candidates.find(|issue| issue.title.contains(version))?;
+
+    tracing::warn!(
+        existing_title = %fuzzy.title,
+        expected_title,
+        "matched existing component release issue by version substring in title; \
+         consider renaming the ticket to the expected title",
+    );
+
+    Some(fuzzy)
+}
+
+/// Returns the last day of the current calendar month.
+fn end_of_month(date: Date) -> Date {
+    date.replace_day(date.month().length(date.year()))
+        .expect("the last day of the current month is always a valid date")
+}
+
+fn build_release_title(component: &str, version: &str) -> String {
+    format!("Release {} of {}", version, component)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::BTreeMap;
+
+    use pretty_assertions::assert_eq;
+    use time::Month;
+    use url::Url;
+
+    use super::*;
+    use crate::vcs_service::{IssueState, Project};
+
+    fn empty_profile() -> Profile {
+        Profile {
+            profile_name: "test".to_owned(),
+            components: IndexMap::new(),
+        }
+    }
+
+    fn linked_issue(
+        title: String,
+        project_path: String,
+        web_url: Url,
+        link_type: IssueLinkType,
+    ) -> LinkedIssue {
+        LinkedIssue {
+            link_type,
+            issue: Issue {
+                id: 1,
+                iid: 1,
+                title,
+                project: Project {
+                    id: 1,
+                    path_with_namespace: project_path.to_owned(),
+                },
+                short_reference: format!("{project_path}#1"),
+                description: None,
+                state: IssueState::Opened,
+                linked_issues: Vec::new(),
+                web_url,
+            },
+        }
+    }
+
+    #[test]
+    fn end_of_month_handles_varying_month_lengths() {
+        assert_eq!(
+            end_of_month(Date::from_calendar_date(2023, Month::February, 15).expect("valid date")),
+            Date::from_calendar_date(2023, Month::February, 28).expect("valid date"),
+        );
+        assert_eq!(
+            end_of_month(Date::from_calendar_date(2024, Month::February, 10).expect("valid date")),
+            Date::from_calendar_date(2024, Month::February, 29).expect("valid date"),
+            "February in a leap year has 29 days",
+        );
+        assert_eq!(
+            end_of_month(Date::from_calendar_date(2023, Month::April, 1).expect("valid date")),
+            Date::from_calendar_date(2023, Month::April, 30).expect("valid date"),
+        );
+        assert_eq!(
+            end_of_month(Date::from_calendar_date(2023, Month::December, 31).expect("valid date")),
+            Date::from_calendar_date(2023, Month::December, 31).expect("valid date"),
+        );
+    }
+
+    #[test]
+    fn build_release_title_formats_version_and_component() {
+        assert_eq!(
+            build_release_title("controller", "v1.2.3"),
+            "Release v1.2.3 of controller",
+        );
+    }
+
+    #[test]
+    fn has_component_changed_is_false_without_previous_release() {
+        assert!(!has_component_changed(
+            &ComponentIdentifier::from("a".to_owned()),
+            &ComponentVersion::Semver("1.0.0".parse().expect("valid semver")),
+            None,
+        ));
+    }
+
+    #[test]
+    fn has_component_changed_detects_changed_and_added_components() {
+        let previous = Release {
+            date: Date::from_calendar_date(2024, Month::January, 1).expect("valid date"),
+            components: IndexMap::from([(
+                ComponentIdentifier::from("a".to_owned()),
+                ComponentVersion::Semver("1.0.0".parse().expect("valid semver")),
+            )]),
+            release_notes: None,
+            tickets: Vec::new(),
+        };
+
+        assert!(
+            !has_component_changed(
+                &ComponentIdentifier::from("a".to_owned()),
+                &ComponentVersion::Semver("1.0.0".parse().expect("valid semver")),
+                Some(&previous),
+            ),
+            "identical version is unchanged",
+        );
+        assert!(
+            has_component_changed(
+                &ComponentIdentifier::from("a".to_owned()),
+                &ComponentVersion::Semver("2.0.0".parse().expect("valid semver")),
+                Some(&previous),
+            ),
+            "different version is changed",
+        );
+        assert!(
+            has_component_changed(
+                &ComponentIdentifier::from("b".to_owned()),
+                &ComponentVersion::Semver("1.0.0".parse().expect("valid semver")),
+                Some(&previous),
+            ),
+            "component absent from the previous release counts as changed",
+        );
+    }
+
+    #[test]
+    fn find_release_issue_prefers_exact_title_match() {
+        let component = "Controller";
+        let version = "v1.0.0";
+        let mut title = build_release_title(component, version);
+
+        let project_path = "group/controller".to_owned();
+        let url: Url = "https://example.com/exact-issue"
+            .parse()
+            .expect("valid url");
+        let link_type = IssueLinkType::IsBlockedBy;
+        let exact = linked_issue(title.clone(), project_path.clone(), url.clone(), link_type);
+
+        title.push_str(" and other things");
+        let fuzzy = linked_issue(title, project_path, url, link_type);
+
+        let expected = exact.issue.clone();
+
+        let linked_issues = [exact, fuzzy];
+        let found =
+            find_release_issue("Controller", "v1.0.0", "group/controller", &linked_issues).unwrap();
+
+        assert_eq!(expected, *found);
+    }
+
+    #[test]
+    fn find_release_issue_falls_back_to_version_substring() {
+        let issues = vec![linked_issue(
+            "Bump to v1.0.0 please".to_owned(),
+            "group/controller".to_owned(),
+            "https://example.com/".parse().expect("valid url"),
+            IssueLinkType::IsBlockedBy,
+        )];
+
+        let found = find_release_issue("Controller", "v1.0.0", "group/controller", &issues);
+
+        assert_eq!(
+            found.map(|i| i.web_url.as_str()),
+            Some("https://example.com/"),
+        );
+    }
+
+    #[test]
+    fn previous_release() {
+        let releases = Releases {
+            releases: crate::data::Releases {
+                product_name: "OpenTalk".to_owned().into(),
+                releases_page_header: None,
+                series: BTreeMap::from_iter([(
+                    "1.0".parse().expect("valid series"),
+                    ReleaseSeries {
+                        end_of_life: Date::from_calendar_date(2030, Month::December, 31)
+                            .expect("valid date"),
+                        releases: IndexMap::from([
+                            (
+                                "1.0.0".parse().expect("valid semver"),
+                                Release {
+                                    date: Date::from_calendar_date(2024, Month::January, 1)
+                                        .expect("valid date"),
+                                    components: IndexMap::from_iter([(
+                                        ComponentIdentifier::from("a".to_owned()),
+                                        ComponentVersion::Semver(
+                                            "1.0.0".parse().expect("valid semver"),
+                                        ),
+                                    )]),
+                                    release_notes: None,
+                                    tickets: Vec::new(),
+                                },
+                            ),
+                            (
+                                "1.0.1".parse().expect("valid semver"),
+                                Release {
+                                    date: Date::from_calendar_date(2024, Month::January, 1)
+                                        .expect("valid date"),
+                                    components: IndexMap::from_iter([(
+                                        ComponentIdentifier::from("a".to_owned()),
+                                        ComponentVersion::Semver(
+                                            "1.0.1".parse().expect("valid semver"),
+                                        ),
+                                    )]),
+                                    release_notes: None,
+                                    tickets: Vec::new(),
+                                },
+                            ),
+                            (
+                                "1.0.2-beta.1".parse().expect("valid semver"),
+                                Release {
+                                    date: Date::from_calendar_date(2024, Month::January, 1)
+                                        .expect("valid date"),
+                                    components: IndexMap::from_iter([(
+                                        ComponentIdentifier::from("a".to_owned()),
+                                        ComponentVersion::Semver(
+                                            "1.0.2-beta.1".parse().expect("valid semver"),
+                                        ),
+                                    )]),
+                                    release_notes: None,
+                                    tickets: Vec::new(),
+                                },
+                            ),
+                        ]),
+                    },
+                )]),
+                components: IndexMap::new(),
+                component_categories: IndexMap::new(),
+            },
+            profile: empty_profile(),
+            path: PathBuf::new(),
+            dry_run: true,
+        };
+
+        let previous = releases.previous_release(&"1.0.1".parse().expect("valid semver"));
+        assert_eq!(
+            previous,
+            releases
+                .releases
+                .get_release(&"1.0.0".parse().expect("valid semver")),
+        );
+
+        // Previous release includes beta
+        let previous = releases.previous_release(&"1.0.2".parse().expect("valid semver"));
+        assert_eq!(
+            previous,
+            releases
+                .releases
+                .get_release(&"1.0.2-beta.1".parse().expect("valid semver"))
+        );
+
+        // Previous release is none when nothing is lower
+        let previous = releases.previous_release(&"1.0.0".parse().expect("valid semver"));
+        assert!(previous.is_none());
+    }
+
+    #[test]
+    fn get_or_insert_returns_existing_without_duplicating() {
+        let mut releases = Releases {
+            releases: crate::data::Releases {
+                product_name: "OpenTalk".to_owned().into(),
+                releases_page_header: None,
+                series: BTreeMap::from([(
+                    "1.0".parse().expect("valid series"),
+                    ReleaseSeries {
+                        end_of_life: Date::from_calendar_date(2030, Month::December, 31)
+                            .expect("valid date"),
+                        releases: IndexMap::from([
+                            (
+                                "1.0.0".parse().expect("valid semver"),
+                                Release {
+                                    date: Date::from_calendar_date(2024, Month::January, 1)
+                                        .expect("valid date"),
+                                    components: IndexMap::new(),
+                                    release_notes: None,
+                                    tickets: Vec::new(),
+                                },
+                            ),
+                            (
+                                "1.0.1".parse().expect("valid semver"),
+                                Release {
+                                    date: Date::from_calendar_date(2024, Month::January, 1)
+                                        .expect("valid date"),
+                                    components: IndexMap::new(),
+                                    release_notes: None,
+                                    tickets: Vec::new(),
+                                },
+                            ),
+                        ]),
+                    },
+                )]),
+                components: IndexMap::new(),
+                component_categories: IndexMap::new(),
+            },
+            profile: empty_profile(),
+            path: PathBuf::new(),
+            dry_run: true,
+        };
+        let expected = releases.clone();
+
+        let existing = releases
+            .get_or_insert_from_previous("1.0.1".parse().expect("valid semver"))
+            .expect("lookup succeeds");
+
+        assert_eq!(
+            Some(&existing),
+            releases
+                .releases
+                .get_release(&"1.0.1".parse().expect("valid semver")),
+        );
+        assert_eq!(
+            expected, releases,
+            "an existing release must not be duplicated",
+        );
+    }
+
+    #[test]
+    fn get_or_insert_without_previous_creates_empty_release() {
+        let mut releases = Releases {
+            releases: crate::data::Releases {
+                product_name: "OpenTalk".to_owned().into(),
+                releases_page_header: None,
+                series: BTreeMap::new(),
+                components: IndexMap::new(),
+                component_categories: IndexMap::new(),
+            },
+            profile: empty_profile(),
+            path: PathBuf::new(),
+            dry_run: true,
+        };
+
+        let new = releases
+            .get_or_insert_from_previous("1.0.0".parse().expect("valid semver"))
+            .expect("insert succeeds");
+
+        assert!(
+            new.components.is_empty(),
+            "the very first release has no components to seed from",
+        );
+        assert!(
+            releases
+                .releases
+                .get_release(&"1.0.0".parse().expect("valid semver"))
+                .is_some()
+        );
+    }
+
+    #[test]
+    fn save_in_dry_run_does_not_write_file() {
+        let mut path = std::env::temp_dir();
+        path.push("relbo-test.yml");
+        let releases = Releases {
+            releases: crate::data::Releases {
+                product_name: "OpenTalk".to_owned().into(),
+                releases_page_header: None,
+                series: BTreeMap::new(),
+                components: IndexMap::new(),
+                component_categories: IndexMap::new(),
+            },
+            profile: empty_profile(),
+            path: path.clone(),
+            dry_run: true,
+        };
+
+        releases.save().expect("dry-run save is a no-op");
+
+        assert!(!path.exists(), "dry-run must not create the releases file");
+    }
+}

@@ -9,12 +9,19 @@ use command::Command;
 use tracing_indicatif::IndicatifLayer;
 use tracing_subscriber::{EnvFilter, layer::SubscriberExt as _, util::SubscriberInitExt as _};
 
+mod bot_config;
+mod bot_templates;
 mod command;
 mod data;
+mod gitlab_service;
 mod helper;
+mod output;
 mod output_format;
 mod release_metadata;
+mod release_workflow;
+mod tasks;
 mod template;
+mod vcs_service;
 
 #[derive(Clone, Debug, PartialEq, Eq, Parser)]
 #[command(author, version, about)]

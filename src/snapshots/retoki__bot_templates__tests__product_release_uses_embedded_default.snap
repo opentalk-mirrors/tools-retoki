@@ -1,0 +1,18 @@
+---
+source: src/bot_templates.rs
+expression: body
+---
+## Component versions
+
+<!-- markdownlint-disable MD056 -->
+| Category | Component | Version | Ticket |
+| -------- | --------- | ------- | ------ |
+| **Frontend** | [**web-frontend**](https://git.opentalk.dev/opentalk/frontend/web/web-app) | [v2.6.4](https://git.opentalk.dev/opentalk/frontend/web/web-app/-/releases/v2.6.4) :sparkles: | [Issue](https://git.opentalk.dev/opentalk/frontend/web/web-app/-/issues/2801) |
+| **3rd-Party Components** | **keycloak** | v26.3.2 |  |
+
+<!-- markdownlint-enable MD056 -->
+
+## Dependency graph
+
+<!-- DEPENDENCY_GRAPH_START -->
+<!-- DEPENDENCY_GRAPH_END -->

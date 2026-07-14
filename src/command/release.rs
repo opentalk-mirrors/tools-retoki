@@ -9,10 +9,12 @@ use semver::Version;
 
 mod fetch_changelogs;
 mod fetch_product_tickets;
+mod init;
 mod show;
 
 pub use fetch_changelogs::FetchChangelogsArgs;
 pub use fetch_product_tickets::FetchProductTicketsArgs;
+pub use init::InitArgs;
 
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct ReleaseArgs {
@@ -34,6 +36,11 @@ impl ReleaseArgs {
 pub enum ReleaseCommand {
     Show(show::ShowArgs),
 
+    /// Create or update the product release issue for a version in the release tickets project
+    ///
+    /// Requires the GITLAB_TOKEN environment variable to be set
+    Init(InitArgs),
+
     /// Fetch all changelog entries for the component releases of a product release
     ///
     /// Requires the GITLAB_TOKEN environment variable to be set
@@ -49,6 +56,7 @@ impl ReleaseCommand {
     pub fn execute<R: AsRef<Path>>(self, release_file: R, version: &Version) -> Result<()> {
         match self {
             ReleaseCommand::Show(args) => args.execute(release_file, version),
+            ReleaseCommand::Init(args) => args.execute(version),
             ReleaseCommand::FetchChangelogs(args) => args.execute(release_file, version),
             ReleaseCommand::FetchProductTickets(args) => args.execute(release_file, version),
         }
