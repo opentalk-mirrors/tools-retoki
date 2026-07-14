@@ -1,5 +1,5 @@
 ---
-source: src/templates.rs
+source: src/bot_templates.rs
 expression: body
 ---
 ## Component versions

@@ -5,15 +5,15 @@ use std::path::{Path, PathBuf};
 
 use anyhow::Context;
 use indexmap::IndexMap;
-use retoki::data::{
-    read_profile_file, read_release_file, write_releases_file, Component, ComponentIdentifier,
-    ComponentProfile, ComponentVersion, Profile, Release, ReleaseSeries, SeriesNumber,
-};
 use semver::Version;
 use time::{Date, OffsetDateTime};
 
 use crate::{
-    templates::{CategoryData, ComponentData},
+    bot_templates::{CategoryData, ComponentData},
+    data::{
+        Component, ComponentIdentifier, ComponentProfile, ComponentVersion, Profile, Release,
+        ReleaseSeries, SeriesNumber, read_profile_file, read_release_file, write_releases_file,
+    },
     vcs_service::{Issue, IssueLinkType, LinkedIssue, VcsService},
 };
 
@@ -85,7 +85,7 @@ impl<T> Staged<'_, T> {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Releases {
-    releases: retoki::data::Releases,
+    releases: crate::data::Releases,
     profile: Profile,
     path: PathBuf,
     dry_run: bool,
@@ -142,6 +142,7 @@ impl Releases {
                 date: today,
                 components,
                 release_notes: None,
+                tickets: Vec::new(),
             })
             .into_mut()
     }
@@ -207,7 +208,7 @@ impl Releases {
         }
 
         write_releases_file(&self.path, self.releases.clone())
-            .with_context(|| format!("couldn't write releases file at {}", &self.path.display()))
+            .with_context(|| format!("couldn't write releases file at {}", self.path.display()))
     }
 }
 
@@ -413,6 +414,7 @@ mod tests {
                 ComponentVersion::Semver("1.0.0".parse().expect("valid semver")),
             )]),
             release_notes: None,
+            tickets: Vec::new(),
         };
 
         assert!(
@@ -486,7 +488,7 @@ mod tests {
     #[test]
     fn previous_release() {
         let releases = Releases {
-            releases: retoki::data::Releases {
+            releases: crate::data::Releases {
                 product_name: "OpenTalk".to_owned().into(),
                 releases_page_header: None,
                 series: BTreeMap::from_iter([(
@@ -507,6 +509,7 @@ mod tests {
                                         ),
                                     )]),
                                     release_notes: None,
+                                    tickets: Vec::new(),
                                 },
                             ),
                             (
@@ -521,6 +524,7 @@ mod tests {
                                         ),
                                     )]),
                                     release_notes: None,
+                                    tickets: Vec::new(),
                                 },
                             ),
                             (
@@ -535,6 +539,7 @@ mod tests {
                                         ),
                                     )]),
                                     release_notes: None,
+                                    tickets: Vec::new(),
                                 },
                             ),
                         ]),
@@ -573,7 +578,7 @@ mod tests {
     #[test]
     fn get_or_insert_returns_existing_without_duplicating() {
         let mut releases = Releases {
-            releases: retoki::data::Releases {
+            releases: crate::data::Releases {
                 product_name: "OpenTalk".to_owned().into(),
                 releases_page_header: None,
                 series: BTreeMap::from([(
@@ -589,6 +594,7 @@ mod tests {
                                         .expect("valid date"),
                                     components: IndexMap::new(),
                                     release_notes: None,
+                                    tickets: Vec::new(),
                                 },
                             ),
                             (
@@ -598,6 +604,7 @@ mod tests {
                                         .expect("valid date"),
                                     components: IndexMap::new(),
                                     release_notes: None,
+                                    tickets: Vec::new(),
                                 },
                             ),
                         ]),
@@ -631,7 +638,7 @@ mod tests {
     #[test]
     fn get_or_insert_without_previous_creates_empty_release() {
         let mut releases = Releases {
-            releases: retoki::data::Releases {
+            releases: crate::data::Releases {
                 product_name: "OpenTalk".to_owned().into(),
                 releases_page_header: None,
                 series: BTreeMap::new(),
@@ -651,10 +658,12 @@ mod tests {
             new.components.is_empty(),
             "the very first release has no components to seed from",
         );
-        assert!(releases
-            .releases
-            .get_release(&"1.0.0".parse().expect("valid semver"))
-            .is_some());
+        assert!(
+            releases
+                .releases
+                .get_release(&"1.0.0".parse().expect("valid semver"))
+                .is_some()
+        );
     }
 
     #[test]
@@ -662,7 +671,7 @@ mod tests {
         let mut path = std::env::temp_dir();
         path.push("relbo-test.yml");
         let releases = Releases {
-            releases: retoki::data::Releases {
+            releases: crate::data::Releases {
                 product_name: "OpenTalk".to_owned().into(),
                 releases_page_header: None,
                 series: BTreeMap::new(),

@@ -9,11 +9,11 @@ use std::{
     collections::{BTreeMap, BTreeSet},
 };
 
-use anyhow::{bail, Context as _};
+use anyhow::{Context as _, bail};
 use derive_builder::Builder;
 use gitlab::{
-    api::{common::NameOrId, issues::IssueState, Endpoint, Query as _, QueryParams},
     Gitlab,
+    api::{Endpoint, Query as _, QueryParams, common::NameOrId, issues::IssueState},
 };
 use http::Method;
 use rayon::iter::{IntoParallelIterator, ParallelIterator as _};

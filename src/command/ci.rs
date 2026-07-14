@@ -9,31 +9,35 @@ use owo_colors::OwoColorize as _;
 use url::Url;
 
 use crate::{
-    cli::CommonArgs,
-    config::Config,
+    bot_config::Config,
     gitlab_service::GitlabService,
     output::Output,
     tasks::generate_dependency_graph::DependencyGraphUpdater,
     vcs_service::{VcsService, VcsServiceExt as _},
 };
 
-#[derive(Clone, Debug, Args)]
-pub(crate) struct CiArgs {}
+#[derive(Clone, Debug, PartialEq, Eq, Args)]
+pub struct CiArgs {
+    /// Only log the actions that would be performed without writing anything.
+    #[arg(long, env = "RETOKI_DRY_RUN")]
+    dry_run: bool,
+}
 
 impl CiArgs {
-    pub(crate) fn run(&self, common_args: &CommonArgs, config: &Config) -> anyhow::Result<()> {
+    pub fn run(&self) -> anyhow::Result<()> {
+        let config = Config::load()?;
         let gitlab_service = GitlabService::connect(
             config.gitlab_url.clone(),
             config.gitlab_token.clone(),
             config.gitlab_group.clone(),
         )?
-        .dry_run_if(common_args.dry_run);
+        .dry_run_if(self.dry_run);
 
         Self::run_inner(
             &gitlab_service,
             &config.release_label,
             &mut stdout().lock(),
-            common_args.dry_run,
+            self.dry_run,
             &config.gitlab_url,
         )
     }

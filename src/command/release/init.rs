@@ -3,74 +3,62 @@
 use std::io::stdout;
 
 use clap::Args;
+use semver::Version;
 
 use crate::{
-    cli::CommonArgs,
-    command::release::ReleaseArgs,
-    config::Config,
+    bot_config::Config,
+    bot_templates,
     gitlab_service::GitlabService,
     output::Output,
-    releases::ReleasesBuilder,
-    templates,
+    release_workflow::ReleasesBuilder,
     vcs_service::{Issue, VcsService, VcsServiceExt},
 };
 
-#[derive(Debug, Clone, Args)]
-pub struct InitArgs;
+#[derive(Debug, Clone, PartialEq, Eq, Args)]
+pub struct InitArgs {
+    /// Only log the actions that would be performed without writing anything.
+    #[arg(long, env = "RETOKI_DRY_RUN")]
+    dry_run: bool,
+}
 
 impl InitArgs {
-    pub fn run(
-        &self,
-        release_args: &ReleaseArgs,
-        common_args: &CommonArgs,
-        config: &Config,
-    ) -> anyhow::Result<()> {
+    pub fn execute(&self, version: &Version) -> anyhow::Result<()> {
+        let config = Config::load()?;
         let vcs = GitlabService::connect(
             config.gitlab_url.clone(),
             config.gitlab_token.clone(),
             config.gitlab_group.clone(),
         )?
-        .dry_run_if(common_args.dry_run);
+        .dry_run_if(self.dry_run);
 
-        self.run_inner(
-            release_args,
-            common_args,
-            config,
-            &vcs,
-            &mut stdout().lock(),
-        )
+        self.run_inner(version, &config, &vcs, &mut stdout().lock())
     }
 
     fn run_inner(
         &self,
-        release_args: &ReleaseArgs,
-        common_args: &CommonArgs,
+        version: &Version,
         config: &Config,
         vcs: &dyn VcsService,
         out: &mut dyn Output,
     ) -> anyhow::Result<()> {
         let mut releases = ReleasesBuilder::new()
-            .dry_run(common_args.dry_run)
+            .dry_run(self.dry_run)
             .load(config.releases_yml_path.clone(), &config.release_profile)?;
         let release = releases
-            .edit(|r| r.get_or_insert_from_previous(release_args.version.clone()))?
+            .edit(|r| r.get_or_insert_from_previous(version.clone()))?
             .save()?;
 
-        let title = release_args.title();
+        let title = format!("Release {version}");
         let issue = vcs.get_open_issue_with_title(&config.release_repo, &title)?;
         let linked_issues = issue
             .as_ref()
             .map(|issue| issue.linked_issues.as_slice())
             .unwrap_or(&[]);
         let categories: Vec<_> = releases
-            .category_data(&release_args.version, &release, linked_issues, vcs)
+            .category_data(version, &release, linked_issues, vcs)
             .collect();
-        let body = templates::product_release_body(
-            vcs,
-            &config.release_repo,
-            &release_args.version,
-            &categories,
-        )?;
+        let body =
+            bot_templates::product_release_body(vcs, &config.release_repo, version, &categories)?;
 
         if let Some(Issue {
             iid,

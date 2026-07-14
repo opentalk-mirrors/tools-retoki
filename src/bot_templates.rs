@@ -18,7 +18,7 @@ use tera::Tera;
 
 use crate::vcs_service::VcsService;
 
-const PRODUCT_RELEASE_DEFAULT: &str = include_str!("templates/product_release.md");
+const PRODUCT_RELEASE_DEFAULT: &str = include_str!("bot_templates/product_release.md");
 
 /// A category of components in the product release table.
 

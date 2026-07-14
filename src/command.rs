@@ -7,10 +7,11 @@ use anyhow::Result;
 use clap::{Args, Subcommand};
 
 use self::{
-    compare::CompareArgs, component::ComponentArgs, edit::EditArgs, generate::GenerateArgs,
-    release::ReleaseArgs, series::SeriesArgs,
+    ci::CiArgs, compare::CompareArgs, component::ComponentArgs, edit::EditArgs,
+    generate::GenerateArgs, release::ReleaseArgs, series::SeriesArgs,
 };
 
+pub mod ci;
 pub mod compare;
 pub mod component;
 pub mod edit;
@@ -32,6 +33,11 @@ pub enum Command {
 
     /// Perform actions related to a component
     Component(ComponentArgs),
+
+    /// Run tasks intended to be executed in a CI pipeline
+    ///
+    /// This currently updates the dependency graphs in all open release tickets.
+    Ci(CiArgs),
 
     /// Edit a `releases.yml` file
     Edit(EditArgs),
@@ -65,6 +71,7 @@ impl Command {
             Command::Series(args) => args.execute(release_file),
             Command::Edit(args) => args.execute(release_file),
             Command::Compare(args) => args.execute(release_file),
+            Command::Ci(args) => args.run(),
         }
     }
 }

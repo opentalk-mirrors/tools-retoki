@@ -76,8 +76,8 @@ fn default_release_profile() -> String {
 impl Config {
     pub(crate) fn load() -> Result<Self, ConfigError> {
         Self::from_sources(
-            File::new("relbo", FileFormat::Toml).required(false),
-            Environment::with_prefix("RELBO"),
+            File::new("retoki", FileFormat::Toml).required(false),
+            Environment::with_prefix("RETOKI"),
             std::env::var("GITLAB_TOKEN").ok(),
         )
     }
