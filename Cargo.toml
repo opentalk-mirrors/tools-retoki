@@ -44,6 +44,6 @@ urlencoding = "2"
 
 [dev-dependencies]
 insta = { version = "1.40.0", features = ["glob", "yaml"] }
-mockall = "0.14.0"
+mockall = "0.15.0"
 pretty_assertions = "1.4.0"
 tempfile = "3.12.0"
