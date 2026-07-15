@@ -47,6 +47,21 @@ pub(crate) trait VcsService: Send + Sync {
         labels: &[&'a str],
     ) -> anyhow::Result<Issue>;
 
+    /// List issues in `project` carrying the given `label`, regardless of their
+    /// state (open or closed).
+    fn find_issues_with_label(&self, project: &str, label: &str) -> anyhow::Result<Vec<Issue>>;
+
+    /// Create a link of the given `link_type` from the issue `source_iid` in
+    /// `source_project` to the issue `target_iid` in `target_project`.
+    fn create_issue_link(
+        &self,
+        source_project: &str,
+        source_iid: u64,
+        target_project: &str,
+        target_iid: u64,
+        link_type: IssueLinkType,
+    ) -> anyhow::Result<()>;
+
     /// Read a raw file from the repository.
     ///
     /// Returns `Ok(None)` if the file does not exist.
@@ -131,6 +146,39 @@ impl<S: VcsService> VcsService for DryRunVcsService<S> {
         }
     }
 
+    fn find_issues_with_label(&self, project: &str, label: &str) -> anyhow::Result<Vec<Issue>> {
+        self.inner.find_issues_with_label(project, label)
+    }
+
+    fn create_issue_link(
+        &self,
+        source_project: &str,
+        source_iid: u64,
+        target_project: &str,
+        target_iid: u64,
+        link_type: IssueLinkType,
+    ) -> anyhow::Result<()> {
+        if self.enabled {
+            tracing::info!(
+                source_project,
+                source_iid,
+                target_project,
+                target_iid,
+                ?link_type,
+                "DRY RUN: would create issue link",
+            );
+            Ok(())
+        } else {
+            self.inner.create_issue_link(
+                source_project,
+                source_iid,
+                target_project,
+                target_iid,
+                link_type,
+            )
+        }
+    }
+
     fn get_raw_file(&self, project: &str, path: &str) -> anyhow::Result<Option<String>> {
         self.inner.get_raw_file(project, path)
     }
@@ -168,6 +216,16 @@ impl Issue {
                 .replace("/", "_")
                 .replace("-", "_"),
             self.iid
+        )
+    }
+
+    /// Render the issue as `path#iid` followed by its web URL, for printing in command output.
+    pub(crate) fn reference_with_url(&self) -> String {
+        format!(
+            "{path}#{iid}\n 🌐 {url}",
+            path = self.project.path_with_namespace,
+            iid = self.iid,
+            url = self.web_url,
         )
     }
 }

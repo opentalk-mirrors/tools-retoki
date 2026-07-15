@@ -13,10 +13,11 @@ use anyhow::{Context as _, bail};
 use derive_builder::Builder;
 use gitlab::{
     Gitlab,
-    api::{Endpoint, Query as _, QueryParams, common::NameOrId, issues::IssueState},
+    api::{Endpoint, ParamValue, Query as _, QueryParams, common::NameOrId, issues::IssueState},
 };
 use http::Method;
 use rayon::iter::{IntoParallelIterator, ParallelIterator as _};
+use serde::Serialize;
 use url::Url;
 
 use self::api::LinkedItem;
@@ -199,6 +200,66 @@ impl VcsService for GitlabService {
     }
 
     #[tracing::instrument(level = "info", skip(self), err)]
+    fn find_issues_with_label(
+        &self,
+        project: &str,
+        label: &str,
+    ) -> anyhow::Result<Vec<vcs_service::Issue>> {
+        let endpoint = gitlab::api::projects::issues::Issues::builder()
+            .project(project)
+            .label(label)
+            .build()
+            .context("couldn't build project issues endpoint")?;
+
+        let issues: Vec<Issue> = endpoint.query(&self.client).with_context(|| {
+            format!("couldn't list issues in project {project} with label {label:?}")
+        })?;
+
+        // All issues live in the project we just queried.
+        let Some(project_id) = issues.first().map(|issue| issue.project_id) else {
+            return Ok(vec![]);
+        };
+        let projects = BTreeMap::from_iter([(project_id, self.get_project(project_id)?)]);
+
+        issues
+            .into_par_iter()
+            .map(|i| {
+                let linked_issues = self.get_linked_issues(project, i.iid)?;
+                i.to_vcs_service_issue(&projects, &self.group, linked_issues)
+            })
+            .collect()
+    }
+
+    #[tracing::instrument(level = "info", skip(self), err)]
+    fn create_issue_link(
+        &self,
+        source_project: &str,
+        source_iid: u64,
+        target_project: &str,
+        target_iid: u64,
+        link_type: vcs_service::IssueLinkType,
+    ) -> anyhow::Result<()> {
+        let endpoint = CreateIssueLink::builder()
+            .project(NameOrId::Name(source_project.into()))
+            .issue(source_iid)
+            .target_project(NameOrId::Name(target_project.into()))
+            .target_issue(target_iid)
+            .link_type(link_type.into())
+            .build()
+            .context("couldn't build issue link creation endpoint")?;
+
+        gitlab::api::ignore(endpoint)
+            .query(&self.client)
+            .with_context(|| {
+                format!(
+                    "couldn't create issue link {source_project}#{source_iid} -> \
+                     {target_project}#{target_iid}"
+                )
+            })?;
+        Ok(())
+    }
+
+    #[tracing::instrument(level = "info", skip(self), err)]
     fn get_raw_file(&self, project: &str, path: &str) -> anyhow::Result<Option<String>> {
         let endpoint = gitlab::api::projects::repository::files::FileRaw::builder()
             .project(project)
@@ -303,5 +364,79 @@ impl Endpoint for LinkedItems<'_> {
 
     fn endpoint(&self) -> Cow<'static, str> {
         format!("projects/{}/issues/{}/links", self.project, self.issue).into()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+enum CreateIssueLinkType {
+    Blocks,
+    IsBlockedBy,
+    RelatesTo,
+}
+
+impl ParamValue<'static> for CreateIssueLinkType {
+    fn as_value(&self) -> Cow<'static, str> {
+        match self {
+            Self::Blocks => "blocks".into(),
+            Self::IsBlockedBy => "is_blocked_by".into(),
+            Self::RelatesTo => "relates_to".into(),
+        }
+    }
+}
+
+impl From<vcs_service::IssueLinkType> for CreateIssueLinkType {
+    fn from(value: vcs_service::IssueLinkType) -> Self {
+        match value {
+            vcs_service::IssueLinkType::Blocks => Self::Blocks,
+            vcs_service::IssueLinkType::IsBlockedBy => Self::IsBlockedBy,
+            vcs_service::IssueLinkType::RelatesTo => Self::RelatesTo,
+        }
+    }
+}
+
+/// Endpoint that creates a link between two issues.
+///
+/// The GitLab API client crate does not expose an issue-links endpoint, so we
+/// implement the `POST projects/:id/issues/:iid/links` call ourselves.
+#[derive(Debug, Builder, Clone)]
+struct CreateIssueLink<'a> {
+    #[builder(setter(into))]
+    project: NameOrId<'a>,
+
+    issue: u64,
+
+    #[builder(setter(into))]
+    target_project: NameOrId<'a>,
+
+    target_issue: u64,
+
+    link_type: CreateIssueLinkType,
+}
+
+impl<'a> CreateIssueLink<'a> {
+    fn builder() -> CreateIssueLinkBuilder<'a> {
+        CreateIssueLinkBuilder::default()
+    }
+}
+
+impl Endpoint for CreateIssueLink<'_> {
+    fn method(&self) -> Method {
+        Method::POST
+    }
+
+    fn endpoint(&self) -> Cow<'static, str> {
+        format!("projects/{}/issues/{}/links", self.project, self.issue).into()
+    }
+
+    fn parameters(&self) -> QueryParams<'_> {
+        let mut params = QueryParams::default();
+
+        let _ = params
+            .push("target_project_id", &self.target_project)
+            .push("target_issue_iid", self.target_issue)
+            .push("link_type", self.link_type);
+
+        params
     }
 }

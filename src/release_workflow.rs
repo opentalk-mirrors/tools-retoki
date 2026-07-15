@@ -11,8 +11,9 @@ use time::{Date, OffsetDateTime};
 use crate::{
     bot_templates::{CategoryData, ComponentData},
     data::{
-        Component, ComponentIdentifier, ComponentProfile, ComponentVersion, Profile, Release,
-        ReleaseSeries, SeriesNumber, read_profile_file, read_release_file, write_releases_file,
+        Component, ComponentIdentifier, ComponentName, ComponentProfile, ComponentVersion, Profile,
+        Release, ReleaseSeries, SeriesNumber, read_profile_file, read_release_file,
+        write_releases_file,
     },
     vcs_service::{Issue, IssueLinkType, LinkedIssue, VcsService},
 };
@@ -61,12 +62,36 @@ impl ReleasesEditor<'_> {
     pub fn get_or_insert_from_previous(&mut self, version: Version) -> anyhow::Result<Release> {
         self.inner.get_or_insert_from_previous(version)
     }
+
+    /// Set the planned `component_version` of `component` in the release entry
+    /// for `version`, returning the updated release.
+    ///
+    /// Fails if no release entry exists for `version`; callers are expected to
+    /// have created it via `init` beforehand.
+    pub fn set_component_version(
+        &mut self,
+        version: &Version,
+        component: ComponentIdentifier,
+        component_version: ComponentVersion,
+    ) -> anyhow::Result<Release> {
+        self.inner
+            .set_component_version(version, component, component_version)
+    }
 }
 
 #[must_use = "edits are not persisted until you call `.save()` (use `.discard()` to drop them)"]
 pub(crate) struct Staged<'a, T> {
     releases: &'a mut Releases,
     value: T,
+}
+
+/// A component resolved against both the releases data and the loaded profile.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ResolvedComponent {
+    pub id: ComponentIdentifier,
+    pub name: ComponentName,
+    pub category_name: String,
+    pub gitlab_url: Option<String>,
 }
 
 impl<T> Staged<'_, T> {
@@ -90,7 +115,6 @@ pub(crate) struct Releases {
     path: PathBuf,
     dry_run: bool,
 }
-
 impl Releases {
     pub fn edit<T>(
         &mut self,
@@ -160,6 +184,77 @@ impl Releases {
         }
 
         Ok(self.insert_new_from_previous(version).clone())
+    }
+
+    /// Set the planned `component_version` of `component` in the release entry
+    /// for `version`, returning the updated release. Fails if no such release
+    /// entry exists.
+    fn set_component_version(
+        &mut self,
+        version: &Version,
+        component: ComponentIdentifier,
+        component_version: ComponentVersion,
+    ) -> anyhow::Result<Release> {
+        let series_nr = SeriesNumber::from(version);
+        let release = self
+            .releases
+            .series
+            .get_mut(&series_nr)
+            .and_then(|series| series.releases.get_mut(version))
+            .with_context(|| {
+                format!(
+                    "no release entry for {version} in releases.yml; \
+                     run `retoki release {version} init` first"
+                )
+            })?;
+        let _ = release.components.insert(component, component_version);
+        Ok(release.clone())
+    }
+
+    /// Look up `component` in the releases data and the loaded profile,
+    /// returning the metadata that the release workflow commonly needs.
+    ///
+    /// Fails if the component is not declared in `releases.yml`. A missing
+    /// profile entry is not an error: it simply yields no `gitlab_url`, which
+    /// marks the component as one without its own release project (e.g. a
+    /// third-party component).
+    pub fn resolve_component(&self, component: &str) -> anyhow::Result<ResolvedComponent> {
+        let id = ComponentIdentifier::from(component.to_owned());
+        let component =
+            self.releases.components.get(&id).with_context(|| {
+                format!("component {component} is not declared in releases.yml")
+            })?;
+        let category_name = self
+            .releases
+            .component_categories
+            .get(&component.category)
+            .map(|category| category.name.to_string())
+            .unwrap_or_else(|| component.category.to_string());
+        let gitlab_url = self
+            .profile
+            .components
+            .get(&id)
+            .and_then(|profile| profile.gitlab_url.clone());
+        Ok(ResolvedComponent {
+            id,
+            name: component.name.clone(),
+            category_name,
+            gitlab_url,
+        })
+    }
+
+    /// Return the planned version of `component` in the release immediately
+    /// preceding `version`, if that release exists and carries a semver version
+    /// for the component.
+    #[must_use]
+    pub fn previous_component_version(
+        &self,
+        version: &Version,
+        component: &ComponentIdentifier,
+    ) -> Option<Version> {
+        self.previous_release(version)
+            .and_then(|previous| previous.components.get(component))
+            .and_then(|version| version.as_semver().cloned())
     }
 
     pub fn category_data(

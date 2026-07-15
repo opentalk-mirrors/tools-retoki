@@ -11,7 +11,7 @@ use crate::{
     gitlab_service::GitlabService,
     output::Output,
     release_workflow::ReleasesBuilder,
-    vcs_service::{Issue, VcsService, VcsServiceExt},
+    vcs_service::{VcsService, VcsServiceExt},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Args)]
@@ -60,17 +60,11 @@ impl InitArgs {
         let body =
             bot_templates::product_release_body(vcs, &config.release_repo, version, &categories)?;
 
-        if let Some(Issue {
-            iid,
-            project,
-            web_url,
-            ..
-        }) = issue
-        {
-            vcs.update_issue_description(&config.release_repo, iid, &body)?;
+        if let Some(issue) = issue {
+            vcs.update_issue_description(&config.release_repo, issue.iid, &body)?;
             out.println(&format_args!(
-                "Updated description of issue {path}{iid}\n 🌐 {web_url}",
-                path = project.path_with_namespace
+                "Updated description of issue {}",
+                issue.reference_with_url()
             ));
         } else {
             let created = vcs.create_issue(
@@ -80,10 +74,8 @@ impl InitArgs {
                 &[&config.release_label],
             )?;
             out.println(&format_args!(
-                "Created issue {path}{iid}\n 🌐 {web_url}",
-                path = created.project.path_with_namespace,
-                iid = created.iid,
-                web_url = created.web_url
+                "Created issue {}",
+                created.reference_with_url()
             ));
         }
 

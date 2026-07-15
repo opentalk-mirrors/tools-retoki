@@ -19,6 +19,7 @@ use tera::Tera;
 use crate::vcs_service::VcsService;
 
 const PRODUCT_RELEASE_DEFAULT: &str = include_str!("bot_templates/product_release.md");
+const COMPONENT_RELEASE_DEFAULT: &str = include_str!("bot_templates/component_release.md");
 
 /// A category of components in the product release table.
 
@@ -73,6 +74,40 @@ pub(crate) fn product_release_body(
     let mut context = tera::Context::new();
     context.insert("version", version);
     context.insert("categories", categories);
+
+    render(&template, &context)
+}
+
+/// Render the body of a component release issue that blocks the product release.
+///
+/// `component_version` and `previous_version` are expected to already carry the
+/// display prefix (e.g. `v1.21.0`) so that the rendered links match the version
+/// strings used in the product release table.
+#[expect(clippy::too_many_arguments)]
+pub(crate) fn component_release_body(
+    vcs_service: &dyn VcsService,
+    project: &str,
+    component_name: &str,
+    component_version: &str,
+    product_version: &Version,
+    category: &str,
+    previous_version: Option<&str>,
+    gitlab_url: Option<&str>,
+) -> anyhow::Result<String> {
+    let template = load_template(
+        vcs_service,
+        project,
+        ".gitlab/issue_templates/component_release.md",
+        COMPONENT_RELEASE_DEFAULT,
+    )?;
+
+    let mut context = tera::Context::new();
+    context.insert("component_name", component_name);
+    context.insert("component_version", component_version);
+    context.insert("product_version", product_version);
+    context.insert("category", category);
+    context.insert("previous_version", &previous_version);
+    context.insert("gitlab_url", &gitlab_url);
 
     render(&template, &context)
 }
