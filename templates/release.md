@@ -27,7 +27,7 @@ title: {{ product_name }} v{{ version }}
 ## Changelog
 
 {% for ticket in tickets -%}
-* {{ ticket.title }} ([ticket#{{ticket.iid}}]({{ticket.web_url}}))
+- {{ ticket.title }} ([ticket#{{ticket.iid}}]({{ticket.web_url}}))
 {% endfor %}
 {%- endif %}
 
