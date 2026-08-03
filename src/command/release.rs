@@ -7,11 +7,13 @@ use anyhow::Result;
 use clap::{Args, Subcommand};
 use semver::Version;
 
+mod add;
 mod fetch_changelogs;
 mod fetch_product_tickets;
 mod init;
 mod show;
 
+pub use add::AddArgs;
 pub use fetch_changelogs::FetchChangelogsArgs;
 pub use fetch_product_tickets::FetchProductTicketsArgs;
 pub use init::InitArgs;
@@ -41,6 +43,11 @@ pub enum ReleaseCommand {
     /// Requires the GITLAB_TOKEN environment variable to be set
     Init(InitArgs),
 
+    /// Add a component release issue that blocks the product release issue for a version
+    ///
+    /// Requires the GITLAB_TOKEN environment variable to be set
+    Add(AddArgs),
+
     /// Fetch all changelog entries for the component releases of a product release
     ///
     /// Requires the GITLAB_TOKEN environment variable to be set
@@ -57,6 +64,7 @@ impl ReleaseCommand {
         match self {
             ReleaseCommand::Show(args) => args.execute(release_file, version),
             ReleaseCommand::Init(args) => args.execute(version),
+            ReleaseCommand::Add(args) => args.execute(version),
             ReleaseCommand::FetchChangelogs(args) => args.execute(release_file, version),
             ReleaseCommand::FetchProductTickets(args) => args.execute(release_file, version),
         }
