@@ -5,6 +5,170 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2026-08-03
+
+[0.14.0]: https://git.opentalk.dev/opentalk/tools/retoki/-/compare/v0.13.0...v0.14.0
+
+### 🚀 New features
+
+- (cli) Add command-line parsing ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (config) Add loading of config from relbo.toml file and env ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Add snafu for error handling ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (config) Add configuration fields ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (cli) Add scaffolding for check-milestones subcommand ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (cli) Check for overdue milestones in gitlab ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (cli) Add some colors to command-line output ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (cli) Show release blocker issues ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Add dry-run flag ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Generate diagrams in release tickets ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451), [#3](https://git.opentalk.dev/opentalk/tools/retoki/-/issues/3))
+- Migrate from figment to config crate ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Add defaults for most config options ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Don't use milestones to track releases ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451), [#24](https://git.opentalk.dev/opentalk/tools/retoki/-/issues/24))
+- Rename default ticket ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Add indicative logs ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Remove milestone listing ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Add `relase init` command ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451), [#15](https://git.opentalk.dev/opentalk/tools/retoki/-/issues/15))
+- Merge relbo features into retoki ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Introduce command to add component to release ([!454](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/454))
+
+### 🐛 Bug fixes
+
+- (container) Install executable in /usr/local/bin and fix entrypoint ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Query milestone issues from group scope instead of standalone scope ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451), [#2](https://git.opentalk.dev/opentalk/tools/retoki/-/issues/2))
+- Escape `(` and `)` in mermaid diagram labels ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451), [#5](https://git.opentalk.dev/opentalk/tools/retoki/-/issues/5))
+- Html-escape square brackets in dependency graph ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451), [#7](https://git.opentalk.dev/opentalk/tools/retoki/-/issues/7))
+- Allow issue description field to be absent ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Handle epics linked from issues gracefully ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451), [#6](https://git.opentalk.dev/opentalk/tools/retoki/-/issues/6))
+- (output) Prevent dependency lines in mermaid diagram from being printed multiple times ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Use `-` for markdown lists ([!457](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/457))
+
+### ⚡ Performance
+
+- Parallel requests ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+
+### 📚 Documentation
+
+- Document ci and release init commands ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+
+### 🔨 Refactor
+
+- Load related issues inside the overdue milestones fetch instead of outside ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Move listing of overdue milestones into separate method ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Migrate from snafu to thiserror and anyhow ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Implement dry-run on VcsService trait level ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+
+### 📦 Dependencies
+
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Lock file maintenance ([!461](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/461))
+- (deps) Update crate gitlab ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update git.opentalk.dev:5050/opentalk/backend/containers/rust docker tag to v1.83.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update git.opentalk.dev:5050/opentalk/backend/containers/rust docker tag to v1.84.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update git.opentalk.dev:5050/opentalk/backend/containers/rust docker tag to v1.85.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update git.opentalk.dev:5050/opentalk/backend/containers/rust docker tag to v1.92.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update git.opentalk.dev:5050/opentalk/backend/containers/rust docker tag to v1.93.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update git.opentalk.dev:5050/opentalk/backend/containers/rust docker tag to v1.96.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update git.opentalk.dev:5050/opentalk/backend/containers/rust docker tag to v1.97.1 ([!464](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/464))
+- (deps) Update pre-commit hook adrienverge/yamllint to v1.38.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update pre-commit hook alessandrojcm/commitlint-pre-commit-hook to v9.24.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update pre-commit hook alessandrojcm/commitlint-pre-commit-hook to v9.25.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update pre-commit hook andrejorsula/pre-commit-cargo to v0.5.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update pre-commit hook davidanson/markdownlint-cli2 to v0.23.1 ([!455](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/455))
+- (deps) Update pre-commit hook embarkstudios/cargo-deny to v0.19.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update pre-commit hook embarkstudios/cargo-deny to v0.19.6 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update pre-commit hook embarkstudios/cargo-deny to v0.19.8 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update pre-commit hook embarkstudios/cargo-deny to v0.19.9 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update pre-commit hook markdownlint/markdownlint to v0.15.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate anyhow to v1.0.104 ([!458](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/458))
+- (deps) Update rust crate clap to v4.5.24 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate clap to v4.5.26 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate clap to v4.5.27 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate clap to v4.5.28 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate clap to v4.5.29 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate derive_more to v2 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate derive_more to v2.0.1 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate gitlab to 0.1706.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate gitlab to 0.1707.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate gitlab to 0.1708.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate gitlab to 0.1709.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate gitlab to 0.1710.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate gitlab to v0.1708.2 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate gitlab to v0.1709.1 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate gitlab to v0.1709.3 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate http to v1.3.1 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate itertools to 0.14.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate jiff to 0.2.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate jiff to v0.1.18 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate jiff to v0.1.19 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate jiff to v0.1.21 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate jiff to v0.1.23 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate jiff to v0.1.25 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate jiff to v0.1.26 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate jiff to v0.1.28 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate jiff to v0.2.2 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate jiff to v0.2.22 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate jiff to v0.2.23 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate jiff to v0.2.4 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate mockall to 0.14.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate mockall to 0.15.0 ([!452](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/452))
+- (deps) Update rust crate semver to v1.0.24 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate semver to v1.0.26 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate serde to v1.0.217 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate serde to v1.0.218 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate serde_json to v1.0.151 ([!462](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/462))
+- (deps) Update rust crate snafu to 0.9.0 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate strip-ansi-escapes to v0.2.1 ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (deps) Update rust crate tera to v2.1.0 ([!465](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/465))
+- (deps) Update rust crate time to v0.3.54 ([!463](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/463))
+
+### ⚙ Miscellaneous
+
+- Initial import ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Add project-wide deny rules ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (ci) Add initial ci jobs ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (tests) Introduce test scaffolding ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (tests) Add a simple test with overdue milestone and no issues ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (tests) Add a test with multiple overdue milestone and issues ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Rename `check-milestones` subcommand to `ci` ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Lockfile maintenance ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Add pre-commit config ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Git ignore relbo.toml ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Relax linting rules and add clippy lints ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Prepare for merge into retoki ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+
+### Ci
+
+- Add renovate.json ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- Use gitlab-ci templates ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (pre-commit) Switch from taplo to olpat (taplo is unmaintained) ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+- (pre-commit) Switch to olpat ([!454](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/454))
+
+### Test
+
+- Config loading ([!451](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/451))
+
 ## [0.13.0] - 2026-07-13
 
 [0.13.0]: https://git.opentalk.dev/opentalk/tools/retoki/-/compare/v0.12.0...v0.13.0
