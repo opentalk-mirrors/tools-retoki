@@ -11,6 +11,7 @@ use tracing_subscriber::{EnvFilter, layer::SubscriberExt as _, util::SubscriberI
 mod bot_config;
 mod bot_templates;
 mod command;
+mod completion;
 mod data;
 mod gitlab_service;
 mod helper;

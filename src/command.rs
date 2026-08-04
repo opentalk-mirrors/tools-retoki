@@ -24,11 +24,18 @@ pub mod release;
 pub mod series;
 pub mod utils;
 
+/// Long flag name (without leading `--`) of the `release_file` argument.
+pub const RELEASE_FILE_FLAG: &str = "release-file";
+/// Long flag name (without leading `--`) of the `profile_path` argument.
+pub const PROFILE_PATH_FLAG: &str = "profile-path";
+/// Default file name used for the `release_file` argument.
+pub const DEFAULT_RELEASE_FILE: &str = "releases.yml";
+
 #[derive(Clone, Debug, PartialEq, Eq, Parser)]
 #[command(author, version, about)]
 pub struct Cli {
     /// The YAML file containing the structured release information.
-    #[clap(long, default_value = "releases.yml", env = "RETOKI_RELEASE_FILE")]
+    #[clap(long = RELEASE_FILE_FLAG, default_value = DEFAULT_RELEASE_FILE, env = "RETOKI_RELEASE_FILE")]
     pub release_file: PathBuf,
 
     #[command(subcommand)]
@@ -101,10 +108,9 @@ impl Command {
 }
 
 fn install_completions(shell_override: Option<Shell>) -> Result<()> {
-    let shell = match shell_override {
-        Some(s) => s,
-        None => detect_shell()?,
-    };
+    let shell = shell_override
+        .or_else(Shell::from_env)
+        .context("could not detect the shell; use --shell to specify one")?;
 
     let target = completion_target(shell)?;
     install_completion_file(shell, target)
@@ -255,16 +261,6 @@ fn append_line_if_missing(path: &Path, line: &str) -> Result<bool> {
     Ok(true)
 }
 
-fn detect_shell() -> Result<Shell> {
-    let shell_path = std::env::var("SHELL").context("$SHELL is not set")?;
-    let name = Path::new(&shell_path)
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("");
-    name.parse::<Shell>()
-        .map_err(|_| anyhow::anyhow!("unrecognised shell '{name}'; use --shell to specify one"))
-}
-
 fn xdg_config_home() -> Result<PathBuf> {
     match std::env::var_os("XDG_CONFIG_HOME") {
         Some(dir) if !dir.is_empty() => Ok(PathBuf::from(dir)),
@@ -290,7 +286,7 @@ fn home_dir() -> Result<PathBuf> {
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct ProfileArgs {
     /// Path to the profile to use
-    #[clap(long, env = "RETOKI_PROFILE_PATH", default_value_os_t = default_profile_path())]
+    #[clap(long = PROFILE_PATH_FLAG, env = "RETOKI_PROFILE_PATH", default_value_os_t = default_profile_path())]
     pub profile: PathBuf,
 }
 

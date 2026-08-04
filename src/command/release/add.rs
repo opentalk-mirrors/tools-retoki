@@ -4,6 +4,7 @@ use std::io::stdout;
 
 use anyhow::{Context as _, Ok};
 use clap::Args;
+use clap_complete::ArgValueCandidates;
 use semver::Version;
 
 use crate::{
@@ -23,6 +24,7 @@ use crate::{
 #[derive(Debug, Clone, PartialEq, Eq, Args)]
 pub struct AddArgs {
     /// Identifier of the component or group to add, i.e. its key in `releases.yml`.
+    #[clap(add = ArgValueCandidates::new(crate::completion::component_candidates))]
     component_or_group: String,
 
     /// Planned version of the component for this release.
@@ -157,8 +159,9 @@ impl AddArgs {
                 })?;
 
             if let Some(url) = component.gitlab_url {
-                let resolved = releases
-                    .resolve_component(&ComponentIdentifier::from(self.component_or_group.clone()))?;
+                let resolved = releases.resolve_component(&ComponentIdentifier::from(
+                    self.component_or_group.clone(),
+                ))?;
                 self.put_component_issue(
                     &resolved,
                     product_version,

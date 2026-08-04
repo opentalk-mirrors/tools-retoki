@@ -5,7 +5,7 @@ use std::{fs, path::PathBuf};
 
 use insta::{assert_debug_snapshot, assert_snapshot};
 use retoki::command::{
-    Command, ProfileArgs,
+    Command, DEFAULT_RELEASE_FILE, ProfileArgs,
     release::{FetchChangelogsArgs, ReleaseArgs, ReleaseCommand},
 };
 use tempfile::tempdir_in;
@@ -24,7 +24,7 @@ fn test_fetch_changelog_with_public_profile() {
     //        release.yml since it will be changed (changelog added by retoki)
     let _ = fs::create_dir("tests/test-result");
     let tmp_dir = tempdir_in("tests/test-result").expect("Failed to create temporary directory");
-    let tmp_release_yml = tmp_dir.path().join("releases.yml");
+    let tmp_release_yml = tmp_dir.path().join(DEFAULT_RELEASE_FILE);
     fs::copy("tests/fetch_changelog/releases.yml", &tmp_release_yml)
         .expect("Could not create copy of release.yml");
 

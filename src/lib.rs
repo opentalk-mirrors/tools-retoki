@@ -4,6 +4,7 @@
 pub mod bot_config;
 pub mod bot_templates;
 pub mod command;
+pub mod completion;
 pub mod data;
 pub mod gitlab_service;
 pub mod helper;

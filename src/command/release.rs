@@ -5,6 +5,7 @@ use std::path::Path;
 
 use anyhow::Result;
 use clap::{Args, Subcommand};
+use clap_complete::engine::ArgValueCandidates;
 use semver::Version;
 
 mod add;
@@ -22,6 +23,7 @@ pub use init::InitArgs;
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct ReleaseArgs {
     /// The release version
+    #[clap(add = ArgValueCandidates::new(crate::completion::product_version_candidates))]
     pub version: Version,
 
     #[clap(subcommand)]
