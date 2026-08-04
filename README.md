@@ -173,3 +173,20 @@ published on the web:
 
 Hyperlinks are retained inline in angle brackets and Markdown release notes (including tables and
 footnotes) are converted to plain text, so no further post-processing is required.
+
+## Shell completions
+
+`retoki` provides dynamic shell completions that are computed by the binary itself, so they always
+match the installed version and can complete live values such as release versions and component
+identifiers from your `releases.yml`.
+
+### Automatic setup
+
+Run the following once to add the completion registration to your shell's startup file. The shell
+is auto-detected from `$SHELL`; use `--shell` to override it:
+
+```sh
+retoki install-completions
+```
+
+Restart your shell afterwards. Re-running the command is safe, it will not add duplicate entries.
