@@ -157,7 +157,8 @@ impl AddArgs {
                 })?;
 
             if let Some(url) = component.gitlab_url {
-                let resolved = releases.resolve_component(&self.component_or_group)?;
+                let resolved = releases
+                    .resolve_component(&ComponentIdentifier::from(self.component_or_group.clone()))?;
                 self.put_component_issue(
                     &resolved,
                     product_version,
@@ -277,7 +278,11 @@ impl AddArgs {
         linked_issues: &mut Vec<LinkedIssue>,
         gitlab_url: &str,
     ) -> Result<(), anyhow::Error> {
-        let component_project = component_project(vcs, gitlab_url, &self.component_or_group)?;
+        let component_project = component_project(
+            vcs,
+            gitlab_url,
+            &ComponentIdentifier::from(self.component_or_group.clone()),
+        )?;
         let component_title = build_release_title(&component.name.to_string(), component_version);
         let issue = match find_existing_component_issue(
             vcs,
@@ -339,7 +344,11 @@ impl AddArgs {
         linked_issues: &mut Vec<LinkedIssue>,
         gitlab_url: &str,
     ) -> anyhow::Result<()> {
-        let project = component_project(vcs, gitlab_url, &self.component_or_group)?;
+        let project = component_project(
+            vcs,
+            gitlab_url,
+            &ComponentIdentifier::from(self.component_or_group.clone()),
+        )?;
         let title = build_release_title(&group.name, group_version);
         let issue = match find_existing_component_issue(
             vcs,
@@ -362,7 +371,7 @@ impl AddArgs {
                     .components
                     .keys()
                     .map(|id| {
-                        let resolved = releases.resolve_component(id.as_str())?;
+                        let resolved = releases.resolve_component(id)?;
                         let old_version = releases
                             .previous_component_version(product_version, &resolved.id)
                             .map(ComponentVersion::Semver);
@@ -403,11 +412,11 @@ impl AddArgs {
 fn component_project(
     vcs: &dyn VcsService,
     gitlab_url: &str,
-    component: &str,
+    component_id: &ComponentIdentifier,
 ) -> anyhow::Result<String> {
-    let url = gitlab_url
-        .parse()
-        .with_context(|| format!("invalid gitlab_url {gitlab_url:?} for component {component}"))?;
+    let url = gitlab_url.parse().with_context(|| {
+        format!("invalid gitlab_url {gitlab_url:?} for component {component_id}")
+    })?;
     vcs.project_path_from_url(&url)
         .with_context(|| format!("couldn't derive project path from gitlab_url {gitlab_url:?}"))
 }

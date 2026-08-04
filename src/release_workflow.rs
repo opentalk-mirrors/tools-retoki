@@ -208,12 +208,15 @@ impl Releases {
     /// profile entry is not an error: it simply yields no `gitlab_url`, which
     /// marks the component as one without its own release project (e.g. a
     /// third-party component).
-    pub fn resolve_component(&self, component: &str) -> anyhow::Result<ResolvedComponent> {
-        let id = ComponentIdentifier::from(component.to_owned());
-        let component =
-            self.releases.components.get(&id).with_context(|| {
-                format!("component {component} is not declared in releases.yml")
-            })?;
+    pub fn resolve_component(
+        &self,
+        component_id: &ComponentIdentifier,
+    ) -> anyhow::Result<ResolvedComponent> {
+        let component = self
+            .releases
+            .components
+            .get(component_id)
+            .with_context(|| format!("component {component_id} is not declared in releases.yml"))?;
         let category_name = self
             .releases
             .component_categories
@@ -222,11 +225,11 @@ impl Releases {
             .unwrap_or_else(|| component.category.to_string());
         let gitlab_url = self
             .profile
-            .component(&id)
+            .component(component_id)
             .and_then(|profile| profile.gitlab_url)
             .map(str::to_owned);
         Ok(ResolvedComponent {
-            id,
+            id: component_id.clone(),
             name: component.name.clone(),
             category_name,
             gitlab_url,
