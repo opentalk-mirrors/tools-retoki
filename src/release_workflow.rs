@@ -316,12 +316,15 @@ fn build_component_data(
     linked_issues: &[LinkedIssue],
     vcs: &dyn VcsService,
 ) -> ComponentData {
-    let prefixed = version.prefixed();
+    let prefixed_version = version.prefixed();
+    let version_str = version.to_string();
     let gitlab_url = profile.and_then(|profile| profile.gitlab_url.clone());
-    let ticket_url = resolve_ticket_url(&name, &prefixed, gitlab_url.as_ref(), linked_issues, vcs);
+    let ticket_url =
+        resolve_ticket_url(&name, &version_str, gitlab_url.as_ref(), linked_issues, vcs);
     ComponentData {
         name,
-        version: prefixed,
+        version: version_str,
+        prefixed_version,
         has_changed: has_component_changed(id, version, previous_release),
         gitlab_url,
         ticket_url,
@@ -395,9 +398,14 @@ fn find_release_issue<'a>(
     {
         return Some(exact);
     }
-
     // ...then fall back to a fuzzy match on the version substring.
-    let fuzzy = candidates.find(|issue| issue.title.contains(version))?;
+    let Some(fuzzy) = candidates.find(|issue| issue.title.contains(version)) else {
+        tracing::warn!(
+            expected_title,
+            "No component issue was found with the expected title"
+        );
+        return None;
+    };
 
     tracing::warn!(
         existing_title = %fuzzy.title,

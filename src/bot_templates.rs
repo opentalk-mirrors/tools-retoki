@@ -37,6 +37,7 @@ pub(crate) struct CategoryData {
 pub(crate) struct ComponentData {
     pub name: String,
     pub version: String,
+    pub prefixed_version: String,
     pub has_changed: bool,
     pub gitlab_url: Option<String>,
     pub ticket_url: Option<String>,
@@ -144,7 +145,8 @@ mod tests {
                 name: "Frontend".to_owned(),
                 components: vec![ComponentData {
                     name: "web-frontend".to_owned(),
-                    version: "v2.6.4".to_owned(),
+                    version: "2.6.4".to_owned(),
+                    prefixed_version: "v2.6.4".to_owned(),
                     has_changed: true,
                     gitlab_url: Some(
                         "https://git.opentalk.dev/opentalk/frontend/web/web-app".to_owned(),
@@ -159,7 +161,8 @@ mod tests {
                 name: "3rd-Party Components".to_owned(),
                 components: vec![ComponentData {
                     name: "keycloak".to_owned(),
-                    version: "v26.3.2".to_owned(),
+                    version: "26.3.2".to_owned(),
+                    prefixed_version: "v26.3.2".to_owned(),
                     has_changed: false,
                     gitlab_url: None,
                     ticket_url: None,
