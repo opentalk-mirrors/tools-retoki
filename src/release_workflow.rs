@@ -11,9 +11,9 @@ use time::{Date, OffsetDateTime};
 use crate::{
     bot_templates::{CategoryData, ComponentData},
     data::{
-        Component, ComponentIdentifier, ComponentName, ComponentProfile, ComponentVersion, Profile,
-        Release, ReleaseSeries, SeriesNumber, read_profile_file, read_release_file,
-        write_releases_file,
+        Component, ComponentCategoryName, ComponentIdentifier, ComponentName, ComponentProfile,
+        ComponentVersion, Profile, Release, ReleaseSeries, SeriesNumber, read_profile_file,
+        read_release_file, write_releases_file,
     },
     vcs_service::{Issue, IssueLinkType, LinkedIssue, VcsService},
 };
@@ -286,9 +286,19 @@ impl Releases {
             );
             categories
                 .entry(category.clone())
-                .or_insert_with(|| CategoryData {
-                    name: category.to_string(),
-                    components: Vec::new(),
+                .or_insert_with(|| {
+                    let category_name = self
+                        .releases
+                        .component_categories
+                        .get(&category)
+                        .map(|c| c.name.clone())
+                        .unwrap_or_else(|| {
+                            ComponentCategoryName::from("Unkown category".to_string())
+                        });
+                    CategoryData {
+                        name: category_name,
+                        components: Vec::new(),
+                    }
                 })
                 .components
                 .push(data);

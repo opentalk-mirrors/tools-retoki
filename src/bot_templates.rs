@@ -16,7 +16,7 @@ use semver::Version;
 use serde::Serialize;
 use tera::Tera;
 
-use crate::vcs_service::VcsService;
+use crate::{data::ComponentCategoryName, vcs_service::VcsService};
 
 const PRODUCT_RELEASE_DEFAULT: &str = include_str!("bot_templates/product_release.md");
 const COMPONENT_RELEASE_DEFAULT: &str = include_str!("bot_templates/component_release.md");
@@ -26,7 +26,7 @@ const COMPONENT_RELEASE_DEFAULT: &str = include_str!("bot_templates/component_re
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct CategoryData {
     /// The name of the category e.g., services
-    pub name: String,
+    pub name: ComponentCategoryName,
     /// The components that belong to the category e.g., controller, roomserver
     pub components: Vec<ComponentData>,
 }
@@ -142,7 +142,7 @@ mod tests {
     fn sample_categories() -> Vec<CategoryData> {
         vec![
             CategoryData {
-                name: "Frontend".to_owned(),
+                name: ComponentCategoryName::from("Frontend".to_owned()),
                 components: vec![ComponentData {
                     name: "web-frontend".to_owned(),
                     version: "2.6.4".to_owned(),
@@ -158,7 +158,7 @@ mod tests {
                 }],
             },
             CategoryData {
-                name: "3rd-Party Components".to_owned(),
+                name: ComponentCategoryName::from("3rd-Party Components".to_owned()),
                 components: vec![ComponentData {
                     name: "keycloak".to_owned(),
                     version: "26.3.2".to_owned(),
