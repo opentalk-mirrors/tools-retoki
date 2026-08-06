@@ -2,6 +2,8 @@
 // SPDX-FileCopyrightText: Wolfgang Silbermayr <w.silbermayr@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
+use owo_colors::OwoColorize as _;
+use similar::{ChangeTag, TextDiff};
 use url::Url;
 
 /// Extension trait that lets any `VcsService` be wrapped in the available
@@ -21,6 +23,9 @@ pub(crate) trait VcsService: Send + Sync {
     fn get_open_issues_with_label(&self, label: &str) -> anyhow::Result<Vec<Issue>>;
 
     fn get_linked_issues(&self, project: &str, issue_id: u64) -> anyhow::Result<Vec<LinkedIssue>>;
+
+    /// Read an issue.
+    fn get_issue(&self, project: &str, issue_id: u64) -> anyhow::Result<Option<Issue>>;
 
     fn update_issue_description(
         &self,
@@ -94,6 +99,10 @@ impl<S: VcsService> VcsService for DryRunVcsService<S> {
         self.inner.get_linked_issues(project, issue_id)
     }
 
+    fn get_issue(&self, project: &str, issue_id: u64) -> anyhow::Result<Option<Issue>> {
+        self.inner.get_issue(project, issue_id)
+    }
+
     fn update_issue_description(
         &self,
         project: &str,
@@ -101,6 +110,14 @@ impl<S: VcsService> VcsService for DryRunVcsService<S> {
         description: &str,
     ) -> anyhow::Result<()> {
         if self.enabled {
+            let current_description = self
+                .inner
+                .get_issue(project, issue_id)?
+                .ok_or_else(|| anyhow::anyhow!("issue {issue_id} in project {project} not found"))?
+                .description;
+            println!("Would update issue {}#{}:", project, issue_id);
+            print_description_diff(current_description.as_deref(), description);
+
             tracing::info!(project, issue_id, "DRY RUN: would update issue description",);
             Ok(())
         } else {
@@ -252,5 +269,29 @@ pub(crate) enum IssueState {
 impl IssueState {
     pub(crate) const fn is_opened(&self) -> bool {
         matches!(self, Self::Opened)
+    }
+}
+
+fn print_description_diff(current: Option<&str>, next: &str) {
+    let old = current.unwrap_or_default();
+
+    if old == next {
+        return;
+    }
+
+    let diff = TextDiff::from_lines(old, next);
+
+    println!("{}", "--- current".red());
+    println!("{}", "+++ new".green());
+    for hunk in diff.unified_diff().iter_hunks() {
+        println!("{}", hunk.header().cyan());
+        for change in hunk.iter_changes() {
+            let line = change.value().strip_suffix('\n').unwrap_or(change.value());
+            match change.tag() {
+                ChangeTag::Delete => println!("{}", format_args!("-{line}").red()),
+                ChangeTag::Insert => println!("{}", format_args!("+{line}").green()),
+                ChangeTag::Equal => println!(" {line}"),
+            }
+        }
     }
 }

@@ -121,6 +121,42 @@ impl VcsService for GitlabService {
     }
 
     #[tracing::instrument(level = "info", skip(self), err)]
+    fn get_issue(
+        &self,
+        project: &str,
+        issue_id: u64,
+    ) -> anyhow::Result<Option<vcs_service::Issue>> {
+        let endpoint = GetIssue::builder()
+            .project(NameOrId::Name(project.into()))
+            .issue(issue_id)
+            .build()
+            .context("couldn't build issue endpoint")?;
+
+        let issue: Issue = match endpoint.query(&self.client) {
+            Ok(issue) => issue,
+            Err(gitlab::api::ApiError::GitlabWithStatus { status, .. })
+                if status == http::StatusCode::NOT_FOUND =>
+            {
+                return Ok(None);
+            }
+            Err(e) => {
+                return Err(anyhow::Error::new(e).context(format!(
+                    "couldn't fetch issue {issue_id} in project {project}"
+                )));
+            }
+        };
+
+        let projects = self.get_projects([issue.project_id].into_iter().collect())?;
+        let linked_issues = self.get_linked_issues(project, issue.iid)?;
+
+        Ok(Some(issue.to_vcs_service_issue(
+            &projects,
+            &self.group,
+            linked_issues,
+        )?))
+    }
+
+    #[tracing::instrument(level = "info", skip(self), err)]
     fn update_issue_description(
         &self,
         project: &str,
@@ -364,6 +400,30 @@ impl Endpoint for LinkedItems<'_> {
 
     fn endpoint(&self) -> Cow<'static, str> {
         format!("projects/{}/issues/{}/links", self.project, self.issue).into()
+    }
+}
+
+#[derive(Debug, Builder, Clone)]
+struct GetIssue<'a> {
+    #[builder(setter(into))]
+    project: NameOrId<'a>,
+
+    issue: u64,
+}
+
+impl<'a> GetIssue<'a> {
+    fn builder() -> GetIssueBuilder<'a> {
+        GetIssueBuilder::default()
+    }
+}
+
+impl Endpoint for GetIssue<'_> {
+    fn method(&self) -> Method {
+        Method::GET
+    }
+
+    fn endpoint(&self) -> Cow<'static, str> {
+        format!("projects/{}/issues/{}", self.project, self.issue).into()
     }
 }
 
