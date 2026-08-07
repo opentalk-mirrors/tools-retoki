@@ -12,7 +12,7 @@ use crate::{
     data::ComponentVersion,
     gitlab_service::GitlabService,
     output::Output,
-    release_workflow::{Releases, ReleasesBuilder, ResolvedComponent},
+    release_workflow::{Releases, ReleasesBuilder, ResolvedComponent, build_release_title},
     vcs_service::{Issue, IssueLinkType, LinkedIssue, VcsService, VcsServiceExt},
 };
 
@@ -83,7 +83,7 @@ impl AddArgs {
                 &releases,
                 &resolved,
                 &product_issue,
-                self.component_version.to_string(),
+                &component_version,
                 &mut linked_issues,
                 gitlab_url,
             )?;
@@ -100,7 +100,7 @@ impl AddArgs {
             .save()?;
 
         let categories: Vec<_> = releases
-            .category_data(product_version, &release, &linked_issues, vcs)
+            .category_data(product_version, &release, &linked_issues, vcs)?
             .collect();
         let body = product_release_body(vcs, &config.release_repo, product_version, &categories)?;
         vcs.update_issue_description(&config.release_repo, product_issue.iid, &body)?;
@@ -124,22 +124,19 @@ impl AddArgs {
         releases: &Releases,
         resolved: &ResolvedComponent,
         product_issue: &Issue,
-        component_version: String,
+        component_version: &ComponentVersion,
         linked_issues: &mut Vec<LinkedIssue>,
         gitlab_url: &str,
     ) -> Result<(), anyhow::Error> {
         let component_project = component_project(vcs, gitlab_url, &self.component)?;
-        let component_title = format!(
-            "Release {component_version} of {name}",
-            name = resolved.name,
-        );
+        let component_title = build_release_title(&resolved.name, component_version);
         let component_issue = match find_existing_component_issue(
             vcs,
             product_issue,
             &component_project,
             &config.release_label,
             &component_title,
-            &component_version,
+            component_version,
         )? {
             Some(existing) => {
                 out.println(&format_args!(
@@ -156,7 +153,7 @@ impl AddArgs {
                     vcs,
                     &component_project,
                     &resolved.name.to_string(),
-                    &component_version,
+                    component_version,
                     product_version,
                     &resolved.category_name,
                     previous_version.as_deref(),
@@ -235,8 +232,9 @@ fn find_existing_component_issue(
     component_project: &str,
     release_label: &str,
     expected_title: &str,
-    version_marker: &str,
+    version_marker: &ComponentVersion,
 ) -> anyhow::Result<Option<Issue>> {
+    let version_marker = version_marker.to_string();
     let linked = product_issue
         .linked_issues
         .iter()
@@ -244,12 +242,12 @@ fn find_existing_component_issue(
         .map(|linked| &linked.issue)
         .filter(|issue| issue.project.path_with_namespace == component_project);
 
-    if let Some(found) = match_component_issue(linked, expected_title, version_marker) {
+    if let Some(found) = match_component_issue(linked, expected_title, &version_marker) {
         return Ok(Some(found.clone()));
     }
 
     let candidates = vcs.find_issues_with_label(component_project, release_label)?;
-    Ok(match_component_issue(candidates.iter(), expected_title, version_marker).cloned())
+    Ok(match_component_issue(candidates.iter(), expected_title, &version_marker).cloned())
 }
 
 /// Match a component release issue among `candidates`, preferring an exact
@@ -441,7 +439,7 @@ components:
             .expect_create_issue()
             .withf(|project, title, _body, labels| {
                 project == "opentalk/web-frontend"
-                    && title == "Release 1.21.0 of Web-Frontend"
+                    && title == "Release v1.21.0 of Web-Frontend"
                     && labels == ["release"]
             })
             .returning(|_, _, _, _| Ok(component_issue()));

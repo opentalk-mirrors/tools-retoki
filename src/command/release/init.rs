@@ -55,7 +55,7 @@ impl InitArgs {
             .map(|issue| issue.linked_issues.as_slice())
             .unwrap_or(&[]);
         let categories: Vec<_> = releases
-            .category_data(version, &release, linked_issues, vcs)
+            .category_data(version, &release, linked_issues, vcs)?
             .collect();
         let body =
             bot_templates::product_release_body(vcs, &config.release_repo, version, &categories)?;

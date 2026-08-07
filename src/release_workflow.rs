@@ -263,22 +263,28 @@ impl Releases {
         release: &Release,
         linked_issues: &[LinkedIssue],
         vcs: &dyn VcsService,
-    ) -> impl Iterator<Item = CategoryData> {
+    ) -> anyhow::Result<impl Iterator<Item = CategoryData>> {
         let previous_release = self.previous_release(version);
         let mut categories = IndexMap::new();
 
         for (component_id, component_version) in &release.components {
-            let (component_name, category) = self
+            let Component {
+                name: component_name,
+                category,
+                ..
+            } = self
                 .releases
                 .components
                 .get(component_id)
-                .map(|Component { name, category, .. }| (name.to_string(), category.clone()))
-                .unwrap_or_else(|| (component_id.to_string(), "uncategorized".to_owned().into()));
+                .with_context(|| {
+                    format!("component {component_id} is not declared in releases.yml")
+                })?;
+            let category = category.clone();
 
             let data = build_component_data(
                 component_id,
-                component_name,
-                component_version,
+                component_name.clone(),
+                component_version.clone(),
                 self.profile.components.get(component_id),
                 previous_release,
                 linked_issues,
@@ -304,7 +310,7 @@ impl Releases {
                 .push(data);
         }
 
-        categories.into_values()
+        Ok(categories.into_values())
     }
 
     fn save(&self) -> anyhow::Result<()> {
@@ -319,23 +325,23 @@ impl Releases {
 
 fn build_component_data(
     id: &ComponentIdentifier,
-    name: String,
-    version: &ComponentVersion,
+    name: ComponentName,
+    version: ComponentVersion,
     profile: Option<&ComponentProfile>,
     previous_release: Option<&Release>,
     linked_issues: &[LinkedIssue],
     vcs: &dyn VcsService,
 ) -> ComponentData {
     let prefixed_version = version.prefixed();
-    let version_str = version.to_string();
     let gitlab_url = profile.and_then(|profile| profile.gitlab_url.clone());
-    let ticket_url =
-        resolve_ticket_url(&name, &version_str, gitlab_url.as_ref(), linked_issues, vcs);
+    let ticket_url = resolve_ticket_url(&name, &version, gitlab_url.as_ref(), linked_issues, vcs);
+    let has_changed = has_component_changed(id, &version, previous_release);
+
     ComponentData {
         name,
-        version: version_str,
+        version,
         prefixed_version,
-        has_changed: has_component_changed(id, version, previous_release),
+        has_changed,
         gitlab_url,
         ticket_url,
     }
@@ -357,8 +363,8 @@ fn has_component_changed(
 }
 
 fn resolve_ticket_url(
-    component_name: &str,
-    component_version: &str,
+    component_name: &ComponentName,
+    component_version: &ComponentVersion,
     gitlab_url: Option<&String>,
     linked_issues: &[LinkedIssue],
     vcs: &dyn VcsService,
@@ -387,8 +393,8 @@ fn resolve_ticket_url(
 }
 
 fn find_release_issue<'a>(
-    component_name: &str,
-    version: &str,
+    component_name: &ComponentName,
+    version: &ComponentVersion,
     project_path: &str,
     linked_issues: &'a [LinkedIssue],
 ) -> Option<&'a Issue> {
@@ -409,7 +415,8 @@ fn find_release_issue<'a>(
         return Some(exact);
     }
     // ...then fall back to a fuzzy match on the version substring.
-    let Some(fuzzy) = candidates.find(|issue| issue.title.contains(version)) else {
+    let version_str = version.to_string();
+    let Some(fuzzy) = candidates.find(|issue| issue.title.contains(&version_str)) else {
         tracing::warn!(
             expected_title,
             "No component issue was found with the expected title"
@@ -433,8 +440,8 @@ fn end_of_month(date: Date) -> Date {
         .expect("the last day of the current month is always a valid date")
 }
 
-fn build_release_title(component: &str, version: &str) -> String {
-    format!("Release {} of {}", version, component)
+pub fn build_release_title(component: &ComponentName, version: &ComponentVersion) -> String {
+    format!("Release {} of {}", version.prefixed(), component)
 }
 
 #[cfg(test)]
@@ -442,6 +449,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     use pretty_assertions::assert_eq;
+    use semver::{BuildMetadata, Prerelease};
     use time::Month;
     use url::Url;
 
@@ -504,7 +512,16 @@ mod tests {
     #[test]
     fn build_release_title_formats_version_and_component() {
         assert_eq!(
-            build_release_title("controller", "v1.2.3"),
+            build_release_title(
+                &ComponentName::from("controller".to_string()),
+                &ComponentVersion::Semver(Version {
+                    major: 1,
+                    minor: 2,
+                    patch: 3,
+                    pre: Prerelease::EMPTY,
+                    build: BuildMetadata::EMPTY
+                })
+            ),
             "Release v1.2.3 of controller",
         );
     }
@@ -558,9 +575,15 @@ mod tests {
 
     #[test]
     fn find_release_issue_prefers_exact_title_match() {
-        let component = "Controller";
-        let version = "v1.0.0";
-        let mut title = build_release_title(component, version);
+        let component = ComponentName::from("controller".to_string());
+        let version = ComponentVersion::Semver(Version {
+            major: 1,
+            minor: 2,
+            patch: 3,
+            pre: Prerelease::EMPTY,
+            build: BuildMetadata::EMPTY,
+        });
+        let mut title = build_release_title(&component, &version);
 
         let project_path = "group/controller".to_owned();
         let url: Url = "https://example.com/exact-issue"
@@ -576,13 +599,21 @@ mod tests {
 
         let linked_issues = [exact, fuzzy];
         let found =
-            find_release_issue("Controller", "v1.0.0", "group/controller", &linked_issues).unwrap();
+            find_release_issue(&component, &version, "group/controller", &linked_issues).unwrap();
 
         assert_eq!(expected, *found);
     }
 
     #[test]
     fn find_release_issue_falls_back_to_version_substring() {
+        let component = ComponentName::from("controller".to_string());
+        let version = ComponentVersion::Semver(Version {
+            major: 1,
+            minor: 0,
+            patch: 0,
+            pre: Prerelease::EMPTY,
+            build: BuildMetadata::EMPTY,
+        });
         let issues = vec![linked_issue(
             "Bump to v1.0.0 please".to_owned(),
             "group/controller".to_owned(),
@@ -590,7 +621,7 @@ mod tests {
             IssueLinkType::IsBlockedBy,
         )];
 
-        let found = find_release_issue("Controller", "v1.0.0", "group/controller", &issues);
+        let found = find_release_issue(&component, &version, "group/controller", &issues);
 
         assert_eq!(
             found.map(|i| i.web_url.as_str()),

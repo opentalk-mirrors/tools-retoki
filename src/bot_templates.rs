@@ -16,7 +16,10 @@ use semver::Version;
 use serde::Serialize;
 use tera::Tera;
 
-use crate::{data::ComponentCategoryName, vcs_service::VcsService};
+use crate::{
+    data::{ComponentCategoryName, ComponentName, ComponentVersion},
+    vcs_service::VcsService,
+};
 
 const PRODUCT_RELEASE_DEFAULT: &str = include_str!("bot_templates/product_release.md");
 const COMPONENT_RELEASE_DEFAULT: &str = include_str!("bot_templates/component_release.md");
@@ -35,8 +38,8 @@ pub(crate) struct CategoryData {
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct ComponentData {
-    pub name: String,
-    pub version: String,
+    pub name: ComponentName,
+    pub version: ComponentVersion,
     pub prefixed_version: String,
     pub has_changed: bool,
     pub gitlab_url: Option<String>,
@@ -89,7 +92,7 @@ pub(crate) fn component_release_body(
     vcs_service: &dyn VcsService,
     project: &str,
     component_name: &str,
-    component_version: &str,
+    component_version: &ComponentVersion,
     product_version: &Version,
     category: &str,
     previous_version: Option<&str>,
@@ -144,8 +147,8 @@ mod tests {
             CategoryData {
                 name: ComponentCategoryName::from("Frontend".to_owned()),
                 components: vec![ComponentData {
-                    name: "web-frontend".to_owned(),
-                    version: "2.6.4".to_owned(),
+                    name: ComponentName::from("web-frontend".to_owned()),
+                    version: ComponentVersion::Semver("2.6.4".parse().unwrap()),
                     prefixed_version: "v2.6.4".to_owned(),
                     has_changed: true,
                     gitlab_url: Some(
@@ -160,8 +163,8 @@ mod tests {
             CategoryData {
                 name: ComponentCategoryName::from("3rd-Party Components".to_owned()),
                 components: vec![ComponentData {
-                    name: "keycloak".to_owned(),
-                    version: "26.3.2".to_owned(),
+                    name: ComponentName::from("keycloak".to_owned()),
+                    version: ComponentVersion::Semver("26.3.2".parse().unwrap()),
                     prefixed_version: "v26.3.2".to_owned(),
                     has_changed: false,
                     gitlab_url: None,
