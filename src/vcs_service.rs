@@ -2,7 +2,7 @@
 // SPDX-FileCopyrightText: Wolfgang Silbermayr <w.silbermayr@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use owo_colors::OwoColorize as _;
+use owo_colors::{OwoColorize as _, Style};
 use similar::{ChangeTag, TextDiff};
 use url::Url;
 
@@ -283,14 +283,25 @@ fn print_description_diff(current: Option<&str>, next: &str) {
 
     println!("{}", "--- current".red());
     println!("{}", "+++ new".green());
-    for hunk in diff.unified_diff().iter_hunks() {
-        println!("{}", hunk.header().cyan());
-        for change in hunk.iter_changes() {
-            let line = change.value().strip_suffix('\n').unwrap_or(change.value());
-            match change.tag() {
-                ChangeTag::Delete => println!("{}", format_args!("-{line}").red()),
-                ChangeTag::Insert => println!("{}", format_args!("+{line}").green()),
-                ChangeTag::Equal => println!(" {line}"),
+    for (idx, group) in diff.grouped_ops(3).iter().enumerate() {
+        if idx > 0 {
+            println!("{:-^1$}", "-", 80);
+        }
+        for op in group {
+            for change in diff.iter_inline_changes(op) {
+                let (sign, style) = match change.tag() {
+                    ChangeTag::Delete => ("-", Style::new().red()),
+                    ChangeTag::Insert => ("+", Style::new().green()),
+                    ChangeTag::Equal => (" ", Style::new()),
+                };
+                print!("{}", sign.style(style));
+                for (emphasized, value) in change.iter_strings_lossy() {
+                    let style = if emphasized { style.underline() } else { style };
+                    print!("{}", value.style(style));
+                }
+                if change.missing_newline() {
+                    println!();
+                }
             }
         }
     }
