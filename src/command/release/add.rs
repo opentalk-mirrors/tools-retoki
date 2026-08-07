@@ -45,7 +45,7 @@ impl AddArgs {
 
     fn run_inner(
         &self,
-        version: &Version,
+        product_version: &Version,
         config: &Config,
         vcs: &dyn VcsService,
         out: &mut dyn Output,
@@ -56,19 +56,18 @@ impl AddArgs {
 
         let resolved = releases.resolve_component(&self.component)?;
 
-        let title = format!("Release {version}");
+        let title = format!("Release {product_version}");
         let product_issue = vcs
             .get_open_issue_with_title(&config.release_repo, &title)?
             .with_context(|| {
                 format!(
                     "no open product release issue {title:?} found in {repo}; \
-                     run `retoki release {version} init` first",
+                     run `retoki release {product_version} init` first",
                     repo = config.release_repo,
                 )
             })?;
 
         let component_version = ComponentVersion::Semver(self.component_version.clone());
-        let prefixed_component_version = component_version.prefixed();
 
         // Start from the product issue's current blockers. A freshly created
         // and linked component issue is appended below so that the re-rendered
@@ -77,14 +76,14 @@ impl AddArgs {
 
         if let Some(gitlab_url) = resolved.gitlab_url.as_deref() {
             self.put_component_issue(
-                version,
+                product_version,
                 config,
                 vcs,
                 out,
                 &releases,
                 &resolved,
                 &product_issue,
-                prefixed_component_version,
+                self.component_version.to_string(),
                 &mut linked_issues,
                 gitlab_url,
             )?;
@@ -97,13 +96,13 @@ impl AddArgs {
         }
 
         let release = releases
-            .edit(|r| r.set_component_version(version, resolved.id, component_version))?
+            .edit(|r| r.set_component_version(product_version, resolved.id, component_version))?
             .save()?;
 
         let categories: Vec<_> = releases
-            .category_data(version, &release, &linked_issues, vcs)
+            .category_data(product_version, &release, &linked_issues, vcs)
             .collect();
-        let body = product_release_body(vcs, &config.release_repo, version, &categories)?;
+        let body = product_release_body(vcs, &config.release_repo, product_version, &categories)?;
         vcs.update_issue_description(&config.release_repo, product_issue.iid, &body)?;
 
         out.println(&format_args!(
@@ -118,20 +117,20 @@ impl AddArgs {
     #[expect(clippy::too_many_arguments)]
     fn put_component_issue(
         &self,
-        release_version: &Version,
+        product_version: &Version,
         config: &Config,
         vcs: &dyn VcsService,
         out: &mut dyn Output,
         releases: &Releases,
         resolved: &ResolvedComponent,
         product_issue: &Issue,
-        prefixed_component_version: String,
+        component_version: String,
         linked_issues: &mut Vec<LinkedIssue>,
         gitlab_url: &str,
     ) -> Result<(), anyhow::Error> {
         let component_project = component_project(vcs, gitlab_url, &self.component)?;
         let component_title = format!(
-            "Release {prefixed_component_version} of {name}",
+            "Release {component_version} of {name}",
             name = resolved.name,
         );
         let component_issue = match find_existing_component_issue(
@@ -140,7 +139,7 @@ impl AddArgs {
             &component_project,
             &config.release_label,
             &component_title,
-            &prefixed_component_version,
+            &component_version,
         )? {
             Some(existing) => {
                 out.println(&format_args!(
@@ -151,14 +150,14 @@ impl AddArgs {
             }
             None => {
                 let previous_version = releases
-                    .previous_component_version(release_version, &resolved.id)
+                    .previous_component_version(product_version, &resolved.id)
                     .map(|previous| ComponentVersion::Semver(previous).prefixed());
                 let body = bot_templates::component_release_body(
                     vcs,
                     &component_project,
                     &resolved.name.to_string(),
-                    &prefixed_component_version,
-                    release_version,
+                    &component_version,
+                    product_version,
                     &resolved.category_name,
                     previous_version.as_deref(),
                     Some(gitlab_url),
@@ -416,6 +415,9 @@ components:
     /// release issue exists.
     fn stub_reads(vcs: &mut MockVcsService) {
         let _ = vcs
+            .expect_get_issue()
+            .returning(|_, _| Ok(Some(product_issue())));
+        let _ = vcs
             .expect_get_open_issue_with_title()
             .returning(|_, _| Ok(Some(product_issue())));
         let _ = vcs
@@ -439,7 +441,7 @@ components:
             .expect_create_issue()
             .withf(|project, title, _body, labels| {
                 project == "opentalk/web-frontend"
-                    && title == "Release v1.21.0 of Web-Frontend"
+                    && title == "Release 1.21.0 of Web-Frontend"
                     && labels == ["release"]
             })
             .returning(|_, _, _, _| Ok(component_issue()));
