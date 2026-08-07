@@ -545,7 +545,7 @@ groups:
     fn write_sample_with(dir: &Path, profile: &str) -> PathBuf {
         let path = dir.join("releases.yml");
         fs::write(&path, SAMPLE).unwrap();
-        let profile_dir = dir.join("retoki-profiles");
+        let profile_dir = dir.join(crate::data::PROFILE_DIR);
         fs::create_dir_all(&profile_dir).unwrap();
         fs::write(profile_dir.join("gitlab.yml"), profile).unwrap();
         path

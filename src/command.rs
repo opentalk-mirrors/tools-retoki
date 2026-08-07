@@ -9,7 +9,7 @@ use std::{
 
 use anyhow::{Context, Result};
 use clap::{Args, Parser, Subcommand};
-use clap_complete::Shell;
+use clap_complete::{ArgValueCandidates, Shell};
 
 use self::{
     ci::CiArgs, compare::CompareArgs, edit::EditArgs, generate::GenerateArgs, release::ReleaseArgs,
@@ -26,8 +26,6 @@ pub mod utils;
 
 /// Long flag name (without leading `--`) of the `release_file` argument.
 pub const RELEASE_FILE_FLAG: &str = "release-file";
-/// Long flag name (without leading `--`) of the `profile_path` argument.
-pub const PROFILE_PATH_FLAG: &str = "profile-path";
 /// Default file name used for the `release_file` argument.
 pub const DEFAULT_RELEASE_FILE: &str = "releases.yml";
 
@@ -286,7 +284,7 @@ fn home_dir() -> Result<PathBuf> {
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct ProfileArgs {
     /// Path to the profile to use
-    #[clap(long = PROFILE_PATH_FLAG, env = "RETOKI_PROFILE_PATH", default_value_os_t = default_profile_path())]
+    #[clap(long, env = "RETOKI_PROFILE_PATH", default_value_os_t = default_profile_path(), add = ArgValueCandidates::new(crate::completion::profile_candidates))]
     pub profile: PathBuf,
 }
 

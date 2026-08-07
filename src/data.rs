@@ -19,6 +19,9 @@ mod release_series;
 mod releases;
 mod series_number;
 
+/// Name of the directory holding profile files, resolved next to the release file.
+pub const PROFILE_DIR: &str = "retoki-profiles";
+
 pub use component::Component;
 pub use component_category::ComponentCategory;
 pub use component_category_identifier::ComponentCategoryIdentifier;

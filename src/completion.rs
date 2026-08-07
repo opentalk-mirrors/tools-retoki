@@ -1,18 +1,18 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use clap_complete::engine::CompletionCandidate;
 
 use crate::{
-    command::{DEFAULT_RELEASE_FILE, PROFILE_PATH_FLAG, RELEASE_FILE_FLAG},
-    data::read_release_file,
+    command::{DEFAULT_RELEASE_FILE, RELEASE_FILE_FLAG},
+    data::{PROFILE_DIR, read_release_file},
 };
 
 /// Product release versions, newest first. Empty when the release file is missing or invalid.
 pub fn product_version_candidates() -> Vec<CompletionCandidate> {
-    let Ok(releases) = read_release_file(completion_context_paths().0) else {
+    let Ok(releases) = read_release_file(completion_release_file()) else {
         return Vec::new();
     };
     releases
@@ -25,7 +25,7 @@ pub fn product_version_candidates() -> Vec<CompletionCandidate> {
 
 /// Component identifiers. Empty when the release file is missing or invalid.
 pub fn component_candidates() -> Vec<CompletionCandidate> {
-    let Ok(releases) = read_release_file(completion_context_paths().0) else {
+    let Ok(releases) = read_release_file(completion_release_file()) else {
         return Vec::new();
     };
     releases
@@ -35,12 +35,52 @@ pub fn component_candidates() -> Vec<CompletionCandidate> {
         .collect()
 }
 
-/// Extract release.yml and profile-path overwrites from the provided CLI arguments.
+/// Profile names from existing files in the effective profile directory.
+///
+/// We don't autocomplete the full name, since retoki only uses the file name without suffix as
+/// profile name.
+pub fn profile_candidates() -> Vec<CompletionCandidate> {
+    let release_file = completion_release_file();
+    let profile_dir = release_file
+        .parent()
+        .unwrap_or_else(|| Path::new("."))
+        .join(PROFILE_DIR);
+
+    let Ok(entries) = std::fs::read_dir(profile_dir) else {
+        return Vec::new();
+    };
+
+    // Filter out files which don't qualify as profile configurations
+    let mut names: Vec<String> = entries
+        .filter_map(Result::ok)
+        .filter_map(|entry| {
+            let path = entry.path();
+            let is_yaml = path
+                .extension()
+                .and_then(|ext| ext.to_str())
+                .is_some_and(|ext| {
+                    ext.eq_ignore_ascii_case("yml") || ext.eq_ignore_ascii_case("yaml")
+                });
+            if !path.is_file() || !is_yaml {
+                return None;
+            }
+
+            path.file_stem()
+                .and_then(|stem| stem.to_str())
+                .map(ToOwned::to_owned)
+        })
+        .collect();
+
+    names.sort();
+    names.into_iter().map(CompletionCandidate::new).collect()
+}
+
+/// Resolve the effective release file path from the CLI arguments being completed.
 ///
 /// This is used during dynamic autocompletion. We expect retoki to be called with a `--` separator.
-/// Everything after the separator is used for the autocompletion and not interpreted as CLI
-/// parameter. e.g.: `retoki -- retoki releases 26.1.1 add`
-fn completion_context_paths() -> (PathBuf, Option<PathBuf>) {
+/// Everything after the separator is the command line being completed
+/// and not interpreted as a CLI parameter. e.g.: `retoki -- retoki release 26.1.1 add`
+fn completion_release_file() -> PathBuf {
     let args: Vec<String> = std::env::args_os()
         .filter_map(|arg| arg.into_string().ok())
         .collect();
@@ -51,13 +91,10 @@ fn completion_context_paths() -> (PathBuf, Option<PathBuf>) {
         None => &[][..],
     };
 
-    let release_file = flag_value(words, RELEASE_FILE_FLAG)
+    flag_value(words, RELEASE_FILE_FLAG)
         .map(PathBuf::from)
         .or_else(|| std::env::var_os("RETOKI_RELEASE_FILE").map(PathBuf::from))
-        .unwrap_or_else(|| PathBuf::from(DEFAULT_RELEASE_FILE));
-    let profile_path = flag_value(words, PROFILE_PATH_FLAG).map(PathBuf::from);
-
-    (release_file, profile_path)
+        .unwrap_or_else(|| PathBuf::from(DEFAULT_RELEASE_FILE))
 }
 
 /// Last value passed for `flag`, in either `--flag value` or `--flag=value` form.
