@@ -245,6 +245,55 @@ impl Issue {
             url = self.web_url,
         )
     }
+
+    /// Match a release issue among `candidates`, preferring an exact
+    /// `expected_title` match and falling back to any title containing
+    /// `version_marker`.
+    pub(crate) fn match_release_issue<'a, I>(
+        candidates: I,
+        expected_title: &str,
+        version_marker: &str,
+    ) -> Option<&'a Issue>
+    where
+        I: IntoIterator<Item = &'a Issue>,
+    {
+        let candidates: Vec<&Issue> = candidates.into_iter().collect();
+
+        if let Some(exact) = candidates
+            .iter()
+            .copied()
+            .find(|i| i.title == expected_title)
+        {
+            return Some(exact);
+        }
+
+        let fuzzy = candidates
+            .into_iter()
+            .find(|i| title_matches_version(&i.title, version_marker))?;
+        tracing::warn!(
+            existing_title = %fuzzy.title,
+            expected_title,
+            "matched existing component release issue by version substring in title; \
+             consider renaming the ticket to the expected title",
+        );
+        Some(fuzzy)
+    }
+}
+
+/// Whether `title` contains `version_marker` as a standalone version rather
+/// than a prefix of a longer one, so that `26.1.1` doesn't match inside
+/// `26.1.1-beta.1`.
+fn title_matches_version(title: &str, version_marker: &str) -> bool {
+    title.match_indices(version_marker).any(|(idx, matched)| {
+        let next = title[idx + matched.len()..].chars().next();
+        !next.is_some_and(is_version_continuation)
+    })
+}
+
+/// Characters that would extend a semver version to the right (further digits,
+/// a patch separator, a pre-release, or build metadata).
+fn is_version_continuation(c: char) -> bool {
+    c.is_ascii_digit() || matches!(c, '.' | '-' | '+')
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -304,5 +353,106 @@ fn print_description_diff(current: Option<&str>, next: &str) {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn issue(title: &str) -> Issue {
+        Issue {
+            id: 1,
+            iid: 1,
+            title: title.to_owned(),
+            project: Project {
+                id: 1,
+                path_with_namespace: "group/project".to_owned(),
+            },
+            short_reference: "group/project#1".to_owned(),
+            description: None,
+            state: IssueState::Opened,
+            linked_issues: Vec::new(),
+            web_url: Url::parse("https://example.com/group/project/-/issues/1").unwrap(),
+        }
+    }
+
+    #[test]
+    fn match_release_issue_prefers_exact_title() {
+        let fuzzy = issue("Release v26.1.1 of Controller and more");
+        let exact = issue("Release v26.1.1 of Controller");
+        let candidates = [fuzzy.clone(), exact.clone(), fuzzy.clone()];
+
+        let found =
+            Issue::match_release_issue(&candidates, "Release v26.1.1 of Controller", "26.1.1");
+
+        assert_eq!(found, Some(&exact));
+    }
+
+    #[test]
+    fn match_release_issue_falls_back_to_version_substring() {
+        let candidate = issue("Bump to v26.1.1 please");
+        let candidates = [candidate.clone()];
+
+        let found =
+            Issue::match_release_issue(&candidates, "Release v26.1.1 of Controller", "26.1.1");
+
+        assert_eq!(found, Some(&candidate));
+    }
+
+    #[test]
+    fn match_release_issue_returns_none_when_nothing_matches() {
+        let candidates = [issue("Release v25.0.0 of Controller")];
+
+        let found =
+            Issue::match_release_issue(&candidates, "Release v26.1.1 of Controller", "26.1.1");
+
+        assert_eq!(found, None);
+    }
+
+    #[test]
+    fn match_release_issue_does_not_match_prerelease_for_stable_version() {
+        // Regression: the stable marker "26.1.1" must not fuzzy-match a beta
+        // release issue whose version is "26.1.1-beta.1".
+        let beta = issue("Release v26.1.1-beta.1 of Controller");
+        let candidates = [beta];
+
+        let found =
+            Issue::match_release_issue(&candidates, "Release v26.1.1 of Controller", "26.1.1");
+
+        assert_eq!(
+            found, None,
+            "stable version must not match a prerelease issue by substring",
+        );
+    }
+
+    #[test]
+    fn match_release_issue_matches_the_matching_prerelease_marker() {
+        // A beta marker still matches its own beta issue, even when a stable
+        // issue for the same base version is also present.
+        let stable = issue("Release v26.1.1 of Controller");
+        let beta = issue("Release v26.1.1-beta.1 of Controller");
+        let candidates = [stable, beta.clone()];
+
+        let found = Issue::match_release_issue(
+            &candidates,
+            "Release v26.1.1-beta.1 of Controller",
+            "26.1.1-beta.1",
+        );
+
+        assert_eq!(found, Some(&beta));
+    }
+
+    #[test]
+    fn title_matches_version_rejects_longer_versions() {
+        assert!(title_matches_version(
+            "Release v26.1.1 of Controller",
+            "26.1.1"
+        ));
+        assert!(title_matches_version("v26.1.1", "26.1.1"));
+        assert!(!title_matches_version("Release v26.1.1-beta.1", "26.1.1"));
+        assert!(!title_matches_version("Release v26.1.10", "26.1.1"));
+        assert!(!title_matches_version("Release v26.1.1.4", "26.1.1"));
+        assert!(!title_matches_version("Release v26.1.1+build", "26.1.1"));
     }
 }

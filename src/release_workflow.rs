@@ -401,37 +401,20 @@ fn find_release_issue<'a>(
     // Trying to find the release issue by title isn't ideal, but this reflects our current workflow
     // and doesn't require additional metadata (that we currently don't have).
     let expected_title = build_release_title(component_name, version);
-    let mut candidates = linked_issues
+    let candidates = linked_issues
         .iter()
         .filter(|linked| linked.link_type == IssueLinkType::IsBlockedBy)
         .map(|linked| &linked.issue)
         .filter(|issue| issue.project.path_with_namespace == project_path);
 
-    // First look for an exact title match...
-    if let Some(exact) = candidates
-        .clone()
-        .find(|issue| issue.title == expected_title)
-    {
-        return Some(exact);
-    }
-    // ...then fall back to a fuzzy match on the version substring.
-    let version_str = version.to_string();
-    let Some(fuzzy) = candidates.find(|issue| issue.title.contains(&version_str)) else {
+    let found = Issue::match_release_issue(candidates, &expected_title, &version.to_string());
+    if found.is_none() {
         tracing::warn!(
             expected_title,
             "No component issue was found with the expected title"
         );
-        return None;
-    };
-
-    tracing::warn!(
-        existing_title = %fuzzy.title,
-        expected_title,
-        "matched existing component release issue by version substring in title; \
-         consider renaming the ticket to the expected title",
-    );
-
-    Some(fuzzy)
+    }
+    found
 }
 
 /// Returns the last day of the current calendar month.

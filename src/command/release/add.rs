@@ -242,44 +242,12 @@ fn find_existing_component_issue(
         .map(|linked| &linked.issue)
         .filter(|issue| issue.project.path_with_namespace == component_project);
 
-    if let Some(found) = match_component_issue(linked, expected_title, &version_marker) {
+    if let Some(found) = Issue::match_release_issue(linked, expected_title, &version_marker) {
         return Ok(Some(found.clone()));
     }
 
     let candidates = vcs.find_issues_with_label(component_project, release_label)?;
-    Ok(match_component_issue(candidates.iter(), expected_title, &version_marker).cloned())
-}
-
-/// Match a component release issue among `candidates`, preferring an exact
-/// title match and falling back to any title containing `version_marker`.
-fn match_component_issue<'a, I>(
-    candidates: I,
-    expected_title: &str,
-    version_marker: &str,
-) -> Option<&'a Issue>
-where
-    I: IntoIterator<Item = &'a Issue>,
-{
-    let candidates: Vec<&Issue> = candidates.into_iter().collect();
-
-    if let Some(exact) = candidates
-        .iter()
-        .copied()
-        .find(|i| i.title == expected_title)
-    {
-        return Some(exact);
-    }
-
-    let fuzzy = candidates
-        .into_iter()
-        .find(|i| i.title.contains(version_marker))?;
-    tracing::warn!(
-        existing_title = %fuzzy.title,
-        expected_title,
-        "matched existing component release issue by version substring in title; \
-         consider renaming the ticket to the expected title",
-    );
-    Some(fuzzy)
+    Ok(Issue::match_release_issue(candidates.iter(), expected_title, &version_marker).cloned())
 }
 
 #[cfg(test)]
