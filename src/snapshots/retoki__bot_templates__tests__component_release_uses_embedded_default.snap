@@ -1,0 +1,21 @@
+---
+source: src/bot_templates.rs
+expression: body
+---
+## Component Release: controller 1.21.0
+
+**Category:** Services
+**Product Release:** 25.1.0
+**Previous Version:** 1.20.0
+**Repository:** [controller](https://git.opentalk.dev/opentalk/backend/services/controller)
+**Release:** [1.21.0](https://git.opentalk.dev/opentalk/backend/services/controller/-/releases/v1.21.0)
+
+### Changes
+
+<!-- Add component-specific changelog here -->
+
+### Tasks
+
+- [ ] Verify deployment
+- [ ] Update documentation
+- [ ] Notify stakeholders

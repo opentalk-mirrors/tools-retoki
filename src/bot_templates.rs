@@ -95,7 +95,7 @@ pub(crate) fn component_release_body(
     component_version: &ComponentVersion,
     product_version: &Version,
     category: &str,
-    previous_version: Option<&str>,
+    previous_version: Option<&ComponentVersion>,
     gitlab_url: Option<&str>,
 ) -> anyhow::Result<String> {
     let template = load_template(
@@ -107,9 +107,14 @@ pub(crate) fn component_release_body(
 
     let mut context = tera::Context::new();
     context.insert("component_name", component_name);
+    context.insert("component_version_prefixed", &component_version.prefixed());
     context.insert("component_version", component_version);
     context.insert("product_version", product_version);
     context.insert("category", category);
+    context.insert(
+        "previous_version_prefixed",
+        &previous_version.map(|v| v.prefixed()),
+    );
     context.insert("previous_version", &previous_version);
     context.insert("gitlab_url", &gitlab_url);
 
@@ -199,5 +204,27 @@ mod tests {
                 .unwrap();
 
         assert_eq!(body, "Release 1.2.3 contains 2 categories.\n");
+    }
+
+    #[test]
+    fn component_release_uses_embedded_default() {
+        let vcs = vcs_with_no_template(".gitlab/issue_templates/component_release.md");
+        let component_version = ComponentVersion::Semver("1.21.0".parse().unwrap());
+        let prev_component_version = ComponentVersion::Semver("1.20.0".parse().unwrap());
+        let product_version: Version = "25.1.0".parse().unwrap();
+
+        let body = component_release_body(
+            &vcs,
+            "opentalk/tools/relbo",
+            "controller",
+            &component_version,
+            &product_version,
+            "Services",
+            Some(&prev_component_version),
+            Some("https://git.opentalk.dev/opentalk/backend/services/controller"),
+        )
+        .unwrap();
+
+        insta::assert_snapshot!(body);
     }
 }

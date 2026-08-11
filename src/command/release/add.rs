@@ -148,7 +148,7 @@ impl AddArgs {
             None => {
                 let previous_version = releases
                     .previous_component_version(product_version, &resolved.id)
-                    .map(|previous| ComponentVersion::Semver(previous).prefixed());
+                    .map(ComponentVersion::Semver);
                 let body = bot_templates::component_release_body(
                     vcs,
                     &component_project,
@@ -156,7 +156,7 @@ impl AddArgs {
                     component_version,
                     product_version,
                     &resolved.category_name,
-                    previous_version.as_deref(),
+                    previous_version.as_ref(),
                     Some(gitlab_url),
                 )?;
                 let created = vcs.create_issue(
