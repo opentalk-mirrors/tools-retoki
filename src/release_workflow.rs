@@ -407,14 +407,7 @@ fn find_release_issue<'a>(
         .map(|linked| &linked.issue)
         .filter(|issue| issue.project.path_with_namespace == project_path);
 
-    let found = Issue::match_release_issue(candidates, &expected_title, &version.to_string());
-    if found.is_none() {
-        tracing::warn!(
-            expected_title,
-            "No component issue was found with the expected title"
-        );
-    }
-    found
+    Issue::match_release_issue(candidates, &expected_title, &version.to_string())
 }
 
 /// Returns the last day of the current calendar month.
