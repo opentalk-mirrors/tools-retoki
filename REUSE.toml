@@ -18,6 +18,7 @@ path = [
   "src/bot_templates/**.md",
   "src/snapshots/**.snap",
   "templates/**.md",
+  "templates/**.txt",
   "tests/**/snapshots/**.snap",
   "tests/README.md",
 ]

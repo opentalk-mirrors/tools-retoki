@@ -3,6 +3,7 @@
 
 use std::{fs, path::Path};
 
+mod announce;
 mod fetch_changelog;
 mod generate;
 

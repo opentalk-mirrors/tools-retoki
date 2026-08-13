@@ -8,12 +8,14 @@ use clap::{Args, Subcommand};
 use semver::Version;
 
 mod add;
+pub mod announce;
 mod fetch_changelogs;
 mod fetch_product_tickets;
 mod init;
 mod show;
 
 pub use add::AddArgs;
+pub use announce::AnnounceArgs;
 pub use fetch_changelogs::FetchChangelogsArgs;
 pub use fetch_product_tickets::FetchProductTicketsArgs;
 pub use init::InitArgs;
@@ -57,6 +59,9 @@ pub enum ReleaseCommand {
     ///
     /// Requires the GITLAB_TOKEN environment variable to be set
     FetchProductTickets(FetchProductTicketsArgs),
+
+    /// Render a release announcement in Markdown for communication channels such as Matrix or email
+    Announce(AnnounceArgs),
 }
 
 impl ReleaseCommand {
@@ -67,6 +72,7 @@ impl ReleaseCommand {
             ReleaseCommand::Add(args) => args.execute(version),
             ReleaseCommand::FetchChangelogs(args) => args.execute(release_file, version),
             ReleaseCommand::FetchProductTickets(args) => args.execute(release_file, version),
+            ReleaseCommand::Announce(args) => args.execute(release_file, version),
         }
     }
 }
