@@ -88,3 +88,14 @@ in all open release tickets:
 
 Both commands accept `--dry-run` (or `RETOKI_DRY_RUN=true`) to log the actions that would be
 performed without writing anything to GitLab.
+
+### `retoki release <version> announce`
+
+Render a release announcement as Markdown, suitable for Matrix, Element and other chat channels:
+
+`retoki release 2.8.0 announce`
+
+To convert the announcement to plain text for email or mailing lists, pipe the output through a
+converter such as [pandoc](https://pandoc.org/):
+
+`retoki release 2.8.0 announce | pandoc -f markdown -t plain`

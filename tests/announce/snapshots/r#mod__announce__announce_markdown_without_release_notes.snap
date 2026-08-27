@@ -1,0 +1,12 @@
+---
+source: tests/announce/mod.rs
+expression: "announce(AnnounceFormat::Md, \"25.0.0\")"
+---
+We are happy to announce a new OpenTalk release: **v25.0.0**.
+
+## Component versions
+
+| Category | Component | Version |
+| -------- | --------- | ------- |
+| **Frontend** | web-frontend | [v1.20.0](https://gitlab.opencode.de/opentalk/web-frontend/-/releases/v1.20.0) |
+| **Services** | controller | [v0.18.0](https://gitlab.opencode.de/opentalk/controller/-/releases/v0.18.0) |
