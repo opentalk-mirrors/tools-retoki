@@ -5,10 +5,6 @@ use indexmap::IndexMap;
 
 use crate::data::{ComponentIdentifier, ComponentVersion};
 
-pub(crate) fn display_option<T: ToString>(value: &Option<T>) -> String {
-    value.as_ref().map(ToString::to_string).unwrap_or_default()
-}
-
 pub(crate) fn display_components(
     components: &IndexMap<ComponentIdentifier, ComponentVersion>,
 ) -> String {
