@@ -18,3 +18,10 @@ use serde::{Deserialize, Serialize};
     derive_more::Display,
 )]
 pub struct ComponentIdentifier(String);
+
+impl ComponentIdentifier {
+    /// Returns the identifier as a string slice.
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}

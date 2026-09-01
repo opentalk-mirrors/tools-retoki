@@ -352,7 +352,7 @@ impl AddArgs {
                     .components
                     .keys()
                     .map(|id| {
-                        let resolved = releases.resolve_component(&id.to_string())?;
+                        let resolved = releases.resolve_component(id.as_str())?;
                         let old_version = releases
                             .previous_component_version(product_version, &resolved.id)
                             .map(ComponentVersion::Semver);
