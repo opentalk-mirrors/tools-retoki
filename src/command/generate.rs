@@ -29,6 +29,9 @@ use crate::{
 
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct GenerateArgs {
+    /// The release series to generate the release information for.
+    pub series_number: SeriesNumber,
+
     /// The target directory for the release information.
     #[clap(long, default_value = ".")]
     pub target_dir: PathBuf,
@@ -109,6 +112,10 @@ impl GenerateArgs {
             },
         )
         .context("Failed to read release configuration")?;
+        let series = releases
+            .series
+            .get(&self.series_number)
+            .with_context(|| format!("Release series {} does not exist", self.series_number))?;
         let profile = read_profile_file(
             &release_file,
             &self.profile.profile,
@@ -116,14 +123,12 @@ impl GenerateArgs {
         )
         .context("Failed to read profile")?;
 
-        let total_release_series = releases.series.len() as u64;
-        let total_releases = releases
-            .series
-            .values()
-            .map(|series| series.releases.len() as u64)
-            .sum::<u64>();
+        // Pages rendered exactly once per run: the top-level `README.md`, `navigation.md` and the
+        // release-series overview page.
+        const FIXED_OUTPUT_PAGES: u64 = 3;
+        let total_releases = series.releases.len() as u64;
         let total_components = releases.components.len() as u64;
-        let mut total_outputs = 2 + total_release_series + total_releases + total_components;
+        let mut total_outputs = FIXED_OUTPUT_PAGES + total_releases + total_components;
         if self.with_release_metadata_files {
             total_outputs += total_releases;
         }
@@ -141,38 +146,44 @@ impl GenerateArgs {
         self.render_navigation_md(&tera, &releases, &profile, date)?;
         progress_span.pb_inc(1);
 
-        for (number, series) in releases.series.iter().rev() {
-            let versions_with_padding = std::iter::once(None)
-                .chain(series.releases.iter().map(Some))
-                .chain(std::iter::once(None))
-                .collect::<Vec<_>>();
+        // Render the release series
+        let versions_with_padding = std::iter::once(None)
+            .chain(series.releases.iter().map(Some))
+            .chain(std::iter::once(None))
+            .collect::<Vec<_>>();
 
-            self.render_release_series_readme_md(&tera, &releases, &profile, number, series, date)?;
-            progress_span.pb_inc(1);
+        self.render_release_series_readme_md(
+            &tera,
+            &releases,
+            &profile,
+            &self.series_number,
+            series,
+            date,
+        )?;
+        progress_span.pb_inc(1);
 
-            for entry in versions_with_padding.windows(3).rev() {
-                let previous = entry[0].map(|(v, r)| (v.clone(), r));
-                let version = entry[1].unwrap().0;
-                let next = entry[2].map(|(v, r)| (v.clone(), r));
+        for entry in versions_with_padding.windows(3).rev() {
+            let previous = entry[0].map(|(v, r)| (v.clone(), r));
+            let version = entry[1].unwrap().0;
+            let next = entry[2].map(|(v, r)| (v.clone(), r));
 
-                self.render_release_readme_md(
-                    &tera,
-                    &releases,
-                    &profile,
-                    series,
-                    VersionWithNeighbors {
-                        previous,
-                        version,
-                        next,
-                    },
-                    date,
-                )?;
+            self.render_release_readme_md(
+                &tera,
+                &releases,
+                &profile,
+                series,
+                VersionWithNeighbors {
+                    previous,
+                    version,
+                    next,
+                },
+                date,
+            )?;
 
-                if self.with_release_metadata_files {
-                    progress_span.pb_inc(2);
-                } else {
-                    progress_span.pb_inc(1);
-                }
+            if self.with_release_metadata_files {
+                progress_span.pb_inc(2);
+            } else {
+                progress_span.pb_inc(1);
             }
         }
 

@@ -21,7 +21,7 @@ Creating a release is done by following these steps:
    This will query the product changelog from all product work items with the `release-2.8.0` tag.
 
 4. generate documentation
-   `retoki generate --profile internal`
+   `retoki generate --profile internal 2.8`
 
    Render the release documentation.
 
