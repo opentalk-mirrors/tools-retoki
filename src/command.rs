@@ -7,13 +7,12 @@ use anyhow::Result;
 use clap::{Args, Subcommand};
 
 use self::{
-    ci::CiArgs, compare::CompareArgs, component::ComponentArgs, edit::EditArgs,
-    generate::GenerateArgs, release::ReleaseArgs, series::SeriesArgs,
+    ci::CiArgs, compare::CompareArgs, edit::EditArgs, generate::GenerateArgs, release::ReleaseArgs,
+    series::SeriesArgs,
 };
 
 pub mod ci;
 pub mod compare;
-pub mod component;
 pub mod edit;
 pub mod generate;
 pub mod release;
@@ -30,9 +29,6 @@ pub enum Command {
 
     /// Perform actions related to a release series
     Series(SeriesArgs),
-
-    /// Perform actions related to a component
-    Component(ComponentArgs),
 
     /// Run tasks intended to be executed in a CI pipeline
     ///
@@ -67,7 +63,6 @@ impl Command {
         match self {
             Command::Generate(args) => args.execute(release_file),
             Command::Release(args) => args.execute(release_file),
-            Command::Component(args) => args.execute(release_file),
             Command::Series(args) => args.execute(release_file),
             Command::Edit(args) => args.execute(release_file),
             Command::Compare(args) => args.execute(release_file),

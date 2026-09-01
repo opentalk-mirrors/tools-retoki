@@ -12,7 +12,6 @@ pub mod announce;
 mod fetch_changelogs;
 mod fetch_product_tickets;
 mod init;
-mod show;
 
 pub use add::AddArgs;
 pub use announce::AnnounceArgs;
@@ -38,8 +37,6 @@ impl ReleaseArgs {
 
 #[derive(Clone, Debug, PartialEq, Eq, Subcommand)]
 pub enum ReleaseCommand {
-    Show(show::ShowArgs),
-
     /// Create or update the product release issue for a version in the release tickets project
     ///
     /// Requires the GITLAB_TOKEN environment variable to be set
@@ -67,7 +64,6 @@ pub enum ReleaseCommand {
 impl ReleaseCommand {
     pub fn execute<R: AsRef<Path>>(self, release_file: R, version: &Version) -> Result<()> {
         match self {
-            ReleaseCommand::Show(args) => args.execute(release_file, version),
             ReleaseCommand::Init(args) => args.execute(version),
             ReleaseCommand::Add(args) => args.execute(version),
             ReleaseCommand::FetchChangelogs(args) => args.execute(release_file, version),
