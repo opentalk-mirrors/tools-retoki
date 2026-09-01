@@ -80,5 +80,5 @@ pub struct ProfileArgs {
 }
 
 fn default_profile_path() -> PathBuf {
-    PathBuf::from("retoki-profiles/internal.yml")
+    PathBuf::from("retoki-profiles/gitlab.yml")
 }

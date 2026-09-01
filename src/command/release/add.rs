@@ -306,7 +306,7 @@ components:
 "#;
 
     const PROFILE: &str = r#"---
-profile_name: internal
+profile_name: gitlab
 components:
   web-frontend:
     gitlab_url: https://gitlab.example.com/opentalk/web-frontend
@@ -319,7 +319,7 @@ components:
         fs::write(&path, SAMPLE).unwrap();
         let profile_dir = dir.join("retoki-profiles");
         fs::create_dir_all(&profile_dir).unwrap();
-        fs::write(profile_dir.join("internal.yml"), PROFILE).unwrap();
+        fs::write(profile_dir.join("gitlab.yml"), PROFILE).unwrap();
         path
     }
 
@@ -340,7 +340,7 @@ components:
             component_version: "1.21.0".parse().unwrap(),
             dry_run,
             profile_args: ProfileArgs {
-                profile: dir.join("retoki-profiles/internal.yml"),
+                profile: dir.join("retoki-profiles/gitlab.yml"),
             },
         }
     }
