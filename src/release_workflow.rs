@@ -11,9 +11,9 @@ use time::{Date, OffsetDateTime};
 use crate::{
     bot_templates::{CategoryData, ComponentData},
     data::{
-        Component, ComponentCategoryName, ComponentIdentifier, ComponentName, ComponentProfile,
-        ComponentVersion, Profile, Release, ReleaseSeries, SeriesNumber, read_profile_file,
-        read_release_file, write_releases_file,
+        Component, ComponentCategoryName, ComponentIdentifier, ComponentName, ComponentVersion,
+        Profile, Release, ReleaseSeries, SeriesNumber, read_profile_file, read_release_file,
+        write_releases_file,
     },
     vcs_service::{Issue, IssueLinkType, IssueState, LinkedIssue, VcsService},
 };
@@ -107,7 +107,7 @@ impl<T> Staged<'_, T> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Releases {
     releases: crate::data::Releases,
-    profile: Profile,
+    pub profile: Profile,
     path: PathBuf,
     dry_run: bool,
 }
@@ -228,9 +228,9 @@ impl Releases {
             .unwrap_or_else(|| component.category.to_string());
         let gitlab_url = self
             .profile
-            .components
-            .get(&id)
-            .and_then(|profile| profile.gitlab_url.clone());
+            .component(&id)
+            .and_then(|profile| profile.gitlab_url)
+            .map(str::to_owned);
         Ok(ResolvedComponent {
             id,
             name: component.name.clone(),
@@ -254,8 +254,9 @@ impl Releases {
     ) -> anyhow::Result<Vec<ComponentName>> {
         let mut blocking = Vec::new();
 
-        for (id, profile) in &self.profile.components {
+        for (id, profile) in self.profile.all_components() {
             let is_blocking = profile
+                .component
                 .blocked_by
                 .as_deref()
                 .is_some_and(|blocked_by| blocked_by.contains(component));
@@ -270,7 +271,7 @@ impl Releases {
                 .map(|component| component.name.clone())
                 .unwrap_or_else(|| ComponentName::from(id.to_string()));
 
-            let Some(gitlab_url) = profile.gitlab_url.as_deref() else {
+            let Some(gitlab_url) = profile.gitlab_url else {
                 tracing::warn!("Skipping `{name}` as it does not provide a GitLab URL");
                 continue;
             };
@@ -336,7 +337,10 @@ impl Releases {
                 component_id,
                 component_name.clone(),
                 component_version.clone(),
-                self.profile.components.get(component_id),
+                self.profile
+                    .component(component_id)
+                    .and_then(|profile| profile.gitlab_url)
+                    .map(str::to_owned),
                 previous_release,
                 linked_issues,
                 vcs,
@@ -378,13 +382,12 @@ fn build_component_data(
     id: &ComponentIdentifier,
     name: ComponentName,
     version: ComponentVersion,
-    profile: Option<&ComponentProfile>,
+    gitlab_url: Option<String>,
     previous_release: Option<&Release>,
     linked_issues: &[LinkedIssue],
     vcs: &dyn VcsService,
 ) -> ComponentData {
     let prefixed_version = version.prefixed();
-    let gitlab_url = profile.and_then(|profile| profile.gitlab_url.clone());
     let ticket_url = resolve_ticket_url(&name, &version, gitlab_url.as_ref(), linked_issues, vcs);
     let has_changed = has_component_changed(id, &version, previous_release);
 
@@ -451,7 +454,7 @@ fn find_release_issue<'a>(
 ) -> Option<&'a Issue> {
     // Trying to find the release issue by title isn't ideal, but this reflects our current workflow
     // and doesn't require additional metadata (that we currently don't have).
-    let expected_title = build_release_title(component_name, version);
+    let expected_title = build_release_title(&component_name.to_string(), version);
     let candidates = linked_issues
         .iter()
         .filter(|linked| linked.link_type == IssueLinkType::IsBlockedBy)
@@ -467,8 +470,8 @@ fn end_of_month(date: Date) -> Date {
         .expect("the last day of the current month is always a valid date")
 }
 
-pub fn build_release_title(component: &ComponentName, version: &ComponentVersion) -> String {
-    format!("Release {} of {}", version.prefixed(), component)
+pub fn build_release_title(name: &str, version: &ComponentVersion) -> String {
+    format!("Release {} of {}", version.prefixed(), name)
 }
 
 #[cfg(test)]
@@ -486,7 +489,8 @@ mod tests {
     fn empty_profile() -> Profile {
         Profile {
             profile_name: "test".to_owned(),
-            components: IndexMap::new(),
+            standalone_components: IndexMap::new(),
+            groups: IndexMap::new(),
         }
     }
 
@@ -540,7 +544,7 @@ mod tests {
     fn build_release_title_formats_version_and_component() {
         assert_eq!(
             build_release_title(
-                &ComponentName::from("controller".to_string()),
+                "controller",
                 &ComponentVersion::Semver(Version {
                     major: 1,
                     minor: 2,
@@ -610,7 +614,7 @@ mod tests {
             pre: Prerelease::EMPTY,
             build: BuildMetadata::EMPTY,
         });
-        let mut title = build_release_title(&component, &version);
+        let mut title = build_release_title(&component.to_string(), &version);
 
         let project_path = "group/controller".to_owned();
         let url: Url = "https://example.com/exact-issue"

@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use time::Date;
 
 use super::Release;
-use crate::data::{self, ComponentCategoryIdentifier, ComponentIdentifier, SeriesNumber};
+use crate::data::{self, ComponentCategoryIdentifier, ComponentIdentifier, Profile, SeriesNumber};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -24,7 +24,7 @@ impl ReleaseSeries {
         version: SeriesNumber,
         release_series: &data::ReleaseSeries,
         components: &IndexMap<ComponentIdentifier, data::Component>,
-        component_profiles: &IndexMap<ComponentIdentifier, data::ComponentProfile>,
+        profile: &Profile,
         component_categories: &IndexMap<ComponentCategoryIdentifier, data::ComponentCategory>,
         date: Date,
     ) -> Result<Self> {
@@ -67,7 +67,7 @@ impl ReleaseSeries {
                         end_date,
                         release,
                         components,
-                        component_profiles,
+                        profile,
                         component_categories,
                     )
                 })

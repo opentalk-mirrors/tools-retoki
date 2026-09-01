@@ -9,7 +9,7 @@ use time::Date;
 use crate::{
     data::{
         self, ComponentCategory, ComponentCategoryIdentifier, ComponentIdentifier, ProductName,
-        SeriesNumber,
+        Profile, SeriesNumber,
     },
     template::ReleaseSeries,
 };
@@ -35,7 +35,7 @@ impl ReleaseSeriesPage {
         product_name: ProductName,
         release_series: &data::ReleaseSeries,
         components: &IndexMap<ComponentIdentifier, data::Component>,
-        component_profiles: &IndexMap<ComponentIdentifier, data::ComponentProfile>,
+        profile: &Profile,
         component_categories: &IndexMap<ComponentCategoryIdentifier, ComponentCategory>,
         date: Date,
     ) -> Result<Self> {
@@ -43,7 +43,7 @@ impl ReleaseSeriesPage {
             version,
             release_series,
             components,
-            component_profiles,
+            profile,
             component_categories,
             date,
         )?;

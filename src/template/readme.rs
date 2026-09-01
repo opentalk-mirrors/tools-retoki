@@ -56,7 +56,7 @@ impl Readme {
                         version.clone(),
                         series,
                         &releases.components,
-                        &profile.components,
+                        profile,
                         &releases.component_categories,
                         date,
                     )
@@ -65,20 +65,19 @@ impl Readme {
             components: {
                 let mut components = Vec::new();
                 for (identifier, component) in releases.components.iter() {
-                    let component_profile =
-                        profile.components.get(identifier).with_context(|| {
-                            format!(
-                                "Missing `{}` component in `{}` profile",
-                                identifier, profile.profile_name
-                            )
-                        })?;
-                    if component_profile.private {
+                    let component_profile = profile.component(identifier).with_context(|| {
+                        format!(
+                            "Missing `{}` component in `{}` profile",
+                            identifier, profile.profile_name
+                        )
+                    })?;
+                    if component_profile.component.private {
                         continue;
                     }
                     components.push(Component::from_data_component(
                         identifier.clone(),
                         component,
-                        component_profile,
+                        component_profile.gitlab_url.map(str::to_owned),
                     ));
                 }
                 components

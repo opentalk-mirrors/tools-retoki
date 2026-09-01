@@ -9,6 +9,7 @@ mod component_identifier;
 mod component_name;
 mod component_release;
 mod component_version;
+mod group_identifier;
 mod prerelease;
 mod product_name;
 mod product_ticket;
@@ -30,9 +31,10 @@ pub use file::{
     ReleaseFileReadOptions, read_profile_file, read_release_file, read_release_file_with_options,
     write_releases_file,
 };
+pub use group_identifier::GroupIdentifier;
 pub use product_name::ProductName;
 pub use product_ticket::ProductTicket;
-pub use profiles::{ComponentProfile, Profile};
+pub use profiles::{ComponentGroup, Profile};
 pub use release::Release;
 pub use release_series::ReleaseSeries;
 pub use releases::{Releases, StripReleases};

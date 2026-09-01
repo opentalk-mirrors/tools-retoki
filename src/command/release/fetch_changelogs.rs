@@ -17,8 +17,8 @@ use url::Url;
 use crate::{
     command::ProfileArgs,
     data::{
-        Component, ComponentIdentifier, ComponentProfile, ComponentRelease, ComponentVersion,
-        read_profile_file, read_release_file, write_releases_file,
+        Component, ComponentIdentifier, ComponentRelease, ComponentVersion, read_profile_file,
+        read_release_file, write_releases_file,
     },
     helper::progress,
 };
@@ -65,15 +65,15 @@ impl FetchChangelogsArgs {
             .iter_mut()
             .filter_map(|(ident, comp)| {
                 release.components.get(ident).map(|comp_version| {
-                    let comp_profile = profile.components.get(ident);
-                    (ident, comp_version, comp, comp_profile)
+                    let gitlab_url = profile.component(ident).and_then(|entry| entry.gitlab_url);
+                    (ident, comp_version, comp, gitlab_url)
                 })
             })
             .collect();
 
         let res: Vec<_> = release_components
             .into_par_iter()
-            .map(|(identifier, comp_version, component, component_profile)| {
+            .map(|(identifier, comp_version, component, gitlab_url)| {
                 let task_span = info_span!("fetch_changelog");
                 progress::start(
                     &task_span,
@@ -85,7 +85,7 @@ impl FetchChangelogsArgs {
                 Self::fetch_changelog(
                     identifier.clone(),
                     component,
-                    component_profile,
+                    gitlab_url,
                     comp_version,
                     &self.gitlab_token,
                 )
@@ -116,14 +116,13 @@ impl FetchChangelogsArgs {
     fn fetch_changelog(
         component_identifier: ComponentIdentifier,
         component: &mut Component,
-        component_profile: Option<&ComponentProfile>,
+        gitlab_url: Option<&str>,
         version: &ComponentVersion,
         token: &str,
     ) -> Result<bool> {
         tracing::debug!(component = %component_identifier, version = %version, "Looking up release changelog");
 
-        let Some(gitlab_url) = &component_profile.and_then(|profile| profile.gitlab_url.as_deref())
-        else {
+        let Some(gitlab_url) = gitlab_url else {
             let component_release = ComponentRelease {
                 date: None,
                 changelog: None,

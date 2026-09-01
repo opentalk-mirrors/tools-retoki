@@ -1,0 +1,26 @@
+---
+source: src/bot_templates.rs
+expression: body
+---
+## Release: frontend-and-controller 1.21.0
+
+**Product Release:** 25.1.0
+**Repository:** [frontend-and-controller](https://git.opentalk.dev/opentalk/frontend-and-controller)
+**Release:** [1.21.0](https://git.opentalk.dev/opentalk/frontend-and-controller/-/releases/v1.21.0)
+
+### Components
+
+| Component | Category | Previous Version | New Version |
+| --------- | -------- | ---------------- | ----------- |
+| web-frontend | Frontend | 1.20.0 | 1.21.0 |
+| controller | Services | — | 1.21.0 |
+
+### Changes
+
+<!-- Add component-specific changelog here -->
+
+### Tasks
+
+- [ ] Verify deployment
+- [ ] Update documentation
+- [ ] Notify stakeholders

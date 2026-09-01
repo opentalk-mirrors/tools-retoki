@@ -253,7 +253,7 @@ impl GenerateArgs {
             releases.product_name.clone(),
             series,
             &releases.components,
-            &profile.components,
+            profile,
             &releases.component_categories,
             date,
         )?;
@@ -340,13 +340,13 @@ impl GenerateArgs {
         identifier: &ComponentIdentifier,
         component: &Component,
     ) -> Result<()> {
-        let component_profile = profile.components.get(identifier).with_context(|| {
+        let component_profile = profile.component(identifier).with_context(|| {
             format!(
                 "Missing `{}` component in profile `{}`",
                 identifier, profile.profile_name
             )
         })?;
-        if component_profile.private {
+        if component_profile.component.private {
             tracing::debug!(
                 component = %identifier,
                 "Skipping private component page",
@@ -356,7 +356,7 @@ impl GenerateArgs {
         let template_data = template::ComponentPage::from_data_component(
             identifier,
             component,
-            component_profile,
+            component_profile.gitlab_url.map(str::to_owned),
             &releases.product_name,
             releases,
             self.with_md_header,

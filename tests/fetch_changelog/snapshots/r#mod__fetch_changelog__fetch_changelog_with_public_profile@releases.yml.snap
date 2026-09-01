@@ -14,12 +14,20 @@ series:
         date: 2024-07-19
         components:
           controller: 0.16.0
+          web-frontend: 1.17.0
 components:
   controller:
     name: OpenTalk Controller Community Edition
     category: services
     releases:
       0.16.0: {}
+  web-frontend:
+    name: Web-Frontend
+    category: frontend
+    releases:
+      1.17.0: {}
 component_categories:
   services:
     name: Services
+  frontend:
+    name: Frontend

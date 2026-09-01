@@ -3,7 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::data::{self, ComponentIdentifier, ComponentName, ComponentProfile};
+use crate::data::{self, ComponentIdentifier, ComponentName};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -17,12 +17,12 @@ impl Component {
     pub fn from_data_component(
         identifier: ComponentIdentifier,
         component: &data::Component,
-        component_profile: &ComponentProfile,
+        gitlab_url: Option<String>,
     ) -> Self {
         Self {
             identifier,
             name: component.name.clone(),
-            gitlab_url: component_profile.gitlab_url.clone(),
+            gitlab_url,
         }
     }
 }

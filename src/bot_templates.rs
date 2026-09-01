@@ -23,6 +23,7 @@ use crate::{
 
 const PRODUCT_RELEASE_DEFAULT: &str = include_str!("bot_templates/product_release.md");
 const COMPONENT_RELEASE_DEFAULT: &str = include_str!("bot_templates/component_release.md");
+const GROUP_RELEASE_DEFAULT: &str = include_str!("bot_templates/group_release.md");
 
 /// A category of components in the product release table.
 
@@ -117,6 +118,42 @@ pub(crate) fn component_release_body(
     );
     context.insert("previous_version", &previous_version);
     context.insert("gitlab_url", &gitlab_url);
+
+    render(&template, &context)
+}
+
+/// A row in the group release table listing one component's version bump.
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct GroupComponentRow {
+    pub component: ComponentName,
+    pub category: String,
+    pub old_version: Option<ComponentVersion>,
+    pub new_version: ComponentVersion,
+}
+
+pub(crate) fn group_release_body(
+    vcs_service: &dyn VcsService,
+    project: &str,
+    group_name: &str,
+    group_version: &ComponentVersion,
+    product_version: &Version,
+    components: &[GroupComponentRow],
+    gitlab_url: Option<&str>,
+) -> anyhow::Result<String> {
+    let template = load_template(
+        vcs_service,
+        project,
+        ".gitlab/issue_templates/group_release.md",
+        GROUP_RELEASE_DEFAULT,
+    )?;
+
+    let mut context = tera::Context::new();
+    context.insert("group_name", group_name);
+    context.insert("group_version_prefixed", &group_version.prefixed());
+    context.insert("group_version", group_version);
+    context.insert("product_version", product_version);
+    context.insert("gitlab_url", &gitlab_url);
+    context.insert("components", components);
 
     render(&template, &context)
 }
@@ -226,5 +263,69 @@ mod tests {
         .unwrap();
 
         insta::assert_snapshot!(body);
+    }
+
+    fn sample_group_components() -> Vec<GroupComponentRow> {
+        vec![
+            GroupComponentRow {
+                component: ComponentName::from("web-frontend".to_owned()),
+                category: "Frontend".to_owned(),
+                old_version: Some(ComponentVersion::Semver("1.20.0".parse().unwrap())),
+                new_version: ComponentVersion::Semver("1.21.0".parse().unwrap()),
+            },
+            GroupComponentRow {
+                component: ComponentName::from("controller".to_owned()),
+                category: "Services".to_owned(),
+                old_version: None,
+                new_version: ComponentVersion::Semver("1.21.0".parse().unwrap()),
+            },
+        ]
+    }
+
+    #[test]
+    fn group_release_uses_embedded_default() {
+        let vcs = vcs_with_no_template(".gitlab/issue_templates/group_release.md");
+        let group_version = ComponentVersion::Semver("1.21.0".parse().unwrap());
+        let product_version: Version = "25.1.0".parse().unwrap();
+        let components = sample_group_components();
+
+        let body = group_release_body(
+            &vcs,
+            "opentalk/tools/relbo",
+            "frontend-and-controller",
+            &group_version,
+            &product_version,
+            &components,
+            Some("https://git.opentalk.dev/opentalk/frontend-and-controller"),
+        )
+        .unwrap();
+
+        insta::assert_snapshot!(body);
+    }
+
+    #[test]
+    fn group_release_uses_repository_template() {
+        let vcs = vcs_with_template(
+            ".gitlab/issue_templates/group_release.md",
+            "Group {{ group_name }} at {{ group_version }} bundles {{ components | length }} components.\n",
+        );
+        let group_version = ComponentVersion::Semver("1.21.0".parse().unwrap());
+        let product_version: Version = "25.1.0".parse().unwrap();
+
+        let body = group_release_body(
+            &vcs,
+            "opentalk/tools/relbo",
+            "frontend-and-controller",
+            &group_version,
+            &product_version,
+            &sample_group_components(),
+            None,
+        )
+        .unwrap();
+
+        assert_eq!(
+            body,
+            "Group frontend-and-controller at 1.21.0 bundles 2 components.\n"
+        );
     }
 }
