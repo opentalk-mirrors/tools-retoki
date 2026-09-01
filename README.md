@@ -49,6 +49,54 @@ component_categories:
     name: Services
 ```
 
+## Profiles
+
+A profile provides context-dependent information for the components listed in
+`releases.yml`. The same product release can then be rendered or automated with different
+audiences and repositories in mind.
+
+Profiles are selected via `--profile <path>` (or the `RETOKI_PROFILE_PATH` environment variable)
+on every command that reads a profile.
+
+### Example `retoki-profiles/gitlab.yml`
+
+```yaml
+# Human-readable name of the profile, used in error messages.
+profile_name: GitLab
+
+# Per-profile configuration for components that release on their own, keyed by the
+# component identifier used in `releases.yml`.
+components:
+  obelisk:
+    # Repository URL used to build links and to look up changelogs / issue templates.
+    gitlab_url: https://git.opentalk.dev/opentalk/backend/services/obelisk
+    # Base URL for the component's container images.
+    container_base_url: registry.opentalk.dev/opentalk/backend/services/obelisk
+    # When `true`, the component is omitted from the generated documentation for this
+    # profile.
+    private: true
+
+# Optional map of component groups. All components in a group are bumped to the same
+# version and share a single release issue in the group's repository.
+groups:
+  frontend-and-controller:
+    # Name used when creating the shared release issue.
+    name: Frontend & Controller
+    # Repository the shared release issue is created in.
+    gitlab_url: https://git.opentalk.dev/opentalk/product/frontend-and-controller
+    # Members of the group, keyed by the component identifier used in `releases.yml`.
+    # Each member accepts the same per-component fields as a standalone entry above.
+    components:
+      web-frontend:
+      controller:
+```
+
+With this profile:
+
+- `retoki release 2.8.0 add frontend-and-controller -c <version> --profile gitlab` bumps
+  both `web-frontend` and `controller` to `<version>` and creates a single release issue
+  in the group repository.
+
 ## Release ticket automation
 
 In addition to generating documentation, `retoki` can manage the GitLab issues that track a
