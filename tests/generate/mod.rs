@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use std::fs;
+use std::{fs, path::PathBuf};
 
 use insta::{assert_debug_snapshot, assert_snapshot};
 use retoki::{
@@ -33,9 +33,8 @@ fn test_generate_with_public_profile() {
         with_release_metadata_files: true,
         with_md_header: true,
         with_next_release: true,
-        profile: ProfileArgs {
-            profile: "public".to_string(),
-            profile_path: None,
+        profile_args: ProfileArgs {
+            profile: PathBuf::from("tests/generate/retoki-profiles/public.yml"),
         },
         date: Some(date!(2025 - 01 - 01)),
         with_relative_documentation_base_path: None,
@@ -85,9 +84,8 @@ fn test_generate_with_private_profile() {
         with_release_metadata_files: true,
         with_md_header: true,
         with_next_release: false,
-        profile: ProfileArgs {
-            profile: "private".to_string(),
-            profile_path: None,
+        profile_args: ProfileArgs {
+            profile: PathBuf::from("tests/generate/retoki-profiles/private.yml"),
         },
         date: Some(date!(2025 - 01 - 01)),
         with_relative_documentation_base_path: Some("../".to_string()),
@@ -137,9 +135,8 @@ fn test_generate_with_private_component_profile() {
         with_release_metadata_files: true,
         with_md_header: true,
         with_next_release: false,
-        profile: ProfileArgs {
-            profile: "private-component".to_string(),
-            profile_path: None,
+        profile_args: ProfileArgs {
+            profile: PathBuf::from("tests/generate/retoki-profiles/private-component.yml"),
         },
         date: Some(date!(2025 - 01 - 01)),
         with_relative_documentation_base_path: None,
@@ -184,9 +181,8 @@ fn test_generate_with_invalid_profile() {
         with_release_metadata_files: true,
         with_md_header: true,
         with_next_release: false,
-        profile: ProfileArgs {
-            profile: "invalid".to_string(),
-            profile_path: None,
+        profile_args: ProfileArgs {
+            profile: PathBuf::from("tests/generate/retoki-profiles/invalid.yml"),
         },
         date: Some(date!(2025 - 01 - 01)),
         with_relative_documentation_base_path: None,

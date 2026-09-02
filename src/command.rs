@@ -74,13 +74,11 @@ impl Command {
 /// Arguments that are shared by all commands
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct ProfileArgs {
-    /// The name of the profile that should be used for the release yaml
-    #[clap(short = 'p', long = "profile", env("RETOKI_PROFILE"))]
-    pub profile: String,
+    /// Path to the profile to use
+    #[clap(long, env = "RETOKI_PROFILE_PATH", default_value_os_t = default_profile_path())]
+    pub profile: PathBuf,
+}
 
-    /// The path to the directory containing the profile configurations. Defaults
-    /// to the `retoki-profiles` folder which is expected in the same directory as the
-    /// `releases.yml`
-    #[clap(long = "profile-path")]
-    pub profile_path: Option<PathBuf>,
+fn default_profile_path() -> PathBuf {
+    PathBuf::from("retoki-profiles/internal.yml")
 }

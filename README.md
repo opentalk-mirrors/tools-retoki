@@ -11,7 +11,7 @@ Creating a release is done by following these steps:
    e.g. in the example `release.yaml` 2.8.0 would be a product release.
 
 2. fetch changelogs
-   `GITLAB_TOKEN=$(cat ~/.gitlab_token) retoki release 2.8.0 fetch-changelogs --profile internal`
+   `GITLAB_TOKEN=$(cat ~/.gitlab_token) retoki release 2.8.0 fetch-changelogs`
 
    This will query the changelogs from the gitlab release entries of the components.
 
@@ -21,7 +21,7 @@ Creating a release is done by following these steps:
    This will query the product changelog from all product work items with the `release-2.8.0` tag.
 
 4. generate documentation
-   `retoki generate --profile internal 2.8`
+   `retoki generate 2.8`
 
    Render the release documentation.
 
@@ -32,7 +32,7 @@ product_name: OpenTalk
 releases_page_header: |
   ## Release Announcements
 series:
-  '24.8':
+  "24.8":
     end_of_life: 2024-09-19
     releases:
       24.8.0:
@@ -60,15 +60,14 @@ The automation commands (`ci` and `release <version> init`) talk to a GitLab ins
 configured, in order of increasing precedence, via a `retoki.toml` file, `RETOKI_` prefixed
 environment variables, and the `GITLAB_TOKEN` environment variable:
 
-| Setting              | `retoki.toml` key   | Environment variable        | Default                     |
-| -------------------- | ------------------- | --------------------------- | --------------------------- |
-| GitLab base URL      | `gitlab_url`        | `RETOKI_GITLAB_URL`         | `https://git.opentalk.dev`  |
-| GitLab group         | `gitlab_group`      | `RETOKI_GITLAB_GROUP`       | `opentalk`                  |
-| GitLab token         | `gitlab_token`      | `GITLAB_TOKEN`              | _(required)_                |
-| Release ticket label | `release_label`     | `RETOKI_RELEASE_LABEL`      | `release-ticket`            |
-| Release repository   | `release_repo`      | `RETOKI_RELEASE_REPO`       | `opentalk/product-releases` |
-| `releases.yml` path  | `releases_yml_path` | `RETOKI_RELEASES_YML_PATH`  | `./releases.yml`            |
-| Release profile      | `release_profile`   | `RETOKI_RELEASE_PROFILE`    | `internal`                  |
+| Setting              | `retoki.toml` key   | Environment variable       | Default                     |
+| -------------------- | ------------------- | -------------------------- | --------------------------- |
+| GitLab base URL      | `gitlab_url`        | `RETOKI_GITLAB_URL`        | `https://git.opentalk.dev`  |
+| GitLab group         | `gitlab_group`      | `RETOKI_GITLAB_GROUP`      | `opentalk`                  |
+| GitLab token         | `gitlab_token`      | `GITLAB_TOKEN`             | _(required)_                |
+| Release ticket label | `release_label`     | `RETOKI_RELEASE_LABEL`     | `release-ticket`            |
+| Release repository   | `release_repo`      | `RETOKI_RELEASE_REPO`      | `opentalk/product-releases` |
+| `releases.yml` path  | `releases_yml_path` | `RETOKI_RELEASES_YML_PATH` | `./releases.yml`            |
 
 ### `retoki release <version> init`
 

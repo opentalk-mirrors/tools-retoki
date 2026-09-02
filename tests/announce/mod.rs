@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
+use std::path::PathBuf;
+
 use insta::assert_snapshot;
 use retoki::command::{ProfileArgs, release::announce::AnnounceArgs};
 
@@ -8,9 +10,8 @@ const RELEASES_FILE: &str = "tests/generate/releases.yml";
 
 fn announce(version: &str) -> String {
     let args = AnnounceArgs {
-        profile: ProfileArgs {
-            profile: "public".to_string(),
-            profile_path: None,
+        profile_args: ProfileArgs {
+            profile: PathBuf::from("tests/generate/retoki-profiles/public.yml"),
         },
     };
     args.render(RELEASES_FILE, &version.parse().unwrap())

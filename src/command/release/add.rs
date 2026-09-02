@@ -9,6 +9,7 @@ use semver::Version;
 use crate::{
     bot_config::Config,
     bot_templates::{self, product_release_body},
+    command::ProfileArgs,
     data::ComponentVersion,
     gitlab_service::GitlabService,
     output::Output,
@@ -28,6 +29,9 @@ pub struct AddArgs {
     /// Only log the actions that would be performed without writing anything.
     #[arg(long, env = "RETOKI_DRY_RUN")]
     dry_run: bool,
+
+    #[clap(flatten)]
+    pub profile_args: ProfileArgs,
 }
 
 impl AddArgs {
@@ -52,7 +56,7 @@ impl AddArgs {
     ) -> anyhow::Result<()> {
         let mut releases = ReleasesBuilder::new()
             .dry_run(self.dry_run)
-            .load(config.releases_yml_path.clone(), &config.release_profile)?;
+            .load(config.releases_yml_path.clone(), &self.profile_args.profile)?;
 
         let resolved = releases.resolve_component(&self.component)?;
 
@@ -327,15 +331,17 @@ components:
             release_label: "release".to_owned(),
             release_repo: "opentalk/product-releases".to_owned(),
             releases_yml_path: path,
-            release_profile: "internal".to_owned(),
         }
     }
 
-    fn add_args(dry_run: bool) -> AddArgs {
+    fn add_args(dry_run: bool, dir: &Path) -> AddArgs {
         AddArgs {
             component: "web-frontend".to_owned(),
             component_version: "1.21.0".parse().unwrap(),
             dry_run,
+            profile_args: ProfileArgs {
+                profile: dir.join("retoki-profiles/internal.yml"),
+            },
         }
     }
 
@@ -434,7 +440,7 @@ components:
             });
 
         let mut out = Vec::new();
-        add_args(false)
+        add_args(false, dir.path())
             .run_inner(&"25.1.0".parse().unwrap(), &config, &vcs, &mut out)
             .unwrap();
 
@@ -480,7 +486,7 @@ components:
             .returning(|_, _, _| Ok(()));
 
         let mut out = Vec::new();
-        add_args(false)
+        add_args(false, dir.path())
             .run_inner(&"25.1.0".parse().unwrap(), &config, &vcs, &mut out)
             .unwrap();
 
@@ -506,7 +512,7 @@ components:
         let dry_run_vcs = vcs.dry_run_if(true);
 
         let mut out = Vec::new();
-        add_args(true)
+        add_args(true, dir.path())
             .run_inner(&"25.1.0".parse().unwrap(), &config, &dry_run_vcs, &mut out)
             .unwrap();
 
@@ -529,7 +535,7 @@ components:
             .returning(|_, _| Ok(None));
 
         let mut out = Vec::new();
-        let err = add_args(false)
+        let err = add_args(false, dir.path())
             .run_inner(&"25.1.0".parse().unwrap(), &config, &vcs, &mut out)
             .unwrap_err();
 

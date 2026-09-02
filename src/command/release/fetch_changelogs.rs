@@ -36,7 +36,7 @@ pub struct FetchChangelogsArgs {
     pub gitlab_token: String,
 
     #[clap(flatten)]
-    pub profile: ProfileArgs,
+    pub profile_args: ProfileArgs,
 }
 
 impl FetchChangelogsArgs {
@@ -48,11 +48,7 @@ impl FetchChangelogsArgs {
         );
 
         let mut releases = read_release_file(&release_file)?;
-        let profile = read_profile_file(
-            &release_file,
-            &self.profile.profile,
-            self.profile.profile_path.as_deref(),
-        )?;
+        let profile = read_profile_file(&self.profile_args.profile)?;
 
         let series_number = version.into();
         let series = releases

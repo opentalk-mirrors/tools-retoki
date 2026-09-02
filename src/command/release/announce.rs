@@ -25,7 +25,7 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct AnnounceArgs {
     #[clap(flatten)]
-    pub profile: ProfileArgs,
+    pub profile_args: ProfileArgs,
 }
 
 impl AnnounceArgs {
@@ -37,15 +37,9 @@ impl AnnounceArgs {
 
     /// Render the announcement for a release version as Markdown.
     pub fn render<R: AsRef<Path>>(self, release_file: R, version: &Version) -> Result<String> {
-        let Self { profile } = self;
-
         let releases = read_release_file(&release_file)?;
-        let profile = read_profile_file(
-            &release_file,
-            &profile.profile,
-            profile.profile_path.as_deref(),
-        )
-        .context("Failed to read profile")?;
+        let profile =
+            read_profile_file(&self.profile_args.profile).context("Failed to read profile")?;
 
         let series_number = SeriesNumber::from(version);
         let series = releases

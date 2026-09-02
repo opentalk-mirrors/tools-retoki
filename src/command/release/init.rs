@@ -8,6 +8,7 @@ use semver::Version;
 use crate::{
     bot_config::Config,
     bot_templates,
+    command::ProfileArgs,
     gitlab_service::GitlabService,
     output::Output,
     release_workflow::ReleasesBuilder,
@@ -19,6 +20,9 @@ pub struct InitArgs {
     /// Only log the actions that would be performed without writing anything.
     #[arg(long, env = "RETOKI_DRY_RUN")]
     dry_run: bool,
+
+    #[clap(flatten)]
+    pub profile_args: ProfileArgs,
 }
 
 impl InitArgs {
@@ -43,7 +47,7 @@ impl InitArgs {
     ) -> anyhow::Result<()> {
         let mut releases = ReleasesBuilder::new()
             .dry_run(self.dry_run)
-            .load(config.releases_yml_path.clone(), &config.release_profile)?;
+            .load(config.releases_yml_path.clone(), &self.profile_args.profile)?;
         let release = releases
             .edit(|r| r.get_or_insert_from_previous(version.clone()))?
             .save()?;
