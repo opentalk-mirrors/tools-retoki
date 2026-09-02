@@ -21,7 +21,9 @@ use crate::{
 /// other chat channels. To convert it to plain text for email or mailing lists,
 /// pipe the output through a converter such as pandoc:
 ///
-///     retoki release <version> announce | pandoc -f markdown -t plain
+/// ```sh
+/// retoki release <version> announce | pandoc -f markdown -t plain
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct AnnounceArgs {
     #[clap(flatten)]
