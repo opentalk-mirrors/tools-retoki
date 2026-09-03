@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use std::fs;
+use std::{fs, path::PathBuf};
 
 use insta::{assert_debug_snapshot, assert_snapshot};
 use retoki::command::{
@@ -33,13 +33,8 @@ fn test_fetch_changelog_with_public_profile() {
         version: "24.8.0".parse().expect("Must be a valid version"),
         command: ReleaseCommand::FetchChangelogs(FetchChangelogsArgs {
             gitlab_token: "Dummy".to_owned(),
-            profile: ProfileArgs {
-                profile: "public".to_owned(),
-                profile_path: Some(
-                    "tests/fetch_changelog/retoki-profiles"
-                        .parse()
-                        .expect("Must be valid path"),
-                ),
+            profile_args: ProfileArgs {
+                profile: PathBuf::from("tests/fetch_changelog/retoki-profiles/public.yml"),
             },
         }),
     });

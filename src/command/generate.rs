@@ -15,9 +15,8 @@ use time::{Date, OffsetDateTime};
 use tracing::info_span;
 use tracing_indicatif::span_ext::IndicatifSpanExt as _;
 
-use super::ProfileArgs;
 use crate::{
-    command::utils::parse_date,
+    command::{ProfileArgs, utils::parse_date},
     data::{
         Component, ComponentIdentifier, Profile, Release, ReleaseFileReadOptions, ReleaseSeries,
         Releases, SeriesNumber, StripReleases, read_profile_file, read_release_file_with_options,
@@ -65,7 +64,7 @@ pub struct GenerateArgs {
     pub with_next_release: bool,
 
     #[clap(flatten)]
-    pub profile: ProfileArgs,
+    pub profile_args: ProfileArgs,
 
     /// The date that is used as the basis for calculating if releases are EOL
     #[clap(long, value_parser = parse_date)]
@@ -116,12 +115,8 @@ impl GenerateArgs {
             .series
             .get(&self.series_number)
             .with_context(|| format!("Release series {} does not exist", self.series_number))?;
-        let profile = read_profile_file(
-            &release_file,
-            &self.profile.profile,
-            self.profile.profile_path.as_deref(),
-        )
-        .context("Failed to read profile")?;
+        let profile =
+            read_profile_file(&self.profile_args.profile).context("Failed to read profile")?;
 
         // Pages rendered exactly once per run: the top-level `README.md`, `navigation.md` and the
         // release-series overview page.

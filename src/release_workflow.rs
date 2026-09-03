@@ -35,15 +35,11 @@ impl ReleasesBuilder {
         self
     }
 
-    pub fn load(self, path: PathBuf, profile_name: &str) -> anyhow::Result<Releases> {
+    pub fn load(self, path: PathBuf, profile_path: &Path) -> anyhow::Result<Releases> {
         let releases = read_release_file(&path)
             .with_context(|| format!("Failed to read release file at {}", path.display()))?;
-        let profile = read_profile_file(&path, profile_name, None::<&Path>).with_context(|| {
-            format!(
-                "Failed to read profile {profile_name} alongside release file at {}",
-                path.display()
-            )
-        })?;
+        let profile = read_profile_file(profile_path)
+            .with_context(|| format!("Failed to read profile {}", profile_path.display()))?;
 
         Ok(Releases {
             releases,

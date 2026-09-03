@@ -39,11 +39,7 @@ pub use releases::{Releases, StripReleases};
 pub use series_number::SeriesNumber;
 
 mod file {
-    use std::{
-        fs::File,
-        io::BufWriter,
-        path::{Path, PathBuf},
-    };
+    use std::{fs::File, io::BufWriter, path::Path};
 
     use anyhow::Context as _;
 
@@ -95,18 +91,12 @@ mod file {
         Ok(())
     }
 
-    pub fn read_profile_file(
-        release_file: impl AsRef<Path>,
-        profile_name: &str,
-        profile_path: Option<impl AsRef<Path>>,
-    ) -> anyhow::Result<Profile> {
-        let profile_path =
-            profile_path_from_release_path(release_file, profile_name, profile_path)?;
+    pub fn read_profile_file(profile_path: &Path) -> anyhow::Result<Profile> {
         let reader: Box<dyn std::io::Read> = if profile_path.as_os_str() == "-" {
             anyhow::bail!("Reading from stdin is not supported in combination with profiles");
         } else {
             Box::new(
-                File::open(&profile_path)
+                File::open(profile_path)
                     .with_context(|| format!("Couldn't open profile file {profile_path:?}"))?,
             )
         };
@@ -114,24 +104,5 @@ mod file {
         let profile: Profile = serde_yaml::from_reader::<_, Profile>(reader)?;
 
         Ok(profile)
-    }
-
-    fn profile_path_from_release_path(
-        release_file: impl AsRef<Path>,
-        profile_name: &str,
-        profile_path: Option<impl AsRef<Path>>,
-    ) -> anyhow::Result<PathBuf> {
-        const PROFILE_DIR: &str = "retoki-profiles";
-
-        let profile_file = if let Some(profile_path) = profile_path {
-            profile_path.as_ref().join(format!("{profile_name}.yml"))
-        } else {
-            let release_file_dir = release_file.as_ref().parent().with_context(|| format!("Could not build profile path for release file `{:?}` since there was no directory containing that file.", release_file.as_ref()))?;
-            PathBuf::from(release_file_dir)
-                .join(PROFILE_DIR)
-                .join(format!("{profile_name}.yml"))
-        };
-
-        Ok(profile_file)
     }
 }
