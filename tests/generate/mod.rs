@@ -4,7 +4,10 @@
 use std::fs;
 
 use insta::{assert_debug_snapshot, assert_snapshot};
-use retoki::command::{Command, ProfileArgs, generate::GenerateArgs};
+use retoki::{
+    command::{Command, ProfileArgs, generate::GenerateArgs},
+    data::SeriesNumber,
+};
 use tempfile::tempdir_in;
 use time::macros::date;
 
@@ -21,6 +24,7 @@ fn test_generate_with_public_profile() {
     let _ = fs::create_dir("tests/test-result");
     let tmp_dir = tempdir_in("tests/test-result").expect("Failed to create temporary directory");
     let command: Command = Command::Generate(GenerateArgs {
+        series_number: SeriesNumber::from((24, 8)),
         target_dir: tmp_dir.path().to_owned(),
         without_prereleases: false,
         without_readme_gantt_chart: true,
@@ -50,9 +54,6 @@ fn test_generate_with_public_profile() {
         "24.8.1/README.md",
         "24.8.1/metadata.json",
         "24.8/README.md",
-        "25.0.0/README.md",
-        "25.0.0/metadata.json",
-        "25.0/README.md",
         "README.md",
         "components/controller.md",
         "components/web-frontend.md",
@@ -75,6 +76,7 @@ fn test_generate_with_private_profile() {
     let tmp_dir = tempdir_in("tests/test-result").expect("Failed to create temporary directory");
 
     let command: Command = Command::Generate(GenerateArgs {
+        series_number: SeriesNumber::from((24, 8)),
         target_dir: tmp_dir.path().to_owned(),
         without_prereleases: false,
         without_readme_gantt_chart: true,
@@ -104,9 +106,6 @@ fn test_generate_with_private_profile() {
         "24.8.1/README.md",
         "24.8.1/metadata.json",
         "24.8/README.md",
-        "25.0.0/README.md",
-        "25.0.0/metadata.json",
-        "25.0/README.md",
         "README.md",
         "components/controller.md",
         "components/web-frontend.md",
@@ -129,6 +128,7 @@ fn test_generate_with_private_component_profile() {
     let tmp_dir = tempdir_in("tests/test-result").expect("Failed to create temporary directory");
 
     let command: Command = Command::Generate(GenerateArgs {
+        series_number: SeriesNumber::from((24, 8)),
         target_dir: tmp_dir.path().to_owned(),
         without_prereleases: false,
         without_readme_gantt_chart: true,
@@ -160,9 +160,6 @@ fn test_generate_with_private_component_profile() {
         "24.8.1/README.md",
         "24.8.1/metadata.json",
         "24.8/README.md",
-        "25.0.0/README.md",
-        "25.0.0/metadata.json",
-        "25.0/README.md",
         "README.md",
         "components/web-frontend.md",
         "navigation.md",
@@ -178,6 +175,7 @@ fn test_generate_with_invalid_profile() {
     let tmp_dir = tempdir_in("tests/test-result").expect("Failed to create temporary directory");
 
     let command: Command = Command::Generate(GenerateArgs {
+        series_number: SeriesNumber::from((24, 8)),
         target_dir: tmp_dir.path().to_owned(),
         without_prereleases: false,
         without_readme_gantt_chart: true,
