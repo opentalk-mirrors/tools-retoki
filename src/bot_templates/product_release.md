@@ -13,4 +13,5 @@
 ## Dependency graph
 
 <!-- DEPENDENCY_GRAPH_START -->
+{{ dependency_graph }}
 <!-- DEPENDENCY_GRAPH_END -->

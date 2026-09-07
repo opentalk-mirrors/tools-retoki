@@ -15,4 +15,9 @@ expression: body
 ## Dependency graph
 
 <!-- DEPENDENCY_GRAPH_START -->
+```mermaid
+flowchart LR
+
+foo#1[foo#1]
+```
 <!-- DEPENDENCY_GRAPH_END -->

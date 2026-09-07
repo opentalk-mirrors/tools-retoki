@@ -5,4 +5,4 @@
 mod issue_with_blockers;
 mod update;
 
-pub(crate) use update::DependencyGraphUpdater;
+pub(crate) use update::{DependencyGraphUpdater, dependency_graph_for_issue};

@@ -12,6 +12,7 @@ use crate::{
     gitlab_service::GitlabService,
     output::Output,
     release_workflow::ReleasesBuilder,
+    tasks::generate_dependency_graph::dependency_graph_for_issue,
     vcs_service::{VcsService, VcsServiceExt},
 };
 
@@ -61,16 +62,31 @@ impl InitArgs {
         let categories: Vec<_> = releases
             .category_data(version, &release, linked_issues, vcs)?
             .collect();
-        let body =
-            bot_templates::product_release_body(vcs, &config.release_repo, version, &categories)?;
 
         if let Some(issue) = issue {
+            let dependency_graph = dependency_graph_for_issue(vcs, &issue, &config.gitlab_url)?;
+            let body = bot_templates::product_release_body(
+                vcs,
+                &config.release_repo,
+                version,
+                &categories,
+                &dependency_graph,
+            )?;
             vcs.update_issue_description(&config.release_repo, issue.iid, &body)?;
             out.println(&format_args!(
                 "Updated description of issue {}",
                 issue.reference_with_url()
             ));
         } else {
+            // The dependency graph is rooted at the release issue, so it can
+            // only be rendered once the issue exists and its id is known.
+            let body = bot_templates::product_release_body(
+                vcs,
+                &config.release_repo,
+                version,
+                &categories,
+                "",
+            )?;
             let created = vcs.create_issue(
                 &config.release_repo,
                 &title,
@@ -81,6 +97,15 @@ impl InitArgs {
                 "Created issue {}",
                 created.reference_with_url()
             ));
+            let dependency_graph = dependency_graph_for_issue(vcs, &created, &config.gitlab_url)?;
+            let body = bot_templates::product_release_body(
+                vcs,
+                &config.release_repo,
+                version,
+                &categories,
+                &dependency_graph,
+            )?;
+            vcs.update_issue_description(&config.release_repo, created.iid, &body)?;
         }
 
         Ok(())

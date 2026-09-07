@@ -14,6 +14,7 @@ use crate::{
     gitlab_service::GitlabService,
     output::Output,
     release_workflow::{Releases, ReleasesBuilder, ResolvedComponent, build_release_title},
+    tasks::generate_dependency_graph::dependency_graph_for_issue,
     vcs_service::{Issue, IssueLinkType, LinkedIssue, VcsService, VcsServiceExt},
 };
 
@@ -196,7 +197,14 @@ impl AddArgs {
         let categories: Vec<_> = releases
             .category_data(product_version, &release, &linked_issues, vcs)?
             .collect();
-        let body = product_release_body(vcs, &config.release_repo, product_version, &categories)?;
+        let dependency_graph = dependency_graph_for_issue(vcs, &product_issue, &config.gitlab_url)?;
+        let body = product_release_body(
+            vcs,
+            &config.release_repo,
+            product_version,
+            &categories,
+            &dependency_graph,
+        )?;
         vcs.update_issue_description(&config.release_repo, product_issue.iid, &body)?;
 
         out.println(&format_args!(
@@ -610,6 +618,9 @@ groups:
         let _ = vcs
             .expect_find_issues_with_label()
             .returning(|_, _| Ok(Vec::new()));
+        let _ = vcs
+            .expect_get_linked_issues()
+            .returning(|_, _| Ok(Vec::new()));
         let _ = vcs.expect_get_raw_file().returning(|_, _| Ok(None));
     }
 
@@ -669,6 +680,11 @@ groups:
             body.contains("https://gitlab.example.com/opentalk/web-frontend/-/issues/11"),
             "product body should link the component issue, got:\n{body}",
         );
+        // The dependency graph section is rendered into the product body.
+        assert!(
+            body.contains("```mermaid"),
+            "product body should contain the dependency graph, got:\n{body}",
+        );
     }
 
     #[test]
@@ -688,6 +704,9 @@ groups:
         let _ = vcs
             .expect_find_issues_with_label()
             .returning(|_, _| Ok(vec![component_issue()]));
+        let _ = vcs
+            .expect_get_linked_issues()
+            .returning(|_, _| Ok(Vec::new()));
         let _ = vcs.expect_get_raw_file().returning(|_, _| Ok(None));
         // No new issue is created, but the existing one is linked as a blocker.
         let _ = vcs
@@ -891,6 +910,9 @@ components:
             .returning(|url: &Url| Ok(url.path().trim_matches('/').to_owned()));
         let _ = vcs
             .expect_find_issues_with_label()
+            .returning(|_, _| Ok(Vec::new()));
+        let _ = vcs
+            .expect_get_linked_issues()
             .returning(|_, _| Ok(Vec::new()));
         let _ = vcs.expect_get_raw_file().returning(|_, _| Ok(None));
         let _ = vcs

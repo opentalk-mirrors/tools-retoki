@@ -93,20 +93,14 @@ impl<'a> DependencyGraphUpdater<'a> {
             self.print_section_header(&section_header);
         }
 
-        let before = description
-            .lines()
-            .take(start_marker_index.saturating_add(1));
-        let after = description.lines().skip(end_marker_index);
-
-        let tree = IssueWithBlockers::load_from_vcs_service(
+        let overall_description = build_description_with_graph(
             self.vcs_service,
-            issue.clone(),
-            MAX_DEPENDENCY_DEPTH,
+            &issue,
+            description,
+            self.base_url,
+            start_marker_index,
+            end_marker_index,
         )?;
-
-        let diagram_string = tree.to_mermaid_diagram(self.base_url);
-
-        let overall_description = before.chain(diagram_string.lines()).chain(after).join("\n");
 
         if &overall_description == description {
             self.out.println(&format_args!(
@@ -129,6 +123,40 @@ impl<'a> DependencyGraphUpdater<'a> {
         )?;
         Ok(())
     }
+}
+
+/// Render the mermaid dependency graph for `issue` and its blockers.
+///
+/// The returned string is the fenced ```mermaid block, without a trailing
+/// newline, ready to be embedded into an issue template.
+pub(crate) fn dependency_graph_for_issue(
+    vcs_service: &dyn VcsService,
+    issue: &Issue,
+    base_url: &Url,
+) -> anyhow::Result<String> {
+    let tree =
+        IssueWithBlockers::load_from_vcs_service(vcs_service, issue.clone(), MAX_DEPENDENCY_DEPTH)?;
+    Ok(tree.to_mermaid_diagram(base_url).trim_end().to_owned())
+}
+
+/// Replace the content between the dependency graph markers of `description`
+/// with the mermaid diagram rendered from `issue` and its blockers.
+fn build_description_with_graph(
+    vcs_service: &dyn VcsService,
+    issue: &Issue,
+    description: &str,
+    base_url: &Url,
+    start_marker_index: usize,
+    end_marker_index: usize,
+) -> anyhow::Result<String> {
+    let before = description
+        .lines()
+        .take(start_marker_index.saturating_add(1));
+    let after = description.lines().skip(end_marker_index);
+
+    let diagram_string = dependency_graph_for_issue(vcs_service, issue, base_url)?;
+
+    Ok(before.chain(diagram_string.lines()).chain(after).join("\n"))
 }
 
 fn get_dependency_graph_markers(s: &str) -> anyhow::Result<Option<(usize, usize)>> {
