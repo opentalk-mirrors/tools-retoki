@@ -13,7 +13,10 @@ use anyhow::{Context as _, bail};
 use derive_builder::Builder;
 use gitlab::{
     Gitlab,
-    api::{Endpoint, ParamValue, Query as _, QueryParams, common::NameOrId, issues::IssueState},
+    api::{
+        Endpoint, Pageable, ParamValue, Query as _, QueryParams, common::NameOrId,
+        issues::IssueState,
+    },
 };
 use http::Method;
 use rayon::iter::{IntoParallelIterator, ParallelIterator as _};
@@ -75,7 +78,7 @@ impl VcsService for GitlabService {
                     .labels(filter.labels)
                     .build()
                     .context("couldn't build group issues endpoint")?;
-                endpoint
+                gitlab::api::paged(endpoint, gitlab::api::Pagination::All)
                     .query(&self.client)
                     .context("couldn't query group issues")?
             }
@@ -91,7 +94,7 @@ impl VcsService for GitlabService {
                 let endpoint = builder
                     .build()
                     .context("couldn't build project issues endpoint")?;
-                endpoint
+                gitlab::api::paged(endpoint, gitlab::api::Pagination::All)
                     .query(&self.client)
                     .with_context(|| format!("couldn't query issues in project {project}"))?
             }
@@ -385,6 +388,8 @@ impl Endpoint for Issues<'_> {
         params
     }
 }
+
+impl Pageable for Issues<'_> {}
 
 #[derive(Debug, Builder, Clone)]
 struct LinkedItems<'a> {
