@@ -164,6 +164,7 @@ impl<S: VcsService> VcsService for DryRunVcsService<S> {
                 description: Some(description.to_owned()),
                 state: IssueState::Opened,
                 linked_issues: LinkedIssues::Fetched(Vec::new()),
+                labels: labels.iter().map(|l| (*l).to_owned()).collect(),
                 web_url: Url::parse(&format!("https://git.opentalk.dev/{project}/-/issues/0"))
                     .expect("Hardcoded URL should be valid"),
             })
@@ -226,6 +227,7 @@ pub(crate) struct Issue {
     pub description: Option<String>,
     pub state: IssueState,
     pub linked_issues: LinkedIssues,
+    pub labels: Vec<String>,
     pub web_url: Url,
 }
 
@@ -418,6 +420,7 @@ mod tests {
             description: None,
             state: IssueState::Opened,
             linked_issues: LinkedIssues::Fetched(Vec::new()),
+            labels: Vec::new(),
             web_url: Url::parse("https://example.com/group/project/-/issues/1").unwrap(),
         }
     }

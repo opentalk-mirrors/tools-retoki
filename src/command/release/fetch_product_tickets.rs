@@ -5,17 +5,16 @@ use std::path::Path;
 
 use anyhow::Context;
 use clap::Args;
-use gitlab::{
-    Gitlab,
-    api::{Query, projects},
-};
 use semver::Version;
 use tracing::info_span;
 use url::Url;
 
 use crate::{
+    bot_config::Config,
     data::{ProductTicket, SeriesNumber, read_release_file, write_releases_file},
+    gitlab_service::GitlabService,
     helper::progress,
+    vcs_service::{IssueFilter, IssueScope, VcsService},
 };
 
 const DEFAULT_PRODUCT_REPO_URL: &str = "https://git.opentalk.dev/opentalk/product/tickets";
@@ -23,10 +22,6 @@ const RELEASE_LABEL_PREFIX: &str = "release-";
 
 #[derive(Debug, Clone, PartialEq, Eq, Args)]
 pub struct FetchProductTicketsArgs {
-    /// The GitLab access token. This token requires at least `api:read` capabilities.
-    #[clap(long, env = "GITLAB_TOKEN")]
-    pub gitlab_token: String,
-
     #[clap(long, default_value = DEFAULT_PRODUCT_REPO_URL)]
     product_repo: Url,
 }
@@ -47,6 +42,13 @@ impl FetchProductTicketsArgs {
             Some("Finished querying product tickets"),
         );
 
+        let config = Config::load()?;
+        let vcs = GitlabService::connect(
+            config.gitlab_url.clone(),
+            config.gitlab_token.clone(),
+            config.gitlab_group.clone(),
+        )?;
+
         let mut releases = read_release_file(&release_file)?;
         let series_nr = SeriesNumber::from(version);
         let release = releases
@@ -57,29 +59,42 @@ impl FetchProductTicketsArgs {
             .get_mut(version)
             .with_context(|| format!("Release {version} not found in series {series_nr}"))?;
 
-        release.tickets = self.fetch_product_tickets(version)?;
+        release.tickets = self.fetch_product_tickets(&vcs, version)?;
 
         tracing::info!(release = %version, tickets = release.tickets.len(), "Fetched product tickets");
 
         write_releases_file(release_file, releases)
     }
 
-    fn fetch_product_tickets(&self, version: &Version) -> anyhow::Result<Vec<ProductTicket>> {
-        let host = self
-            .product_repo
-            .host_str()
-            .with_context(|| format!("No host part found in url {}", self.product_repo))?;
-        let gitlab = Gitlab::new(host, &self.gitlab_token)?;
-
+    fn fetch_product_tickets(
+        &self,
+        vcs: &dyn VcsService,
+        version: &Version,
+    ) -> anyhow::Result<Vec<ProductTicket>> {
+        let project = vcs.project_path_from_url(&self.product_repo)?;
         let label = release_label(version);
-        let project = self.product_repo.path().trim_matches('/');
 
-        let endpoint = projects::issues::Issues::builder()
-            .project(project)
-            .label(label)
-            .build()?;
+        let issues = vcs
+            .fetch_issues(
+                IssueScope::Project(&project),
+                &IssueFilter {
+                    labels: &[&label],
+                    ..Default::default()
+                },
+            )
+            .context("Failed to fetch tickets")?;
 
-        endpoint.query(&gitlab).context("Failed to fetch tickets")
+        Ok(issues
+            .into_iter()
+            .map(|issue| {
+                ProductTicket::new(
+                    issue.title,
+                    issue.iid,
+                    issue.web_url.to_string(),
+                    issue.labels,
+                )
+            })
+            .collect())
     }
 }
 

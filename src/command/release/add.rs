@@ -587,6 +587,7 @@ groups:
             description: Some("old body".to_owned()),
             state: IssueState::Opened,
             linked_issues: LinkedIssues::Fetched(Vec::new()),
+            labels: Vec::new(),
             web_url: "https://gitlab.example.com/opentalk/product-releases/-/issues/7"
                 .parse()
                 .unwrap(),
@@ -606,6 +607,7 @@ groups:
             description: None,
             state: IssueState::Opened,
             linked_issues: LinkedIssues::Fetched(Vec::new()),
+            labels: Vec::new(),
             web_url: "https://gitlab.example.com/opentalk/web-frontend/-/issues/11"
                 .parse()
                 .unwrap(),
@@ -863,6 +865,7 @@ components:
                 description: None,
                 state: IssueState::Closed,
                 linked_issues: LinkedIssues::NotFetched,
+                labels: Vec::new(),
                 web_url: "https://gitlab.example.com/opentalk/ot-setup/-/issues/21"
                     .parse()
                     .unwrap(),

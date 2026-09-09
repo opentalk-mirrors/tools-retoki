@@ -19,6 +19,8 @@ pub(crate) struct Issue {
     pub project_id: u64,
     pub references: IssueReferences,
     pub state: IssueState,
+    #[serde(default)]
+    pub labels: Vec<String>,
     pub web_url: Url,
 }
 
@@ -37,6 +39,7 @@ impl Issue {
             project_id,
             references,
             state,
+            labels,
             web_url,
         } = self.clone();
         let project = projects
@@ -61,6 +64,7 @@ impl Issue {
                 .to_string(),
             state: state.into(),
             linked_issues,
+            labels,
             web_url,
         })
     }

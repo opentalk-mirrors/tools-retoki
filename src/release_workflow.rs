@@ -512,6 +512,7 @@ mod tests {
                 description: None,
                 state: IssueState::Opened,
                 linked_issues: LinkedIssues::NotFetched,
+                labels: Vec::new(),
                 web_url,
             },
         }
