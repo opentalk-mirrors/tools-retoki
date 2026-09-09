@@ -26,6 +26,11 @@ pub struct AddArgs {
     #[arg(long, short = 'c')]
     component_version: Version,
 
+    /// Update the component even if a component that must be released after it
+    /// (e.g. `ot-setup`) has already been released.
+    #[arg(long)]
+    force: bool,
+
     /// Only log the actions that would be performed without writing anything.
     #[arg(long, env = "RETOKI_DRY_RUN")]
     dry_run: bool,
@@ -72,6 +77,30 @@ impl AddArgs {
             })?;
 
         let component_version = ComponentVersion::Semver(self.component_version.clone());
+
+        let released_blockers =
+            releases.released_blocking_components(&resolved.id, &product_issue, vcs)?;
+        if !released_blockers.is_empty() {
+            let blockers = released_blockers
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(", ");
+            if self.force {
+                out.println(&format_args!(
+                    "Warning: updating {component} even though the already released \
+                     component(s) {blockers} depend on it; proceeding because --force was given",
+                    component = self.component,
+                ));
+            } else {
+                anyhow::bail!(
+                    "cannot update {component}: the already released component(s) {blockers} \
+                     would be invalidated. \
+                     Re-run with --force to override.",
+                    component = self.component,
+                );
+            }
+        }
 
         // Start from the product issue's current blockers. A freshly created
         // and linked component issue is appended below so that the re-rendered
@@ -262,6 +291,7 @@ mod tests {
         sync::{Arc, Mutex},
     };
 
+    use insta::assert_snapshot;
     use pretty_assertions::assert_eq;
     use tempfile::tempdir;
     use url::Url;
@@ -282,7 +312,7 @@ series:
         date: 2025-08-01
         components:
           web-frontend: 1.20.0
-          controller: 0.18.0
+          ot-setup: 0.18.0
   '25.0':
     end_of_life: 2026-01-01
     releases:
@@ -290,7 +320,7 @@ series:
         date: 2025-07-01
         components:
           web-frontend: 1.20.0
-          controller: 0.18.0
+          ot-setup: 0.18.0
 component_categories:
   frontend:
     name: Frontend
@@ -300,8 +330,8 @@ components:
   web-frontend:
     name: Web-Frontend
     category: frontend
-  controller:
-    name: Controller
+  ot-setup:
+    name: OpenTalk Setup
     category: services
 "#;
 
@@ -310,8 +340,8 @@ profile_name: gitlab
 components:
   web-frontend:
     gitlab_url: https://gitlab.example.com/opentalk/web-frontend
-  controller:
-    gitlab_url: https://gitlab.example.com/opentalk/controller
+  ot-setup:
+    gitlab_url: https://gitlab.example.com/opentalk/ot-setup
 "#;
 
     fn write_sample(dir: &Path) -> PathBuf {
@@ -334,10 +364,11 @@ components:
         }
     }
 
-    fn add_args(dry_run: bool, dir: &Path) -> AddArgs {
+    fn args_add_frontend(dry_run: bool, dir: &Path) -> AddArgs {
         AddArgs {
             component: "web-frontend".to_owned(),
             component_version: "1.21.0".parse().unwrap(),
+            force: false,
             dry_run,
             profile_args: ProfileArgs {
                 profile: dir.join("retoki-profiles/gitlab.yml"),
@@ -440,7 +471,7 @@ components:
             });
 
         let mut out = Vec::new();
-        add_args(false, dir.path())
+        args_add_frontend(false, dir.path())
             .run_inner(&"25.1.0".parse().unwrap(), &config, &vcs, &mut out)
             .unwrap();
 
@@ -486,7 +517,7 @@ components:
             .returning(|_, _, _| Ok(()));
 
         let mut out = Vec::new();
-        add_args(false, dir.path())
+        args_add_frontend(false, dir.path())
             .run_inner(&"25.1.0".parse().unwrap(), &config, &vcs, &mut out)
             .unwrap();
 
@@ -512,7 +543,7 @@ components:
         let dry_run_vcs = vcs.dry_run_if(true);
 
         let mut out = Vec::new();
-        add_args(true, dir.path())
+        args_add_frontend(true, dir.path())
             .run_inner(&"25.1.0".parse().unwrap(), &config, &dry_run_vcs, &mut out)
             .unwrap();
 
@@ -535,7 +566,7 @@ components:
             .returning(|_, _| Ok(None));
 
         let mut out = Vec::new();
-        let err = add_args(false, dir.path())
+        let err = args_add_frontend(false, dir.path())
             .run_inner(&"25.1.0".parse().unwrap(), &config, &vcs, &mut out)
             .unwrap_err();
 
@@ -543,5 +574,133 @@ components:
             format!("{err:#}").contains("retoki release 25.1.0 init"),
             "error should point at init, got: {err:#}",
         );
+    }
+
+    /// A profile where `controller` must be released after `web-frontend`.
+    const BLOCKING_PROFILE: &str = r#"---
+profile_name: internal
+components:
+  web-frontend:
+    gitlab_url: https://gitlab.example.com/opentalk/web-frontend
+  ot-setup:
+    gitlab_url: https://gitlab.example.com/opentalk/ot-setup
+    blocked_by:
+      - web-frontend
+"#;
+
+    fn write_sample_with_blocking(dir: &Path) -> PathBuf {
+        let path = dir.join("releases.yml");
+        fs::write(&path, SAMPLE).unwrap();
+        let profile_dir = dir.join("retoki-profiles");
+        fs::create_dir_all(&profile_dir).unwrap();
+        fs::write(profile_dir.join("gitlab.yml"), BLOCKING_PROFILE).unwrap();
+        path
+    }
+
+    /// Product issue that is blocked by an already released (closed) component
+    /// release issue for `ot-setup`.
+    fn product_issue_blocked_by_released_ot_setup() -> Issue {
+        let mut issue = product_issue();
+        issue.linked_issues = vec![LinkedIssue {
+            link_type: IssueLinkType::IsBlockedBy,
+            issue: Issue {
+                id: 4000,
+                iid: 21,
+                title: "Release v0.18.0 of OpenTalk Setup".to_owned(),
+                project: Project {
+                    id: 3,
+                    path_with_namespace: "opentalk/ot-setup".to_owned(),
+                },
+                short_reference: "opentalk/ot-setup#21".to_owned(),
+                description: None,
+                state: IssueState::Closed,
+                linked_issues: Vec::new(),
+                web_url: "https://gitlab.example.com/opentalk/ot-setup/-/issues/21"
+                    .parse()
+                    .unwrap(),
+            },
+        }];
+        issue
+    }
+
+    #[test]
+    fn add_is_rejected_when_a_dependent_component_is_already_released() {
+        let dir = tempdir().unwrap();
+        let path = write_sample_with_blocking(dir.path());
+        let original = fs::read_to_string(&path).unwrap();
+        let config = config_for(path.clone());
+
+        let mut vcs = MockVcsService::new();
+        let _ = vcs
+            .expect_get_open_issue_with_title()
+            .returning(|_, _| Ok(Some(product_issue_blocked_by_released_ot_setup())));
+        let _ = vcs
+            .expect_project_path_from_url()
+            .returning(|url: &Url| Ok(url.path().trim_matches('/').to_owned()));
+
+        let mut out = Vec::new();
+        let err = args_add_frontend(false, dir.path())
+            .run_inner(&"25.1.0".parse().unwrap(), &config, &vcs, &mut out)
+            .unwrap_err();
+
+        assert_snapshot!(
+            err.to_string(),
+            @"cannot update web-frontend: the already released component(s) OpenTalk Setup would be invalidated. Re-run with --force to override."
+        );
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            original,
+            "releases.yml must be untouched when the update is rejected",
+        );
+    }
+
+    #[test]
+    fn add_with_force_updates_despite_released_dependent_component() {
+        let dir = tempdir().unwrap();
+        let path = write_sample_with_blocking(dir.path());
+        let config = config_for(path.clone());
+
+        let mut vcs = MockVcsService::new();
+        let _ = vcs
+            .expect_get_open_issue_with_title()
+            .returning(|_, _| Ok(Some(product_issue_blocked_by_released_ot_setup())));
+        let _ = vcs
+            .expect_project_path_from_url()
+            .returning(|url: &Url| Ok(url.path().trim_matches('/').to_owned()));
+        let _ = vcs
+            .expect_find_issues_with_label()
+            .returning(|_, _| Ok(Vec::new()));
+        let _ = vcs.expect_get_raw_file().returning(|_, _| Ok(None));
+        let _ = vcs
+            .expect_create_issue()
+            .returning(|_, _, _, _| Ok(component_issue()));
+        let _ = vcs
+            .expect_create_issue_link()
+            .returning(|_, _, _, _, _| Ok(()));
+        let _ = vcs
+            .expect_update_issue_description()
+            .returning(|_, _, _| Ok(()));
+
+        let mut args = args_add_frontend(false, dir.path());
+        args.force = true;
+
+        let mut out = Vec::new();
+        args.run_inner(&"25.1.0".parse().unwrap(), &config, &vcs, &mut out)
+            .unwrap();
+
+        let written = fs::read_to_string(&path).unwrap();
+        assert!(
+            written.contains("web-frontend: 1.21.0"),
+            "releases.yml should record the new version, got:\n{written}",
+        );
+        let printed = String::from_utf8(out).unwrap();
+        assert_snapshot!(
+            printed,@"
+        Warning: updating web-frontend even though the already released component(s) OpenTalk Setup depend on it; proceeding because --force was given
+        Created component release issue opentalk/web-frontend#11
+         🌐 https://gitlab.example.com/opentalk/web-frontend/-/issues/11
+        Linked product release issue to be blocked by opentalk/web-frontend#11
+        Updated product release issue opentalk/product-releases#7
+        "        );
     }
 }

@@ -15,7 +15,7 @@ use crate::{
         ComponentVersion, Profile, Release, ReleaseSeries, SeriesNumber, read_profile_file,
         read_release_file, write_releases_file,
     },
-    vcs_service::{Issue, IssueLinkType, LinkedIssue, VcsService},
+    vcs_service::{Issue, IssueLinkType, IssueState, LinkedIssue, VcsService},
 };
 
 #[derive(Debug)]
@@ -237,6 +237,61 @@ impl Releases {
             category_name,
             gitlab_url,
         })
+    }
+
+    /// Names of already-released components whose release would be invalidated
+    /// by (re)adding `component`.
+    ///
+    /// A component `b` blocks updates to `component` when `b`'s profile lists
+    /// `component` in its `blocked_by` (i.e. `component` must be released before
+    /// `b`). If such a `b` has already been released, `component` should not be
+    /// changed since this would invalidate the already existing release of `b`.
+    pub fn released_blocking_components(
+        &self,
+        component: &ComponentIdentifier,
+        product_release_issue: &Issue,
+        vcs: &dyn VcsService,
+    ) -> anyhow::Result<Vec<ComponentName>> {
+        let mut blocking = Vec::new();
+
+        for (id, profile) in &self.profile.components {
+            let is_blocking = profile
+                .blocked_by
+                .as_deref()
+                .is_some_and(|blocked_by| blocked_by.contains(component));
+            if !is_blocking {
+                continue;
+            }
+
+            let name = self
+                .releases
+                .components
+                .get(id)
+                .map(|component| component.name.clone())
+                .unwrap_or_else(|| ComponentName::from(id.to_string()));
+
+            let Some(gitlab_url) = profile.gitlab_url.as_deref() else {
+                tracing::warn!("Skipping `{name}` as it does not provide a GitLab URL");
+                continue;
+            };
+            let url = gitlab_url
+                .parse()
+                .with_context(|| format!("invalid gitlab_url {gitlab_url:?} for component {id}"))?;
+            let project_path = vcs.project_path_from_url(&url).with_context(|| {
+                format!("couldn't derive project path from gitlab_url {gitlab_url:?}")
+            })?;
+
+            let released = product_release_issue.linked_issues.iter().any(|linked| {
+                linked.link_type == IssueLinkType::IsBlockedBy
+                    && linked.issue.project.path_with_namespace == project_path
+                    && linked.issue.state == IssueState::Closed
+            });
+            if released {
+                blocking.push(name);
+            }
+        }
+
+        Ok(blocking)
     }
 
     /// Return the planned version of `component` in the release immediately
