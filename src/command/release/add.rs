@@ -122,7 +122,7 @@ impl AddArgs {
         // Start from the product issue's current blockers. A freshly created
         // and linked component issue is appended below so that the re-rendered
         // product release table can resolve its ticket link.
-        let mut linked_issues = product_issue.linked_issues.clone();
+        let mut linked_issues = product_issue.linked_issues.as_slice().to_vec();
 
         if let Some(group) = group {
             if let Some(url) = &group.gitlab_url {
@@ -227,7 +227,7 @@ impl AddArgs {
         issue: Issue,
         linked_issues: &mut Vec<LinkedIssue>,
     ) -> anyhow::Result<()> {
-        let already_linked = product_issue.linked_issues.iter().any(|linked| {
+        let already_linked = product_issue.linked_issues.as_slice().iter().any(|linked| {
             linked.link_type == IssueLinkType::IsBlockedBy
                 && linked.issue.project.path_with_namespace == issue.project.path_with_namespace
                 && linked.issue.iid == issue.iid
@@ -429,6 +429,7 @@ fn find_existing_component_issue(
     let version_marker = version_marker.to_string();
     let linked = product_issue
         .linked_issues
+        .as_slice()
         .iter()
         .filter(|linked| linked.link_type == IssueLinkType::IsBlockedBy)
         .map(|linked| &linked.issue)
@@ -464,7 +465,7 @@ mod tests {
     use super::*;
     use crate::{
         bot_config::Config,
-        vcs_service::{IssueState, MockVcsService, Project},
+        vcs_service::{IssueState, LinkedIssues, MockVcsService, Project},
     };
 
     const SAMPLE: &str = r#"---
@@ -585,7 +586,7 @@ groups:
             short_reference: "opentalk/product-releases#7".to_owned(),
             description: Some("old body".to_owned()),
             state: IssueState::Opened,
-            linked_issues: Vec::new(),
+            linked_issues: LinkedIssues::Fetched(Vec::new()),
             web_url: "https://gitlab.example.com/opentalk/product-releases/-/issues/7"
                 .parse()
                 .unwrap(),
@@ -604,7 +605,7 @@ groups:
             short_reference: "opentalk/web-frontend#11".to_owned(),
             description: None,
             state: IssueState::Opened,
-            linked_issues: Vec::new(),
+            linked_issues: LinkedIssues::Fetched(Vec::new()),
             web_url: "https://gitlab.example.com/opentalk/web-frontend/-/issues/11"
                 .parse()
                 .unwrap(),
@@ -848,7 +849,7 @@ components:
     /// release issue for `ot-setup`.
     fn product_issue_blocked_by_released_ot_setup() -> Issue {
         let mut issue = product_issue();
-        issue.linked_issues = vec![LinkedIssue {
+        issue.linked_issues = LinkedIssues::Fetched(vec![LinkedIssue {
             link_type: IssueLinkType::IsBlockedBy,
             issue: Issue {
                 id: 4000,
@@ -861,12 +862,12 @@ components:
                 short_reference: "opentalk/ot-setup#21".to_owned(),
                 description: None,
                 state: IssueState::Closed,
-                linked_issues: Vec::new(),
+                linked_issues: LinkedIssues::NotFetched,
                 web_url: "https://gitlab.example.com/opentalk/ot-setup/-/issues/21"
                     .parse()
                     .unwrap(),
             },
-        }];
+        }]);
         issue
     }
 

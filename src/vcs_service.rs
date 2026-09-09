@@ -22,8 +22,9 @@ impl<T: VcsService> VcsServiceExt for T {}
 pub(crate) trait VcsService: Send + Sync {
     /// Fetch issues matching `filter` within `scope`.
     ///
-    /// The returned issues carry an empty `linked_issues` list; call
-    /// [`VcsService::get_linked_issues`] to load an issue's links when needed.
+    /// The returned issues have their `linked_issues` set to
+    /// [`LinkedIssues::NotFetched`]; call [`VcsService::get_linked_issues`] to
+    /// load an issue's links when needed.
     fn fetch_issues<'a>(
         &self,
         scope: IssueScope<'a>,
@@ -162,7 +163,7 @@ impl<S: VcsService> VcsService for DryRunVcsService<S> {
                 short_reference: format!("{project}#0"),
                 description: Some(description.to_owned()),
                 state: IssueState::Opened,
-                linked_issues: Vec::new(),
+                linked_issues: LinkedIssues::Fetched(Vec::new()),
                 web_url: Url::parse(&format!("https://git.opentalk.dev/{project}/-/issues/0"))
                     .expect("Hardcoded URL should be valid"),
             })
@@ -224,7 +225,7 @@ pub(crate) struct Issue {
     pub short_reference: String,
     pub description: Option<String>,
     pub state: IssueState,
-    pub linked_issues: Vec<LinkedIssue>,
+    pub linked_issues: LinkedIssues,
     pub web_url: Url,
 }
 
@@ -304,6 +305,28 @@ fn is_version_continuation(c: char) -> bool {
 pub(crate) struct LinkedIssue {
     pub link_type: IssueLinkType,
     pub issue: Issue,
+}
+
+/// An issue's links together with whether they have been fetched.
+///
+/// Listing endpoints (`fetch_issues`) leave this `NotFetched`; single-issue
+/// reads populate it with `Fetched`.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) enum LinkedIssues {
+    /// The issue's links were not requested when it was fetched.
+    NotFetched,
+    /// The issue's links, possibly empty.
+    Fetched(Vec<LinkedIssue>),
+}
+
+impl LinkedIssues {
+    /// The fetched links, or an empty slice when they were not fetched.
+    pub(crate) fn as_slice(&self) -> &[LinkedIssue] {
+        match self {
+            Self::Fetched(links) => links,
+            Self::NotFetched => &[],
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -394,7 +417,7 @@ mod tests {
             short_reference: "group/project#1".to_owned(),
             description: None,
             state: IssueState::Opened,
-            linked_issues: Vec::new(),
+            linked_issues: LinkedIssues::Fetched(Vec::new()),
             web_url: Url::parse("https://example.com/group/project/-/issues/1").unwrap(),
         }
     }

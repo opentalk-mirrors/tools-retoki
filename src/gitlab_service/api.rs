@@ -27,7 +27,7 @@ impl Issue {
         &self,
         projects: &BTreeMap<u64, Project>,
         gitlab_group: &str,
-        linked_issues: Vec<vcs_service::LinkedIssue>,
+        linked_issues: vcs_service::LinkedIssues,
     ) -> anyhow::Result<vcs_service::Issue> {
         let Self {
             id,
@@ -159,7 +159,11 @@ impl LinkedItem {
             return Ok(None);
         };
 
-        let issue = issue.to_vcs_service_issue(projects, gitlab_group, vec![])?;
+        let issue = issue.to_vcs_service_issue(
+            projects,
+            gitlab_group,
+            vcs_service::LinkedIssues::NotFetched,
+        )?;
 
         Ok(Some(vcs_service::LinkedIssue {
             link_type: link_type.into(),

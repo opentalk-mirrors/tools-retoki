@@ -104,7 +104,13 @@ impl VcsService for GitlabService {
         // issue's blockers fetch them explicitly via `get_linked_issues`.
         issues
             .into_iter()
-            .map(|i| i.to_vcs_service_issue(&projects, &self.group, vec![]))
+            .map(|i| {
+                i.to_vcs_service_issue(
+                    &projects,
+                    &self.group,
+                    vcs_service::LinkedIssues::NotFetched,
+                )
+            })
             .collect()
     }
 
@@ -175,7 +181,7 @@ impl VcsService for GitlabService {
         Ok(Some(issue.to_vcs_service_issue(
             &projects,
             &self.group,
-            linked_issues,
+            vcs_service::LinkedIssues::Fetched(linked_issues),
         )?))
     }
 
@@ -226,7 +232,7 @@ impl VcsService for GitlabService {
         Ok(Some(issue.to_vcs_service_issue(
             &projects,
             &self.group,
-            linked_issues,
+            vcs_service::LinkedIssues::Fetched(linked_issues),
         )?))
     }
 
@@ -254,7 +260,7 @@ impl VcsService for GitlabService {
         issue.to_vcs_service_issue(
             &BTreeMap::from_iter([(issue.project_id, project)]),
             &self.group,
-            vec![],
+            vcs_service::LinkedIssues::Fetched(vec![]),
         )
     }
 
