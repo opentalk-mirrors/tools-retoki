@@ -10,7 +10,7 @@ use url::Url;
 use crate::{
     output::Output,
     tasks::generate_dependency_graph::issue_with_blockers::IssueWithBlockers,
-    vcs_service::{Issue, VcsService},
+    vcs_service::{Issue, IssueFilter, IssueScope, IssueState, VcsService},
 };
 
 const START_MARKER: &str = "<!-- DEPENDENCY_GRAPH_START -->";
@@ -43,9 +43,13 @@ impl<'a> DependencyGraphUpdater<'a> {
     }
 
     pub fn apply(mut self) -> anyhow::Result<()> {
-        let issues = self
-            .vcs_service
-            .get_open_issues_with_label(self.release_label)?;
+        let issues = self.vcs_service.fetch_issues(
+            IssueScope::Group,
+            &IssueFilter {
+                labels: &[self.release_label],
+                state: Some(IssueState::Opened),
+            },
+        )?;
 
         let mut section_header = Some("Release tickets".green().bold().underline().to_string());
 

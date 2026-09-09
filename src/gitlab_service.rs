@@ -23,7 +23,7 @@ use url::Url;
 use self::api::LinkedItem;
 use crate::{
     gitlab_service::api::{Issue, Project},
-    vcs_service::{self, VcsService},
+    vcs_service::{self, IssueFilter, IssueScope, VcsService},
 };
 
 pub(crate) struct GitlabService {
@@ -61,28 +61,51 @@ impl GitlabService {
 
 impl VcsService for GitlabService {
     #[tracing::instrument(level = "info", skip(self), err)]
-    fn get_open_issues_with_label(&self, label: &str) -> anyhow::Result<Vec<vcs_service::Issue>> {
-        let endpoint = Issues::builder(&self.group)
-            .label(Some(label))
-            .state(Some(IssueState::Opened))
-            .build()
-            .context("couldn't build project issues endpoint")?;
+    fn fetch_issues(
+        &self,
+        scope: IssueScope<'_>,
+        filter: &IssueFilter<'_>,
+    ) -> anyhow::Result<Vec<vcs_service::Issue>> {
+        let state = filter.state.map(issue_state);
 
-        let issues: Vec<Issue> = endpoint
-            .query(&self.client)
-            .with_context(|| format!("couldn't get issues with label {label}"))?;
+        let issues: Vec<Issue> = match scope {
+            IssueScope::Group => {
+                let endpoint = Issues::builder(&self.group)
+                    .state(state)
+                    .labels(filter.labels)
+                    .build()
+                    .context("couldn't build group issues endpoint")?;
+                endpoint
+                    .query(&self.client)
+                    .context("couldn't query group issues")?
+            }
+            IssueScope::Project(project) => {
+                let mut builder = gitlab::api::projects::issues::Issues::builder();
+                let _ = builder.project(project);
+                if !filter.labels.is_empty() {
+                    let _ = builder.labels(filter.labels.iter().copied());
+                }
+                if let Some(state) = state {
+                    let _ = builder.state(state);
+                }
+                let endpoint = builder
+                    .build()
+                    .context("couldn't build project issues endpoint")?;
+                endpoint
+                    .query(&self.client)
+                    .with_context(|| format!("couldn't query issues in project {project}"))?
+            }
+        };
 
         let project_ids = issues.iter().map(|i| i.project_id).collect();
-
         let projects = self.get_projects(project_ids)?;
 
+        // Links are intentionally not resolved here; callers that need an
+        // issue's blockers fetch them explicitly via `get_linked_issues`.
         issues
-            .into_par_iter()
-            .map(|i| {
-                let linked_issues = self.get_linked_issues(&i.project_id.to_string(), i.iid)?;
-                i.to_vcs_service_issue(&projects, &self.group, linked_issues)
-            })
-            .collect::<anyhow::Result<Vec<_>>>()
+            .into_iter()
+            .map(|i| i.to_vcs_service_issue(&projects, &self.group, vec![]))
+            .collect()
     }
 
     #[tracing::instrument(level = "info", skip(self), err)]
@@ -236,37 +259,6 @@ impl VcsService for GitlabService {
     }
 
     #[tracing::instrument(level = "info", skip(self), err)]
-    fn find_issues_with_label(
-        &self,
-        project: &str,
-        label: &str,
-    ) -> anyhow::Result<Vec<vcs_service::Issue>> {
-        let endpoint = gitlab::api::projects::issues::Issues::builder()
-            .project(project)
-            .label(label)
-            .build()
-            .context("couldn't build project issues endpoint")?;
-
-        let issues: Vec<Issue> = endpoint.query(&self.client).with_context(|| {
-            format!("couldn't list issues in project {project} with label {label:?}")
-        })?;
-
-        // All issues live in the project we just queried.
-        let Some(project_id) = issues.first().map(|issue| issue.project_id) else {
-            return Ok(vec![]);
-        };
-        let projects = BTreeMap::from_iter([(project_id, self.get_project(project_id)?)]);
-
-        issues
-            .into_par_iter()
-            .map(|i| {
-                let linked_issues = self.get_linked_issues(project, i.iid)?;
-                i.to_vcs_service_issue(&projects, &self.group, linked_issues)
-            })
-            .collect()
-    }
-
-    #[tracing::instrument(level = "info", skip(self), err)]
     fn create_issue_link(
         &self,
         source_project: &str,
@@ -331,6 +323,13 @@ impl VcsService for GitlabService {
     }
 }
 
+fn issue_state(state: vcs_service::IssueState) -> IssueState {
+    match state {
+        vcs_service::IssueState::Opened => IssueState::Opened,
+        vcs_service::IssueState::Closed => IssueState::Closed,
+    }
+}
+
 #[derive(Debug, Builder, Clone)]
 struct Issues<'a> {
     group: &'a str,
@@ -343,9 +342,9 @@ struct Issues<'a> {
     #[builder(default)]
     state: Option<IssueState>,
 
-    /// Filter issues based on label
+    /// Filter issues based on labels; an issue must carry all of them
     #[builder(default)]
-    label: Option<&'a str>,
+    labels: &'a [&'a str],
 }
 
 impl<'a> Issues<'a> {
@@ -371,8 +370,11 @@ impl Endpoint for Issues<'_> {
 
         let _ = params
             .push_opt("state", self.state)
-            .push_opt("milestone", self.milestone)
-            .push_opt("labels", self.label);
+            .push_opt("milestone", self.milestone);
+
+        if !self.labels.is_empty() {
+            let _ = params.push("labels", self.labels.join(","));
+        }
 
         params
     }

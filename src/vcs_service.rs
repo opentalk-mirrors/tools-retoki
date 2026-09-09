@@ -20,7 +20,15 @@ impl<T: VcsService> VcsServiceExt for T {}
 
 #[cfg_attr(test, mockall::automock)]
 pub(crate) trait VcsService: Send + Sync {
-    fn get_open_issues_with_label(&self, label: &str) -> anyhow::Result<Vec<Issue>>;
+    /// Fetch issues matching `filter` within `scope`.
+    ///
+    /// The returned issues carry an empty `linked_issues` list; call
+    /// [`VcsService::get_linked_issues`] to load an issue's links when needed.
+    fn fetch_issues<'a>(
+        &self,
+        scope: IssueScope<'a>,
+        filter: &IssueFilter<'a>,
+    ) -> anyhow::Result<Vec<Issue>>;
 
     fn get_linked_issues(&self, project: &str, issue_id: u64) -> anyhow::Result<Vec<LinkedIssue>>;
 
@@ -51,10 +59,6 @@ pub(crate) trait VcsService: Send + Sync {
         description: &str,
         labels: &[&'a str],
     ) -> anyhow::Result<Issue>;
-
-    /// List issues in `project` carrying the given `label`, regardless of their
-    /// state (open or closed).
-    fn find_issues_with_label(&self, project: &str, label: &str) -> anyhow::Result<Vec<Issue>>;
 
     /// Create a link of the given `link_type` from the issue `source_iid` in
     /// `source_project` to the issue `target_iid` in `target_project`.
@@ -91,8 +95,12 @@ impl<S> DryRunVcsService<S> {
 }
 
 impl<S: VcsService> VcsService for DryRunVcsService<S> {
-    fn get_open_issues_with_label(&self, label: &str) -> anyhow::Result<Vec<Issue>> {
-        self.inner.get_open_issues_with_label(label)
+    fn fetch_issues(
+        &self,
+        scope: IssueScope<'_>,
+        filter: &IssueFilter<'_>,
+    ) -> anyhow::Result<Vec<Issue>> {
+        self.inner.fetch_issues(scope, filter)
     }
 
     fn get_linked_issues(&self, project: &str, issue_id: u64) -> anyhow::Result<Vec<LinkedIssue>> {
@@ -161,10 +169,6 @@ impl<S: VcsService> VcsService for DryRunVcsService<S> {
         } else {
             self.inner.create_issue(project, title, description, labels)
         }
-    }
-
-    fn find_issues_with_label(&self, project: &str, label: &str) -> anyhow::Result<Vec<Issue>> {
-        self.inner.find_issues_with_label(project, label)
     }
 
     fn create_issue_link(
@@ -319,6 +323,24 @@ impl IssueState {
     pub(crate) const fn is_opened(&self) -> bool {
         matches!(self, Self::Opened)
     }
+}
+
+/// Selects the set of projects that [`VcsService::fetch_issues`] searches.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum IssueScope<'a> {
+    /// All projects within the service's configured group.
+    Group,
+    /// A single project identified by its path.
+    Project(&'a str),
+}
+
+/// Optional filters applied by [`VcsService::fetch_issues`].
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub(crate) struct IssueFilter<'a> {
+    /// Restrict to issues carrying all of these labels.
+    pub labels: &'a [&'a str],
+    /// Restrict to issues in this state.
+    pub state: Option<IssueState>,
 }
 
 fn print_description_diff(current: Option<&str>, next: &str) {

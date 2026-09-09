@@ -15,7 +15,9 @@ use crate::{
     output::Output,
     release_workflow::{Releases, ReleasesBuilder, ResolvedComponent, build_release_title},
     tasks::generate_dependency_graph::dependency_graph_for_issue,
-    vcs_service::{Issue, IssueLinkType, LinkedIssue, VcsService, VcsServiceExt},
+    vcs_service::{
+        Issue, IssueFilter, IssueLinkType, IssueScope, LinkedIssue, VcsService, VcsServiceExt,
+    },
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Args)]
@@ -436,7 +438,13 @@ fn find_existing_component_issue(
         return Ok(Some(found.clone()));
     }
 
-    let candidates = vcs.find_issues_with_label(component_project, release_label)?;
+    let candidates = vcs.fetch_issues(
+        IssueScope::Project(component_project),
+        &IssueFilter {
+            labels: &[release_label],
+            ..Default::default()
+        },
+    )?;
     Ok(Issue::match_release_issue(candidates.iter(), expected_title, &version_marker).cloned())
 }
 
@@ -615,9 +623,7 @@ groups:
         let _ = vcs
             .expect_project_path_from_url()
             .returning(|url: &Url| Ok(url.path().trim_matches('/').to_owned()));
-        let _ = vcs
-            .expect_find_issues_with_label()
-            .returning(|_, _| Ok(Vec::new()));
+        let _ = vcs.expect_fetch_issues().returning(|_, _| Ok(Vec::new()));
         let _ = vcs
             .expect_get_linked_issues()
             .returning(|_, _| Ok(Vec::new()));
@@ -702,7 +708,7 @@ groups:
             .returning(|url: &Url| Ok(url.path().trim_matches('/').to_owned()));
         // An issue with the expected title already carries the release label.
         let _ = vcs
-            .expect_find_issues_with_label()
+            .expect_fetch_issues()
             .returning(|_, _| Ok(vec![component_issue()]));
         let _ = vcs
             .expect_get_linked_issues()
@@ -908,9 +914,7 @@ components:
         let _ = vcs
             .expect_project_path_from_url()
             .returning(|url: &Url| Ok(url.path().trim_matches('/').to_owned()));
-        let _ = vcs
-            .expect_find_issues_with_label()
-            .returning(|_, _| Ok(Vec::new()));
+        let _ = vcs.expect_fetch_issues().returning(|_, _| Ok(Vec::new()));
         let _ = vcs
             .expect_get_linked_issues()
             .returning(|_, _| Ok(Vec::new()));
