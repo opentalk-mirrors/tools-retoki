@@ -1,6 +1,6 @@
 ---
 source: tests/announce/mod.rs
-expression: "announce(AnnounceFormat::Md, \"24.8.0\")"
+expression: "announce(\"24.8.0\")"
 ---
 We are happy to announce a new OpenTalk release: **v24.8.0**.
 
@@ -13,5 +13,25 @@ We are happy to announce a new OpenTalk release: **v24.8.0**.
 
 | Category | Component | Version |
 | -------- | --------- | ------- |
-| **Frontend** | web-frontend | [v1.17.0](https://gitlab.opencode.de/opentalk/web-frontend/-/releases/v1.17.0) |
-| **Services** | controller | [v0.16.0](https://gitlab.opencode.de/opentalk/controller/-/releases/v0.16.0) |
+| **Frontend** | **web-frontend** |[v1.17.0](https://gitlab.opencode.de/opentalk/web-frontend/-/releases/v1.17.0)|
+| **Services** | **controller** |[v0.16.0](https://gitlab.opencode.de/opentalk/controller/-/releases/v0.16.0)|
+
+---
+
+## web-frontend v1.17.0
+
+### Stability Improvements
+
+## web-frontend v1.17.0-rc.1
+
+### New Features
+
+---
+
+## controller v0.16.0
+
+### Docs
+
+## controller v0.16.0-rc.1
+
+### Refactor
