@@ -19,11 +19,11 @@ fn announce(version: &str) -> String {
 }
 
 #[test]
-fn announce_markdown_with_release_notes() {
+fn announce_plaintext_with_release_notes() {
     assert_snapshot!(announce("24.8.0"));
 }
 
 #[test]
-fn announce_markdown_without_release_notes() {
+fn announce_plaintext_without_release_notes() {
     assert_snapshot!(announce("25.0.0"));
 }

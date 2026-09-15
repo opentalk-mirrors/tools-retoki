@@ -166,11 +166,10 @@ performed without writing anything to GitLab.
 
 ### `retoki release <version> announce`
 
-Render a release announcement as Markdown, suitable for Matrix, Element and other chat channels:
+Render a release announcement as plain text, suitable for email and mailing lists that are also
+published on the web:
 
 `retoki release 2.8.0 announce`
 
-To convert the announcement to plain text for email or mailing lists, pipe the output through a
-converter such as [pandoc](https://pandoc.org/):
-
-`retoki release 2.8.0 announce | pandoc -f markdown -t plain`
+Hyperlinks are retained inline in angle brackets and Markdown release notes (including tables and
+footnotes) are converted to plain text, so no further post-processing is required.

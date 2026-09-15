@@ -1,0 +1,31 @@
+---
+source: tests/announce/mod.rs
+expression: "announce(\"25.0.0\")"
+---
+We are happy to announce a new OpenTalk release: v25.0.0.
+
+Changelog
+---------
+
+- Ticket 0 <https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ>
+- Ticket 1 <https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=RDdQw4w9WgXcQ>
+
+
+Component versions
+------------------
+
+- Frontend / web-frontend: v1.20.0 <https://gitlab.opencode.de/opentalk/web-frontend/-/releases/v1.20.0>
+- Services / controller: v0.18.0 <https://gitlab.opencode.de/opentalk/controller/-/releases/v0.18.0>
+
+
+----------------------------------------------------------------------
+
+web-frontend v1.20.0
+
+New Features
+
+----------------------------------------------------------------------
+
+controller v0.18.0
+
+New Features
