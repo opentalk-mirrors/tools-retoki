@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
+# SPDX-License-Identifier: EUPL-1.2
+
+---
+profile_name: Group
+components:
+  web-frontend:
+    gitlab_url: https://git.opentalk.dev/opentalk/frontend/web/web-app
+groups:
+  product:
+    name: Product
+    gitlab_url: https://git.opentalk.dev/opentalk/product
+    components:
+      controller:

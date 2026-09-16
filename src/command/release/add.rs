@@ -10,7 +10,7 @@ use crate::{
     bot_config::Config,
     bot_templates::{self, product_release_body},
     command::ProfileArgs,
-    data::ComponentVersion,
+    data::{ComponentGroup, ComponentIdentifier, ComponentVersion, GroupIdentifier},
     gitlab_service::GitlabService,
     output::Output,
     release_workflow::{Releases, ReleasesBuilder, ResolvedComponent, build_release_title},
@@ -19,8 +19,8 @@ use crate::{
 
 #[derive(Debug, Clone, PartialEq, Eq, Args)]
 pub struct AddArgs {
-    /// Identifier of the component to add, i.e. its key in `releases.yml`.
-    component: String,
+    /// Identifier of the component or group to add, i.e. its key in `releases.yml`.
+    component_or_group: String,
 
     /// Planned version of the component for this release.
     #[arg(long, short = 'c')]
@@ -63,8 +63,6 @@ impl AddArgs {
             .dry_run(self.dry_run)
             .load(config.releases_yml_path.clone(), &self.profile_args.profile)?;
 
-        let resolved = releases.resolve_component(&self.component)?;
-
         let title = format!("Release {product_version}");
         let product_issue = vcs
             .get_open_issue_with_title(&config.release_repo, &title)?
@@ -78,8 +76,24 @@ impl AddArgs {
 
         let component_version = ComponentVersion::Semver(self.component_version.clone());
 
-        let released_blockers =
-            releases.released_blocking_components(&resolved.id, &product_issue, vcs)?;
+        let group = releases
+            .profile
+            .groups
+            .get(&GroupIdentifier::from(self.component_or_group.clone()));
+        let component_ids = match group {
+            Some(group) => group.components.keys().cloned().collect(),
+            None => vec![ComponentIdentifier::from(self.component_or_group.clone())],
+        };
+
+        let mut released_blockers = Vec::new();
+        for id in &component_ids {
+            released_blockers.extend(releases.released_blocking_components(
+                id,
+                &product_issue,
+                vcs,
+            )?);
+        }
+
         if !released_blockers.is_empty() {
             let blockers = released_blockers
                 .iter()
@@ -90,14 +104,14 @@ impl AddArgs {
                 out.println(&format_args!(
                     "Warning: updating {component} even though the already released \
                      component(s) {blockers} depend on it; proceeding because --force was given",
-                    component = self.component,
+                    component = self.component_or_group,
                 ));
             } else {
                 anyhow::bail!(
                     "cannot update {component}: the already released component(s) {blockers} \
                      would be invalidated. \
                      Re-run with --force to override.",
-                    component = self.component,
+                    component = self.component_or_group,
                 );
             }
         }
@@ -107,29 +121,76 @@ impl AddArgs {
         // product release table can resolve its ticket link.
         let mut linked_issues = product_issue.linked_issues.clone();
 
-        if let Some(gitlab_url) = resolved.gitlab_url.as_deref() {
-            self.put_component_issue(
-                product_version,
-                config,
-                vcs,
-                out,
-                &releases,
-                &resolved,
-                &product_issue,
-                &component_version,
-                &mut linked_issues,
-                gitlab_url,
-            )?;
+        if let Some(group) = group {
+            if let Some(url) = &group.gitlab_url {
+                self.put_group_issue(
+                    group,
+                    &releases,
+                    product_version,
+                    config,
+                    vcs,
+                    out,
+                    &product_issue,
+                    &component_version,
+                    &mut linked_issues,
+                    url,
+                )?;
+            } else {
+                out.println(&format_args!(
+                    "Group {group} has no gitlab project configured; \
+                   recording the version without a release issue",
+                    group = self.component_or_group,
+                ));
+            }
         } else {
-            out.println(&format_args!(
-                "Component {component} has no gitlab project configured; \
-                 recording the version without a release issue",
-                component = self.component,
-            ));
-        }
+            let component = releases
+                .profile
+                .component(&ComponentIdentifier::from(self.component_or_group.clone()))
+                .with_context(|| {
+                    format!(
+                        "Failed to resolve component or group {}",
+                        self.component_or_group,
+                    )
+                })?;
+
+            if let Some(url) = component.gitlab_url {
+                let resolved = releases.resolve_component(&self.component_or_group)?;
+                self.put_component_issue(
+                    &resolved,
+                    product_version,
+                    config,
+                    vcs,
+                    out,
+                    &releases,
+                    &product_issue,
+                    &component_version,
+                    &mut linked_issues,
+                    url,
+                )?;
+            } else {
+                out.println(&format_args!(
+                    "Component {component} has no gitlab project configured; \
+                    recording the version without a release issue",
+                    component = self.component_or_group,
+                ));
+            }
+        };
 
         let release = releases
-            .edit(|r| r.set_component_version(product_version, resolved.id, component_version))?
+            .edit(|r| {
+                let mut release = None;
+                for component in component_ids {
+                    release = Some(r.set_component_version(
+                        product_version,
+                        component,
+                        component_version.clone(),
+                    )?);
+                }
+
+                release.with_context(|| {
+                    format!("No components to release in {}", self.component_or_group)
+                })
+            })?
             .save()?;
 
         let categories: Vec<_> = releases
@@ -147,23 +208,68 @@ impl AddArgs {
         Ok(())
     }
 
+    /// Link `issue` as a blocker of `product_issue` unless the link already exists,
+    /// and record it in `linked_issues` so the product release table can render it.
+    fn link_issue_to_product(
+        vcs: &dyn VcsService,
+        out: &mut dyn Output,
+        product_issue: &Issue,
+        issue: Issue,
+        linked_issues: &mut Vec<LinkedIssue>,
+    ) -> anyhow::Result<()> {
+        let already_linked = product_issue.linked_issues.iter().any(|linked| {
+            linked.link_type == IssueLinkType::IsBlockedBy
+                && linked.issue.project.path_with_namespace == issue.project.path_with_namespace
+                && linked.issue.iid == issue.iid
+        });
+
+        if already_linked {
+            out.println(&format_args!(
+                "Product release issue is already blocked by {path}#{iid}",
+                path = issue.project.path_with_namespace,
+                iid = issue.iid,
+            ));
+
+            return Ok(());
+        }
+
+        vcs.create_issue_link(
+            &product_issue.project.path_with_namespace,
+            product_issue.iid,
+            &issue.project.path_with_namespace,
+            issue.iid,
+            IssueLinkType::IsBlockedBy,
+        )?;
+        out.println(&format_args!(
+            "Linked product release issue to be blocked by {path}#{iid}",
+            path = issue.project.path_with_namespace,
+            iid = issue.iid,
+        ));
+        linked_issues.push(LinkedIssue {
+            link_type: IssueLinkType::IsBlockedBy,
+            issue,
+        });
+
+        Ok(())
+    }
+
     #[expect(clippy::too_many_arguments)]
     fn put_component_issue(
         &self,
+        component: &ResolvedComponent,
         product_version: &Version,
         config: &Config,
         vcs: &dyn VcsService,
         out: &mut dyn Output,
         releases: &Releases,
-        resolved: &ResolvedComponent,
         product_issue: &Issue,
         component_version: &ComponentVersion,
         linked_issues: &mut Vec<LinkedIssue>,
         gitlab_url: &str,
     ) -> Result<(), anyhow::Error> {
-        let component_project = component_project(vcs, gitlab_url, &self.component)?;
-        let component_title = build_release_title(&resolved.name, component_version);
-        let component_issue = match find_existing_component_issue(
+        let component_project = component_project(vcs, gitlab_url, &self.component_or_group)?;
+        let component_title = build_release_title(&component.name.to_string(), component_version);
+        let issue = match find_existing_component_issue(
             vcs,
             product_issue,
             &component_project,
@@ -180,15 +286,15 @@ impl AddArgs {
             }
             None => {
                 let previous_version = releases
-                    .previous_component_version(product_version, &resolved.id)
+                    .previous_component_version(product_version, &component.id)
                     .map(ComponentVersion::Semver);
                 let body = bot_templates::component_release_body(
                     vcs,
                     &component_project,
-                    &resolved.name.to_string(),
+                    &component.name.to_string(),
                     component_version,
                     product_version,
-                    &resolved.category_name,
+                    &component.category_name,
                     previous_version.as_ref(),
                     Some(gitlab_url),
                 )?;
@@ -205,37 +311,80 @@ impl AddArgs {
                 created
             }
         };
-        let already_linked = product_issue.linked_issues.iter().any(|linked| {
-            linked.link_type == IssueLinkType::IsBlockedBy
-                && linked.issue.project.path_with_namespace == component_project
-                && linked.issue.iid == component_issue.iid
-        });
 
-        if already_linked {
-            out.println(&format_args!(
-                "Product release issue is already blocked by {path}#{iid}",
-                path = component_issue.project.path_with_namespace,
-                iid = component_issue.iid,
-            ));
-        } else {
-            vcs.create_issue_link(
-                &config.release_repo,
-                product_issue.iid,
-                &component_project,
-                component_issue.iid,
-                IssueLinkType::IsBlockedBy,
-            )?;
-            out.println(&format_args!(
-                "Linked product release issue to be blocked by {path}#{iid}",
-                path = component_issue.project.path_with_namespace,
-                iid = component_issue.iid,
-            ));
-            linked_issues.push(LinkedIssue {
-                link_type: IssueLinkType::IsBlockedBy,
-                issue: component_issue,
-            });
-        }
-        Ok(())
+        Self::link_issue_to_product(vcs, out, product_issue, issue, linked_issues)
+    }
+
+    #[expect(clippy::too_many_arguments)]
+    fn put_group_issue(
+        &self,
+        group: &ComponentGroup,
+        releases: &Releases,
+        product_version: &Version,
+        config: &Config,
+        vcs: &dyn VcsService,
+        out: &mut dyn Output,
+        product_issue: &Issue,
+        group_version: &ComponentVersion,
+        linked_issues: &mut Vec<LinkedIssue>,
+        gitlab_url: &str,
+    ) -> anyhow::Result<()> {
+        let project = component_project(vcs, gitlab_url, &self.component_or_group)?;
+        let title = build_release_title(&group.name, group_version);
+        let issue = match find_existing_component_issue(
+            vcs,
+            product_issue,
+            &project,
+            &config.release_label,
+            &title,
+            group_version,
+        )? {
+            Some(existing) => {
+                out.println(&format_args!(
+                    "Reusing existing group release issue {reference}",
+                    reference = existing.reference_with_url()
+                ));
+
+                existing
+            }
+            None => {
+                let component_rows: Vec<_> = group
+                    .components
+                    .keys()
+                    .map(|id| {
+                        let resolved = releases.resolve_component(id.as_str())?;
+                        let old_version = releases
+                            .previous_component_version(product_version, &resolved.id)
+                            .map(ComponentVersion::Semver);
+                        Ok(bot_templates::GroupComponentRow {
+                            component: resolved.name,
+                            category: resolved.category_name,
+                            old_version,
+                            new_version: group_version.clone(),
+                        })
+                    })
+                    .collect::<anyhow::Result<_>>()?;
+                let description = bot_templates::group_release_body(
+                    vcs,
+                    &project,
+                    &group.name,
+                    group_version,
+                    product_version,
+                    &component_rows,
+                    group.gitlab_url.as_deref(),
+                )?;
+                let created =
+                    vcs.create_issue(&project, &title, &description, &[&config.release_label])?;
+                out.println(&format_args!(
+                    "Created group release issue {reference}",
+                    reference = created.reference_with_url()
+                ));
+
+                created
+            }
+        };
+
+        Self::link_issue_to_product(vcs, out, product_issue, issue, linked_issues)
     }
 }
 
@@ -344,12 +493,32 @@ components:
     gitlab_url: https://gitlab.example.com/opentalk/ot-setup
 "#;
 
+    const PROFILE_WITH_GROUP: &str = r#"---
+profile_name: gitlab
+components:
+groups:
+  frontend-and-ot-setup:
+    name: Frontend & ot-setup
+    gitlab_url: https://gitlab.example.com/opentalk/frontend-and-ot-setup
+    components:
+      web-frontend:
+      ot-setup:
+"#;
+
     fn write_sample(dir: &Path) -> PathBuf {
+        write_sample_with(dir, PROFILE)
+    }
+
+    fn write_group_sample(dir: &Path) -> PathBuf {
+        write_sample_with(dir, PROFILE_WITH_GROUP)
+    }
+
+    fn write_sample_with(dir: &Path, profile: &str) -> PathBuf {
         let path = dir.join("releases.yml");
         fs::write(&path, SAMPLE).unwrap();
         let profile_dir = dir.join("retoki-profiles");
         fs::create_dir_all(&profile_dir).unwrap();
-        fs::write(profile_dir.join("gitlab.yml"), PROFILE).unwrap();
+        fs::write(profile_dir.join("gitlab.yml"), profile).unwrap();
         path
     }
 
@@ -366,7 +535,19 @@ components:
 
     fn args_add_frontend(dry_run: bool, dir: &Path) -> AddArgs {
         AddArgs {
-            component: "web-frontend".to_owned(),
+            component_or_group: "web-frontend".to_owned(),
+            component_version: "1.21.0".parse().unwrap(),
+            force: false,
+            dry_run,
+            profile_args: ProfileArgs {
+                profile: dir.join("retoki-profiles/gitlab.yml"),
+            },
+        }
+    }
+
+    fn group_args(dry_run: bool, dir: &Path) -> AddArgs {
+        AddArgs {
+            component_or_group: "frontend-and-ot-setup".to_owned(),
             component_version: "1.21.0".parse().unwrap(),
             force: false,
             dry_run,
@@ -551,6 +732,47 @@ components:
             fs::read_to_string(&path).unwrap(),
             original,
             "releases.yml must be untouched in dry-run mode",
+        );
+    }
+
+    #[test]
+    fn add_with_group_processes_all_components_in_the_group() {
+        let dir = tempdir().unwrap();
+        let path = write_group_sample(dir.path());
+        let config = config_for(path.clone());
+
+        let mut vcs = MockVcsService::new();
+        stub_reads(&mut vcs);
+        // A group represents a single logical release: exactly one component issue, one issue
+        // link, and one product-issue description update — regardless of how many components the
+        // group bundles.
+        let _ = vcs
+            .expect_create_issue()
+            .times(1)
+            .returning(|_, _, _, _| Ok(component_issue()));
+        let _ = vcs
+            .expect_create_issue_link()
+            .times(1)
+            .returning(|_, _, _, _, _| Ok(()));
+        let _ = vcs
+            .expect_update_issue_description()
+            .times(1)
+            .returning(|_, _, _| Ok(()));
+
+        let mut out = Vec::new();
+        group_args(false, dir.path())
+            .run_inner(&"25.1.0".parse().unwrap(), &config, &vcs, &mut out)
+            .unwrap();
+
+        // Both group members must have their versions recorded in releases.yml.
+        let written = fs::read_to_string(&path).unwrap();
+        assert!(
+            written.contains("web-frontend: 1.21.0"),
+            "releases.yml should record web-frontend version, got:\n{written}",
+        );
+        assert!(
+            written.contains("ot-setup: 1.21.0"),
+            "releases.yml should record ot-setup version, got:\n{written}",
         );
     }
 

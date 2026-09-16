@@ -52,3 +52,47 @@ fn test_fetch_changelog_with_public_profile() {
     "#);
     tmp_dir.close().expect("Removing tmp dir must work");
 }
+
+/// 1. create a temporary directory
+/// 2. move a copy of releases.yml to the directory (ensure to not change the original)
+/// 3. execute fetch changelog with a profile where `web-frontend` is a standalone entry and
+///    `controller` lives inside a group
+///     * no entry carries a `gitlab_url`, so `fetch_changelog` skips the network call for both, as
+///       in `test_fetch_changelog_with_public_profile`
+///     * this exercises `Profile::component()` resolving one component through the standalone
+///       lookup and the other through the group lookup in the same run
+/// 4. ensure the files have the expected output
+#[test]
+fn test_fetch_changelog_with_group_profile() {
+    // SETUP: Ensure result directory exists, create a temporary directory, copy
+    //        release.yml since it will be changed (changelog added by retoki)
+    let _ = fs::create_dir("tests/test-result");
+    let tmp_dir = tempdir_in("tests/test-result").expect("Failed to create temporary directory");
+    let tmp_release_yml = tmp_dir.path().join("releases.yml");
+    fs::copy("tests/fetch_changelog/releases.yml", &tmp_release_yml)
+        .expect("Could not create copy of release.yml");
+
+    // Fetch the changelog. Only the changelog should be added in the release.yml.
+    let command: Command = Command::Release(ReleaseArgs {
+        version: "24.8.0".parse().expect("Must be a valid version"),
+        command: ReleaseCommand::FetchChangelogs(FetchChangelogsArgs {
+            gitlab_token: "Dummy".to_owned(),
+            profile_args: ProfileArgs {
+                profile: PathBuf::from("tests/fetch_changelog/retoki-profiles/group.yml"),
+            },
+        }),
+    });
+    command.execute(&tmp_release_yml).unwrap();
+
+    let seen_files = for_all_files(tmp_dir.path(), |path| {
+        let input = fs::read_to_string(path).unwrap();
+        assert_snapshot!(input);
+    });
+
+    assert_debug_snapshot!(seen_files, @r#"
+    [
+        "releases.yml",
+    ]
+    "#);
+    tmp_dir.close().expect("Removing tmp dir must work");
+}

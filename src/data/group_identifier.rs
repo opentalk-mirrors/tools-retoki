@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
+// SPDX-FileCopyrightText: OpenTalk Team <mail@opentalk.eu>
 
 use serde::{Deserialize, Serialize};
 
@@ -17,9 +17,9 @@ use serde::{Deserialize, Serialize};
     derive_more::Into,
     derive_more::Display,
 )]
-pub struct ComponentIdentifier(String);
+pub struct GroupIdentifier(String);
 
-impl ComponentIdentifier {
+impl GroupIdentifier {
     /// Returns the identifier as a string slice.
     pub fn as_str(&self) -> &str {
         &self.0

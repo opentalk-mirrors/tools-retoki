@@ -1,8 +1,9 @@
-# SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
-# SPDX-License-Identifier: EUPL-1.2
-
 ---
-
+source: tests/fetch_changelog/mod.rs
+assertion_line: 99
+expression: input
+input_file: tests/test-result/.tmpIdNAoj/releases.yml
+---
 product_name: OpenTalk
 releases_page_header: |
   ## Release Announcements
@@ -19,11 +20,13 @@ components:
   controller:
     name: OpenTalk Controller Community Edition
     category: services
-    releases: {}
+    releases:
+      0.16.0: {}
   web-frontend:
     name: Web-Frontend
     category: frontend
-    releases: {}
+    releases:
+      1.17.0: {}
 component_categories:
   services:
     name: Services

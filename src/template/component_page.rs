@@ -4,9 +4,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::ComponentRelease;
-use crate::data::{
-    Component, ComponentIdentifier, ComponentName, ComponentProfile, ProductName, Releases,
-};
+use crate::data::{Component, ComponentIdentifier, ComponentName, ProductName, Releases};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -28,7 +26,7 @@ impl ComponentPage {
     pub fn from_data_component(
         component_identifier: &ComponentIdentifier,
         component: &Component,
-        profile: &ComponentProfile,
+        gitlab_url: Option<String>,
         product_name: &ProductName,
         data_releases: &Releases,
         show_md_header: bool,
@@ -46,7 +44,7 @@ impl ComponentPage {
                         .get_product_releases_for_component_version(component_identifier, &version);
                     ComponentRelease::from_data_component_release(
                         &version,
-                        profile.gitlab_url.clone(),
+                        gitlab_url.clone(),
                         &release,
                         product_releases,
                     )

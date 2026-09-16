@@ -2,7 +2,11 @@
 # SPDX-License-Identifier: EUPL-1.2
 
 ---
-profile_name: Public
+profile_name: Group
 components:
-  controller:
   web-frontend:
+groups:
+  product:
+    name: Product
+    components:
+      controller:

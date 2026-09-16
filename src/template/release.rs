@@ -12,17 +12,15 @@ use time::Date;
 use super::{ComponentRelease, ReleaseComponent};
 use crate::data::{
     self, ComponentCategory, ComponentCategoryIdentifier, ComponentIdentifier, ProductTicket,
+    Profile,
 };
 
 /// Returns `true` if the component is marked as private in the profile and must
 /// therefore be excluded from any generated documentation.
-fn is_private(
-    component_profiles: &IndexMap<ComponentIdentifier, data::ComponentProfile>,
-    identifier: &ComponentIdentifier,
-) -> bool {
-    component_profiles
-        .get(identifier)
-        .is_some_and(|profile| profile.private)
+fn is_private(profile: &Profile, identifier: &ComponentIdentifier) -> bool {
+    profile
+        .component(identifier)
+        .is_some_and(|entry| entry.component.private)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -50,13 +48,13 @@ impl Release {
         end_date: Date,
         release: &data::Release,
         components: &IndexMap<ComponentIdentifier, data::Component>,
-        component_profiles: &IndexMap<ComponentIdentifier, data::ComponentProfile>,
+        profile: &Profile,
         component_categories: &IndexMap<ComponentCategoryIdentifier, ComponentCategory>,
     ) -> Result<Self> {
         let mut component_releases = BTreeMap::new();
 
         for (component_identifier, component_version) in &release.components {
-            if is_private(component_profiles, component_identifier) {
+            if is_private(profile, component_identifier) {
                 continue;
             }
             let previous = changelog_base
@@ -65,8 +63,8 @@ impl Release {
                 .next();
 
             if let Some(component) = components.get(component_identifier) {
-                let component_profile = component_profiles.get(component_identifier);
-                let gitlab_url = component_profile.and_then(|comp| comp.gitlab_url.as_ref());
+                let component_profile = profile.component(component_identifier);
+                let gitlab_url = component_profile.and_then(|entry| entry.gitlab_url);
 
                 let releases = component
                     .get_releases(previous.cloned(), component_version.clone())
@@ -74,7 +72,7 @@ impl Release {
                     .map(|(version, release)| {
                         ComponentRelease::from_data_component_release(
                             &version,
-                            gitlab_url.cloned(),
+                            gitlab_url.map(str::to_owned),
                             &release,
                             BTreeSet::default(),
                         )
@@ -101,14 +99,16 @@ impl Release {
                     .map(|identifier| (identifier.clone(), Vec::new()))
                     .collect::<IndexMap<ComponentCategoryIdentifier, Vec<ReleaseComponent>>>();
                 for (identifier, version) in &release.components {
-                    if is_private(component_profiles, identifier) {
+                    if is_private(profile, identifier) {
                         continue;
                     }
                     let component = components
                         .get(identifier)
                         .with_context(|| format!("Couldn't find component {identifier:?}"))?;
-                    let component_profile = component_profiles.get(identifier);
-                    let gitlab_url = component_profile.and_then(|comp| comp.gitlab_url.clone());
+                    let component_profile = profile.component(identifier);
+                    let gitlab_url = component_profile
+                        .and_then(|entry| entry.gitlab_url)
+                        .map(str::to_owned);
 
                     let category =
                         component_categories
@@ -134,13 +134,15 @@ impl Release {
             components_by_identifier: release
                 .components
                 .iter()
-                .filter(|(identifier, _)| !is_private(component_profiles, identifier))
+                .filter(|(identifier, _)| !is_private(profile, identifier))
                 .map(|(identifier, version)| {
                     let component = components
                         .get(identifier)
                         .with_context(|| format!("Couldn't find component {identifier:?}"))?;
-                    let component_profile = component_profiles.get(identifier);
-                    let gitlab_url = component_profile.and_then(|comp| comp.gitlab_url.clone());
+                    let component_profile = profile.component(identifier);
+                    let gitlab_url = component_profile
+                        .and_then(|entry| entry.gitlab_url)
+                        .map(str::to_owned);
 
                     let category =
                         component_categories
