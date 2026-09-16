@@ -101,8 +101,6 @@ lint:justfile:
 test:cargo_test:
   stage: test
   <<: *default_job_condition
-  tags:
-    - testcontainers
   needs: []
   artifacts:
     reports:
