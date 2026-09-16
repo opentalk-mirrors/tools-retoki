@@ -117,6 +117,34 @@ environment variables, and the `GITLAB_TOKEN` environment variable:
 | Release repository   | `release_repo`      | `RETOKI_RELEASE_REPO`      | `opentalk/product-releases` |
 | `releases.yml` path  | `releases_yml_path` | `RETOKI_RELEASES_YML_PATH` | `./releases.yml`            |
 
+#### Required access token scopes
+
+`retoki` authenticates against GitLab with a personal, project, or group access token. When using a
+[fine-grained personal access token](https://docs.gitlab.com/auth/tokens/fine_grained_access_tokens/),
+grant the following resource permissions (boundary: **Group and project**):
+
+| Permission          | Access | Used for                                                          |
+| ------------------- | ------ | ----------------------------------------------------------------- |
+| **User**            | Read   | Initial connection check (`GET /api/v4/user`)                     |
+| **Project**         | Read   | Resolving project namespace and path                              |
+| **Repository**      | Read   | Reading raw repository files (e.g. issue templates)               |
+| **Release**         | Read   | `fetch-changelogs`: reading component release notes               |
+| **Work Item**       | Read   | Searching and reading release/product issues and their links      |
+| **Work Item**       | Create | `init` / `ci`: creating release issues and issue links            |
+| **Work Item**       | Update | `init` / `ci`: updating release issue descriptions                |
+
+The read-only commands (`fetch-changelogs`, `fetch-product-tickets`) only need the **Read**
+permissions above. The `init` and `ci` commands additionally require **Work Item: Create** and
+**Work Item: Update**. When using a legacy (non fine-grained) token, `read_api` covers the
+read-only commands, while `api` is required for `init` and `ci`.
+
+<details>
+<summary>Token Configuration on GitLab UI</summary>
+
+![Example for an access token configuration](./docs/gitlab-permissions.png)
+
+</details>
+
 ### `retoki release <version> init`
 
 Create or update the product release issue for a version in the release tickets project:
