@@ -14,6 +14,7 @@ path = [
   "CHANGELOG.md",
   "Cargo.lock",
   "README.md",
+  "docs/*.png",
   "renovate.json",
   "src/bot_templates/**.md",
   "src/snapshots/**.snap",

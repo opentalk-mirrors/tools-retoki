@@ -17,6 +17,8 @@ config:
   MD033:
     allowed_elements:
       - swagger-ui
+      - details
+      - summary
   MD024: false
   MD041: false
   MD013: false
