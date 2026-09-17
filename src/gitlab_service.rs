@@ -13,10 +13,7 @@ use anyhow::{Context as _, bail};
 use derive_builder::Builder;
 use gitlab::{
     Gitlab,
-    api::{
-        Endpoint, Pageable, ParamValue, Query as _, QueryParams, common::NameOrId,
-        issues::IssueState,
-    },
+    api::{Endpoint, ParamValue, Query as _, QueryParams, common::NameOrId, issues::IssueState},
 };
 use http::Method;
 use rayon::iter::{IntoParallelIterator, ParallelIterator as _};
@@ -73,11 +70,17 @@ impl VcsService for GitlabService {
 
         let issues: Vec<Issue> = match scope {
             IssueScope::Group => {
-                let endpoint = Issues::builder(&self.group)
-                    .state(state)
-                    .labels(filter.labels)
+                let mut builder = gitlab::api::groups::issues::Issues::builder();
+                let _ = builder
+                    .group(&self.group)
+                    .labels(filter.labels.iter().copied());
+                if let Some(state) = state {
+                    let _ = builder.state(state);
+                }
+                let endpoint = builder
                     .build()
                     .context("couldn't build group issues endpoint")?;
+
                 gitlab::api::paged(endpoint, gitlab::api::Pagination::All)
                     .query(&self.client)
                     .context("couldn't query group issues")?
@@ -338,58 +341,6 @@ fn issue_state(state: vcs_service::IssueState) -> IssueState {
         vcs_service::IssueState::Closed => IssueState::Closed,
     }
 }
-
-#[derive(Debug, Builder, Clone)]
-struct Issues<'a> {
-    group: &'a str,
-
-    /// Filter issues based on milestone
-    #[builder(default)]
-    milestone: Option<&'a str>,
-
-    /// Filter issues based on state
-    #[builder(default)]
-    state: Option<IssueState>,
-
-    /// Filter issues based on labels; an issue must carry all of them
-    #[builder(default)]
-    labels: &'a [&'a str],
-}
-
-impl<'a> Issues<'a> {
-    /// Create a builder for the endpoint.
-    pub fn builder(group: &'a str) -> IssuesBuilder<'a> {
-        let mut builder = IssuesBuilder::default();
-        let _ = builder.group(group);
-        builder
-    }
-}
-
-impl Endpoint for Issues<'_> {
-    fn method(&self) -> Method {
-        Method::GET
-    }
-
-    fn endpoint(&self) -> Cow<'static, str> {
-        format!("groups/{}/issues", urlencoding::encode(self.group)).into()
-    }
-
-    fn parameters(&self) -> QueryParams<'_> {
-        let mut params = QueryParams::default();
-
-        let _ = params
-            .push_opt("state", self.state)
-            .push_opt("milestone", self.milestone);
-
-        if !self.labels.is_empty() {
-            let _ = params.push("labels", self.labels.join(","));
-        }
-
-        params
-    }
-}
-
-impl Pageable for Issues<'_> {}
 
 #[derive(Debug, Builder, Clone)]
 struct LinkedItems<'a> {
