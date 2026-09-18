@@ -1,4 +1,7 @@
 We are happy to announce a new {{ product_name }} release: v{{ version }}.
+
+The online version of this release is available at <https://docs.opentalk.eu/releases/{{ version }}>.
+
 {%- if release_notes %}
 
 Release notes
