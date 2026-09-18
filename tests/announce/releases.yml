@@ -1,0 +1,70 @@
+# SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
+# SPDX-License-Identifier: EUPL-1.2
+
+---
+
+product_name: OpenTalk
+releases_page_header: |
+  ## Release Announcements
+series:
+  '24.8':
+    end_of_life: 2024-09-19
+    releases:
+      24.8.0:
+        date: 2024-07-19
+        components:
+          web-frontend: 1.17.0
+          controller: 0.16.0
+        release_notes: |
+          ### Noteworthy changes
+      24.8.1-rc.1:
+        date: 2024-07-25
+        components:
+          web-frontend: 1.17.1
+          controller: 0.16.1
+      24.8.1:
+        date: 2024-07-30
+        components:
+          web-frontend: 1.17.3
+          controller: 0.16.1
+component_categories:
+  frontend:
+    name: Frontend
+  services:
+    name: Services
+components:
+  web-frontend:
+    name: Web-Frontend
+    category: frontend
+    releases:
+      1.17.3:
+        changelog: |-
+          ### Internal 1.17.3
+      1.17.2:
+        changelog: |-
+          ### Internal 1.17.2
+      1.17.1:
+        changelog: |-
+          ### Internal 1.17.1
+      1.17.0:
+        changelog: |-
+          ### Stability Improvements 1.17.0
+  controller:
+    name: OpenTalk Controller Community Edition
+    category: services
+    releases:
+      0.16.1:
+        changelog: |-
+          ### Bug fixes
+      0.16.1-rc.1:
+        changelog: |-
+          ### Ci
+      0.16.1-1:
+        changelog: |-
+          ### Ci
+      0.16.0:
+        changelog: |-
+          ### Docs
+      0.16.0-rc.1:
+        changelog: |-
+          ### Refactor

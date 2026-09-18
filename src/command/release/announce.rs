@@ -11,7 +11,7 @@ use time::OffsetDateTime;
 
 use crate::{
     command::ProfileArgs,
-    data::{SeriesNumber, read_profile_file, read_release_file},
+    data::{SeriesNumber, is_prerelease, read_profile_file, read_release_file},
     template::ReleasePage,
 };
 
@@ -48,11 +48,25 @@ impl AnnounceArgs {
             .get(&series_number)
             .with_context(|| format!("Release series {series_number} not found"))?;
 
+        // The previous release bounds the range of component releases so that
+        // only ones not already part of an earlier product release are rendered.
+        // Prerelease versions are skipped so the base is the last stable release.
+        let previous = series
+            .releases
+            .get_index_of(version)
+            .and_then(|index| series.releases.get_range(..index))
+            .into_iter()
+            .flatten()
+            .rfind(|(previous_version, _)| !is_prerelease(previous_version))
+            .map(|(previous_version, previous_release)| {
+                (previous_version.clone(), previous_release)
+            });
+
         let template_data = ReleasePage::from_data_release(
             &releases,
             &profile,
             version.clone(),
-            None,
+            previous,
             None,
             series.end_of_life,
             false,
