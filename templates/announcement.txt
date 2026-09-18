@@ -1,0 +1,41 @@
+We are happy to announce a new {{ product_name }} release: v{{ version }}.
+
+The online version of this release is available at <https://docs.opentalk.eu/releases/{{ version }}>.
+
+{%- if release_notes %}
+
+Release notes
+-------------
+
+{{ release_notes | md_to_text }}
+{%- endif %}
+{%- if tickets | length > 0 %}
+
+Changelog
+---------
+
+{% for ticket in tickets -%}
+- {{ ticket.title }} <{{ ticket.web_url }}>
+{% endfor -%}
+{%- endif %}
+
+Component versions
+------------------
+
+{% for component in components -%}
+- {{ component.category }} / {{ component.identifier }}: {% if show_gitlab_release_links and component.gitlab_url %}{{ component.prefixed_version }} <{{ component.gitlab_url }}/-/releases/{{ component.prefixed_version }}>{% else %}{{ component.prefixed_version }}{% endif %}
+{% endfor -%}
+{%- for component in components -%}
+{%- if component.identifier in component_releases -%}
+{%- for component_release in component_releases[component.identifier] | reverse %}
+
+----------------------------------------------------------------------
+
+{{ component.identifier }} {{ component_release.prefixed_version }}
+{%- if component_release.changelog %}
+
+{{ component_release.changelog | md_to_text }}
+{%- endif -%}
+{% endfor -%}
+{% endif -%}
+{% endfor %}

@@ -1,0 +1,44 @@
+---
+source: tests/announce/mod.rs
+expression: "announce(\"24.8.1\")"
+---
+We are happy to announce a new OpenTalk release: v24.8.1.
+
+The online version of this release is available at <https://docs.opentalk.eu/releases/24.8.1>.
+
+Component versions
+------------------
+
+- Frontend / web-frontend: v1.17.3 <https://gitlab.opencode.de/opentalk/web-frontend/-/releases/v1.17.3>
+- Services / controller: v0.16.1 <https://gitlab.opencode.de/opentalk/controller/-/releases/v0.16.1>
+
+
+----------------------------------------------------------------------
+
+web-frontend v1.17.3
+
+Internal 1.17.3
+
+----------------------------------------------------------------------
+
+web-frontend v1.17.2
+
+Internal 1.17.2
+
+----------------------------------------------------------------------
+
+web-frontend v1.17.1
+
+Internal 1.17.1
+
+----------------------------------------------------------------------
+
+controller v0.16.1
+
+Bug fixes
+
+----------------------------------------------------------------------
+
+controller v0.16.1-rc.1
+
+Ci

@@ -57,7 +57,7 @@ pub enum ReleaseCommand {
     /// Requires the GITLAB_TOKEN environment variable to be set
     FetchProductTickets(FetchProductTicketsArgs),
 
-    /// Render a release announcement in Markdown for communication channels such as Matrix or email
+    /// Render a release announcement as plain text for email and mailing lists
     Announce(AnnounceArgs),
 }
 

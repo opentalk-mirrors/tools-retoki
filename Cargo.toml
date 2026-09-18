@@ -22,6 +22,7 @@ indexmap = { version = "2.2.6", features = ["serde"] }
 indicatif = { version = "0.18.0", features = ["rayon"] }
 itertools = "0.14.0"
 owo-colors = "4.0.0"
+pulldown-cmark = { version = "0.13.4", default-features = false }
 rayon = "1.10.0"
 semver = { version = "1.0.23", features = ["serde"] }
 serde = { version = "1.0.203", features = ["derive"] }
@@ -40,6 +41,7 @@ time = { version = "0.3.36", features = [
 tracing = "0.1.41"
 tracing-indicatif = "0.3.14"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter", "fmt"] }
+unicode-width = "0.2.2"
 url = { version = "2.5.2", features = ["serde"] }
 urlencoding = "2"
 
