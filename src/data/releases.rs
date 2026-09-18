@@ -103,4 +103,16 @@ impl Releases {
             .get(&SeriesNumber::from(version))
             .and_then(|series| series.releases.get(version))
     }
+
+    /// Return the highest released version less than `version`.
+    /// Pre-releases are included, so a stable release picks up its predecessor's components.
+    #[must_use]
+    pub fn previous_release(&self, version: &Version) -> Option<&Release> {
+        self.series
+            .values()
+            .flat_map(|s| s.releases.iter())
+            .filter(|(v, _)| *v < version)
+            .max_by_key(|(v, _)| *v)
+            .map(|(_, release)| release)
+    }
 }

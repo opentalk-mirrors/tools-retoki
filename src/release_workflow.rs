@@ -129,13 +129,7 @@ impl Releases {
     /// picks up the beta's components.
     #[must_use]
     pub fn previous_release(&self, version: &Version) -> Option<&Release> {
-        self.releases
-            .series
-            .values()
-            .flat_map(|s| s.releases.iter())
-            .filter(|(v, _)| *v < version)
-            .max_by_key(|(v, _)| *v)
-            .map(|(_, release)| release)
+        self.releases.previous_release(version)
     }
 
     /// Insert a new release entry for `version` based on the previous release's components.
