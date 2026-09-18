@@ -63,11 +63,15 @@ fn load_template(
 }
 
 /// Render the body of the product release issue.
+///
+/// `dependency_graph` is the pre-rendered mermaid diagram embedded into the
+/// dependency graph section; pass an empty string to leave the section blank.
 pub(crate) fn product_release_body(
     vcs_service: &dyn VcsService,
     project: &str,
     version: &Version,
     categories: &[CategoryData],
+    dependency_graph: &str,
 ) -> anyhow::Result<String> {
     let template = load_template(
         vcs_service,
@@ -79,6 +83,7 @@ pub(crate) fn product_release_body(
     let mut context = tera::Context::new();
     context.insert("version", version);
     context.insert("categories", categories);
+    context.insert("dependency_graph", dependency_graph);
 
     render(&template, &context)
 }
@@ -222,8 +227,14 @@ mod tests {
         let version: Version = "25.1.0".parse().unwrap();
         let categories = sample_categories();
 
-        let body =
-            product_release_body(&vcs, "opentalk/tools/relbo", &version, &categories).unwrap();
+        let body = product_release_body(
+            &vcs,
+            "opentalk/tools/relbo",
+            &version,
+            &categories,
+            "```mermaid\nflowchart LR\n\nfoo#1[foo#1]\n```",
+        )
+        .unwrap();
 
         insta::assert_snapshot!(body);
     }
@@ -236,9 +247,14 @@ mod tests {
         );
         let version: Version = "1.2.3".parse().unwrap();
 
-        let body =
-            product_release_body(&vcs, "opentalk/tools/relbo", &version, &sample_categories())
-                .unwrap();
+        let body = product_release_body(
+            &vcs,
+            "opentalk/tools/relbo",
+            &version,
+            &sample_categories(),
+            "",
+        )
+        .unwrap();
 
         assert_eq!(body, "Release 1.2.3 contains 2 categories.\n");
     }
