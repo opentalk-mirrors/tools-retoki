@@ -19,6 +19,8 @@ pub(crate) struct Issue {
     pub project_id: u64,
     pub references: IssueReferences,
     pub state: IssueState,
+    #[serde(default)]
+    pub labels: Vec<String>,
     pub web_url: Url,
 }
 
@@ -27,7 +29,7 @@ impl Issue {
         &self,
         projects: &BTreeMap<u64, Project>,
         gitlab_group: &str,
-        linked_issues: Vec<vcs_service::LinkedIssue>,
+        linked_issues: vcs_service::LinkedIssues,
     ) -> anyhow::Result<vcs_service::Issue> {
         let Self {
             id,
@@ -37,6 +39,7 @@ impl Issue {
             project_id,
             references,
             state,
+            labels,
             web_url,
         } = self.clone();
         let project = projects
@@ -61,6 +64,7 @@ impl Issue {
                 .to_string(),
             state: state.into(),
             linked_issues,
+            labels,
             web_url,
         })
     }
@@ -159,7 +163,11 @@ impl LinkedItem {
             return Ok(None);
         };
 
-        let issue = issue.to_vcs_service_issue(projects, gitlab_group, vec![])?;
+        let issue = issue.to_vcs_service_issue(
+            projects,
+            gitlab_group,
+            vcs_service::LinkedIssues::NotFetched,
+        )?;
 
         Ok(Some(vcs_service::LinkedIssue {
             link_type: link_type.into(),

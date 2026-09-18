@@ -276,11 +276,15 @@ impl Releases {
                 format!("couldn't derive project path from gitlab_url {gitlab_url:?}")
             })?;
 
-            let released = product_release_issue.linked_issues.iter().any(|linked| {
-                linked.link_type == IssueLinkType::IsBlockedBy
-                    && linked.issue.project.path_with_namespace == project_path
-                    && linked.issue.state == IssueState::Closed
-            });
+            let released = product_release_issue
+                .linked_issues
+                .as_slice()
+                .iter()
+                .any(|linked| {
+                    linked.link_type == IssueLinkType::IsBlockedBy
+                        && linked.issue.project.path_with_namespace == project_path
+                        && linked.issue.state == IssueState::Closed
+                });
             if released {
                 blocking.push(name);
             }
@@ -478,7 +482,7 @@ mod tests {
     use url::Url;
 
     use super::*;
-    use crate::vcs_service::{IssueState, Project};
+    use crate::vcs_service::{IssueState, LinkedIssues, Project};
 
     fn empty_profile() -> Profile {
         Profile {
@@ -507,7 +511,8 @@ mod tests {
                 short_reference: format!("{project_path}#1"),
                 description: None,
                 state: IssueState::Opened,
-                linked_issues: Vec::new(),
+                linked_issues: LinkedIssues::NotFetched,
+                labels: Vec::new(),
                 web_url,
             },
         }

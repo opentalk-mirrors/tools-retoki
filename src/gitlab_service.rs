@@ -23,7 +23,7 @@ use url::Url;
 use self::api::LinkedItem;
 use crate::{
     gitlab_service::api::{Issue, Project},
-    vcs_service::{self, VcsService},
+    vcs_service::{self, IssueFilter, IssueScope, VcsService},
 };
 
 pub(crate) struct GitlabService {
@@ -61,28 +61,63 @@ impl GitlabService {
 
 impl VcsService for GitlabService {
     #[tracing::instrument(level = "info", skip(self), err)]
-    fn get_open_issues_with_label(&self, label: &str) -> anyhow::Result<Vec<vcs_service::Issue>> {
-        let endpoint = Issues::builder(&self.group)
-            .label(Some(label))
-            .state(Some(IssueState::Opened))
-            .build()
-            .context("couldn't build project issues endpoint")?;
+    fn fetch_issues(
+        &self,
+        scope: IssueScope<'_>,
+        filter: &IssueFilter<'_>,
+    ) -> anyhow::Result<Vec<vcs_service::Issue>> {
+        let state = filter.state.map(issue_state);
 
-        let issues: Vec<Issue> = endpoint
-            .query(&self.client)
-            .with_context(|| format!("couldn't get issues with label {label}"))?;
+        let issues: Vec<Issue> = match scope {
+            IssueScope::Group => {
+                let mut builder = gitlab::api::groups::issues::Issues::builder();
+                let _ = builder
+                    .group(&self.group)
+                    .labels(filter.labels.iter().copied());
+                if let Some(state) = state {
+                    let _ = builder.state(state);
+                }
+                let endpoint = builder
+                    .build()
+                    .context("couldn't build group issues endpoint")?;
+
+                gitlab::api::paged(endpoint, gitlab::api::Pagination::All)
+                    .query(&self.client)
+                    .context("couldn't query group issues")?
+            }
+            IssueScope::Project(project) => {
+                let mut builder = gitlab::api::projects::issues::Issues::builder();
+                let _ = builder.project(project);
+                if !filter.labels.is_empty() {
+                    let _ = builder.labels(filter.labels.iter().copied());
+                }
+                if let Some(state) = state {
+                    let _ = builder.state(state);
+                }
+                let endpoint = builder
+                    .build()
+                    .context("couldn't build project issues endpoint")?;
+                gitlab::api::paged(endpoint, gitlab::api::Pagination::All)
+                    .query(&self.client)
+                    .with_context(|| format!("couldn't query issues in project {project}"))?
+            }
+        };
 
         let project_ids = issues.iter().map(|i| i.project_id).collect();
-
         let projects = self.get_projects(project_ids)?;
 
+        // Links are intentionally not resolved here; callers that need an
+        // issue's blockers fetch them explicitly via `get_linked_issues`.
         issues
-            .into_par_iter()
+            .into_iter()
             .map(|i| {
-                let linked_issues = self.get_linked_issues(&i.project_id.to_string(), i.iid)?;
-                i.to_vcs_service_issue(&projects, &self.group, linked_issues)
+                i.to_vcs_service_issue(
+                    &projects,
+                    &self.group,
+                    vcs_service::LinkedIssues::NotFetched,
+                )
             })
-            .collect::<anyhow::Result<Vec<_>>>()
+            .collect()
     }
 
     #[tracing::instrument(level = "info", skip(self), err)]
@@ -152,7 +187,7 @@ impl VcsService for GitlabService {
         Ok(Some(issue.to_vcs_service_issue(
             &projects,
             &self.group,
-            linked_issues,
+            vcs_service::LinkedIssues::Fetched(linked_issues),
         )?))
     }
 
@@ -203,7 +238,7 @@ impl VcsService for GitlabService {
         Ok(Some(issue.to_vcs_service_issue(
             &projects,
             &self.group,
-            linked_issues,
+            vcs_service::LinkedIssues::Fetched(linked_issues),
         )?))
     }
 
@@ -231,39 +266,8 @@ impl VcsService for GitlabService {
         issue.to_vcs_service_issue(
             &BTreeMap::from_iter([(issue.project_id, project)]),
             &self.group,
-            vec![],
+            vcs_service::LinkedIssues::Fetched(vec![]),
         )
-    }
-
-    #[tracing::instrument(level = "info", skip(self), err)]
-    fn find_issues_with_label(
-        &self,
-        project: &str,
-        label: &str,
-    ) -> anyhow::Result<Vec<vcs_service::Issue>> {
-        let endpoint = gitlab::api::projects::issues::Issues::builder()
-            .project(project)
-            .label(label)
-            .build()
-            .context("couldn't build project issues endpoint")?;
-
-        let issues: Vec<Issue> = endpoint.query(&self.client).with_context(|| {
-            format!("couldn't list issues in project {project} with label {label:?}")
-        })?;
-
-        // All issues live in the project we just queried.
-        let Some(project_id) = issues.first().map(|issue| issue.project_id) else {
-            return Ok(vec![]);
-        };
-        let projects = BTreeMap::from_iter([(project_id, self.get_project(project_id)?)]);
-
-        issues
-            .into_par_iter()
-            .map(|i| {
-                let linked_issues = self.get_linked_issues(project, i.iid)?;
-                i.to_vcs_service_issue(&projects, &self.group, linked_issues)
-            })
-            .collect()
     }
 
     #[tracing::instrument(level = "info", skip(self), err)]
@@ -331,50 +335,10 @@ impl VcsService for GitlabService {
     }
 }
 
-#[derive(Debug, Builder, Clone)]
-struct Issues<'a> {
-    group: &'a str,
-
-    /// Filter issues based on milestone
-    #[builder(default)]
-    milestone: Option<&'a str>,
-
-    /// Filter issues based on state
-    #[builder(default)]
-    state: Option<IssueState>,
-
-    /// Filter issues based on label
-    #[builder(default)]
-    label: Option<&'a str>,
-}
-
-impl<'a> Issues<'a> {
-    /// Create a builder for the endpoint.
-    pub fn builder(group: &'a str) -> IssuesBuilder<'a> {
-        let mut builder = IssuesBuilder::default();
-        let _ = builder.group(group);
-        builder
-    }
-}
-
-impl Endpoint for Issues<'_> {
-    fn method(&self) -> Method {
-        Method::GET
-    }
-
-    fn endpoint(&self) -> Cow<'static, str> {
-        format!("groups/{}/issues", urlencoding::encode(self.group)).into()
-    }
-
-    fn parameters(&self) -> QueryParams<'_> {
-        let mut params = QueryParams::default();
-
-        let _ = params
-            .push_opt("state", self.state)
-            .push_opt("milestone", self.milestone)
-            .push_opt("labels", self.label);
-
-        params
+fn issue_state(state: vcs_service::IssueState) -> IssueState {
+    match state {
+        vcs_service::IssueState::Opened => IssueState::Opened,
+        vcs_service::IssueState::Closed => IssueState::Closed,
     }
 }
 

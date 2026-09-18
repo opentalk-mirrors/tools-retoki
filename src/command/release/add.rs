@@ -15,7 +15,9 @@ use crate::{
     output::Output,
     release_workflow::{Releases, ReleasesBuilder, ResolvedComponent, build_release_title},
     tasks::generate_dependency_graph::dependency_graph_for_issue,
-    vcs_service::{Issue, IssueLinkType, LinkedIssue, VcsService, VcsServiceExt},
+    vcs_service::{
+        Issue, IssueFilter, IssueLinkType, IssueScope, LinkedIssue, VcsService, VcsServiceExt,
+    },
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Args)]
@@ -120,7 +122,7 @@ impl AddArgs {
         // Start from the product issue's current blockers. A freshly created
         // and linked component issue is appended below so that the re-rendered
         // product release table can resolve its ticket link.
-        let mut linked_issues = product_issue.linked_issues.clone();
+        let mut linked_issues = product_issue.linked_issues.as_slice().to_vec();
 
         if let Some(group) = group {
             if let Some(url) = &group.gitlab_url {
@@ -225,7 +227,7 @@ impl AddArgs {
         issue: Issue,
         linked_issues: &mut Vec<LinkedIssue>,
     ) -> anyhow::Result<()> {
-        let already_linked = product_issue.linked_issues.iter().any(|linked| {
+        let already_linked = product_issue.linked_issues.as_slice().iter().any(|linked| {
             linked.link_type == IssueLinkType::IsBlockedBy
                 && linked.issue.project.path_with_namespace == issue.project.path_with_namespace
                 && linked.issue.iid == issue.iid
@@ -427,6 +429,7 @@ fn find_existing_component_issue(
     let version_marker = version_marker.to_string();
     let linked = product_issue
         .linked_issues
+        .as_slice()
         .iter()
         .filter(|linked| linked.link_type == IssueLinkType::IsBlockedBy)
         .map(|linked| &linked.issue)
@@ -436,7 +439,13 @@ fn find_existing_component_issue(
         return Ok(Some(found.clone()));
     }
 
-    let candidates = vcs.find_issues_with_label(component_project, release_label)?;
+    let candidates = vcs.fetch_issues(
+        IssueScope::Project(component_project),
+        &IssueFilter {
+            labels: &[release_label],
+            ..Default::default()
+        },
+    )?;
     Ok(Issue::match_release_issue(candidates.iter(), expected_title, &version_marker).cloned())
 }
 
@@ -456,7 +465,7 @@ mod tests {
     use super::*;
     use crate::{
         bot_config::Config,
-        vcs_service::{IssueState, MockVcsService, Project},
+        vcs_service::{IssueState, LinkedIssues, MockVcsService, Project},
     };
 
     const SAMPLE: &str = r#"---
@@ -577,7 +586,8 @@ groups:
             short_reference: "opentalk/product-releases#7".to_owned(),
             description: Some("old body".to_owned()),
             state: IssueState::Opened,
-            linked_issues: Vec::new(),
+            linked_issues: LinkedIssues::Fetched(Vec::new()),
+            labels: Vec::new(),
             web_url: "https://gitlab.example.com/opentalk/product-releases/-/issues/7"
                 .parse()
                 .unwrap(),
@@ -596,7 +606,8 @@ groups:
             short_reference: "opentalk/web-frontend#11".to_owned(),
             description: None,
             state: IssueState::Opened,
-            linked_issues: Vec::new(),
+            linked_issues: LinkedIssues::Fetched(Vec::new()),
+            labels: Vec::new(),
             web_url: "https://gitlab.example.com/opentalk/web-frontend/-/issues/11"
                 .parse()
                 .unwrap(),
@@ -615,9 +626,7 @@ groups:
         let _ = vcs
             .expect_project_path_from_url()
             .returning(|url: &Url| Ok(url.path().trim_matches('/').to_owned()));
-        let _ = vcs
-            .expect_find_issues_with_label()
-            .returning(|_, _| Ok(Vec::new()));
+        let _ = vcs.expect_fetch_issues().returning(|_, _| Ok(Vec::new()));
         let _ = vcs
             .expect_get_linked_issues()
             .returning(|_, _| Ok(Vec::new()));
@@ -702,7 +711,7 @@ groups:
             .returning(|url: &Url| Ok(url.path().trim_matches('/').to_owned()));
         // An issue with the expected title already carries the release label.
         let _ = vcs
-            .expect_find_issues_with_label()
+            .expect_fetch_issues()
             .returning(|_, _| Ok(vec![component_issue()]));
         let _ = vcs
             .expect_get_linked_issues()
@@ -842,7 +851,7 @@ components:
     /// release issue for `ot-setup`.
     fn product_issue_blocked_by_released_ot_setup() -> Issue {
         let mut issue = product_issue();
-        issue.linked_issues = vec![LinkedIssue {
+        issue.linked_issues = LinkedIssues::Fetched(vec![LinkedIssue {
             link_type: IssueLinkType::IsBlockedBy,
             issue: Issue {
                 id: 4000,
@@ -855,12 +864,13 @@ components:
                 short_reference: "opentalk/ot-setup#21".to_owned(),
                 description: None,
                 state: IssueState::Closed,
-                linked_issues: Vec::new(),
+                linked_issues: LinkedIssues::NotFetched,
+                labels: Vec::new(),
                 web_url: "https://gitlab.example.com/opentalk/ot-setup/-/issues/21"
                     .parse()
                     .unwrap(),
             },
-        }];
+        }]);
         issue
     }
 
@@ -908,9 +918,7 @@ components:
         let _ = vcs
             .expect_project_path_from_url()
             .returning(|url: &Url| Ok(url.path().trim_matches('/').to_owned()));
-        let _ = vcs
-            .expect_find_issues_with_label()
-            .returning(|_, _| Ok(Vec::new()));
+        let _ = vcs.expect_fetch_issues().returning(|_, _| Ok(Vec::new()));
         let _ = vcs
             .expect_get_linked_issues()
             .returning(|_, _| Ok(Vec::new()));

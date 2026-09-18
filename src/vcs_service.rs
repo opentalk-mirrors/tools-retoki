@@ -20,7 +20,16 @@ impl<T: VcsService> VcsServiceExt for T {}
 
 #[cfg_attr(test, mockall::automock)]
 pub(crate) trait VcsService: Send + Sync {
-    fn get_open_issues_with_label(&self, label: &str) -> anyhow::Result<Vec<Issue>>;
+    /// Fetch issues matching `filter` within `scope`.
+    ///
+    /// The returned issues have their `linked_issues` set to
+    /// [`LinkedIssues::NotFetched`]; call [`VcsService::get_linked_issues`] to
+    /// load an issue's links when needed.
+    fn fetch_issues<'a>(
+        &self,
+        scope: IssueScope<'a>,
+        filter: &IssueFilter<'a>,
+    ) -> anyhow::Result<Vec<Issue>>;
 
     fn get_linked_issues(&self, project: &str, issue_id: u64) -> anyhow::Result<Vec<LinkedIssue>>;
 
@@ -51,10 +60,6 @@ pub(crate) trait VcsService: Send + Sync {
         description: &str,
         labels: &[&'a str],
     ) -> anyhow::Result<Issue>;
-
-    /// List issues in `project` carrying the given `label`, regardless of their
-    /// state (open or closed).
-    fn find_issues_with_label(&self, project: &str, label: &str) -> anyhow::Result<Vec<Issue>>;
 
     /// Create a link of the given `link_type` from the issue `source_iid` in
     /// `source_project` to the issue `target_iid` in `target_project`.
@@ -91,8 +96,12 @@ impl<S> DryRunVcsService<S> {
 }
 
 impl<S: VcsService> VcsService for DryRunVcsService<S> {
-    fn get_open_issues_with_label(&self, label: &str) -> anyhow::Result<Vec<Issue>> {
-        self.inner.get_open_issues_with_label(label)
+    fn fetch_issues(
+        &self,
+        scope: IssueScope<'_>,
+        filter: &IssueFilter<'_>,
+    ) -> anyhow::Result<Vec<Issue>> {
+        self.inner.fetch_issues(scope, filter)
     }
 
     fn get_linked_issues(&self, project: &str, issue_id: u64) -> anyhow::Result<Vec<LinkedIssue>> {
@@ -154,17 +163,14 @@ impl<S: VcsService> VcsService for DryRunVcsService<S> {
                 short_reference: format!("{project}#0"),
                 description: Some(description.to_owned()),
                 state: IssueState::Opened,
-                linked_issues: Vec::new(),
+                linked_issues: LinkedIssues::Fetched(Vec::new()),
+                labels: labels.iter().map(|l| (*l).to_owned()).collect(),
                 web_url: Url::parse(&format!("https://git.opentalk.dev/{project}/-/issues/0"))
                     .expect("Hardcoded URL should be valid"),
             })
         } else {
             self.inner.create_issue(project, title, description, labels)
         }
-    }
-
-    fn find_issues_with_label(&self, project: &str, label: &str) -> anyhow::Result<Vec<Issue>> {
-        self.inner.find_issues_with_label(project, label)
     }
 
     fn create_issue_link(
@@ -220,7 +226,8 @@ pub(crate) struct Issue {
     pub short_reference: String,
     pub description: Option<String>,
     pub state: IssueState,
-    pub linked_issues: Vec<LinkedIssue>,
+    pub linked_issues: LinkedIssues,
+    pub labels: Vec<String>,
     pub web_url: Url,
 }
 
@@ -302,6 +309,28 @@ pub(crate) struct LinkedIssue {
     pub issue: Issue,
 }
 
+/// An issue's links together with whether they have been fetched.
+///
+/// Listing endpoints (`fetch_issues`) leave this `NotFetched`; single-issue
+/// reads populate it with `Fetched`.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) enum LinkedIssues {
+    /// The issue's links were not requested when it was fetched.
+    NotFetched,
+    /// The issue's links, possibly empty.
+    Fetched(Vec<LinkedIssue>),
+}
+
+impl LinkedIssues {
+    /// The fetched links, or an empty slice when they were not fetched.
+    pub(crate) fn as_slice(&self) -> &[LinkedIssue] {
+        match self {
+            Self::Fetched(links) => links,
+            Self::NotFetched => &[],
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum IssueLinkType {
     Blocks,
@@ -319,6 +348,24 @@ impl IssueState {
     pub(crate) const fn is_opened(&self) -> bool {
         matches!(self, Self::Opened)
     }
+}
+
+/// Selects the set of projects that [`VcsService::fetch_issues`] searches.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum IssueScope<'a> {
+    /// All projects within the service's configured group.
+    Group,
+    /// A single project identified by its path.
+    Project(&'a str),
+}
+
+/// Optional filters applied by [`VcsService::fetch_issues`].
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub(crate) struct IssueFilter<'a> {
+    /// Restrict to issues carrying all of these labels.
+    pub labels: &'a [&'a str],
+    /// Restrict to issues in this state.
+    pub state: Option<IssueState>,
 }
 
 fn print_description_diff(current: Option<&str>, next: &str) {
@@ -372,7 +419,8 @@ mod tests {
             short_reference: "group/project#1".to_owned(),
             description: None,
             state: IssueState::Opened,
-            linked_issues: Vec::new(),
+            linked_issues: LinkedIssues::Fetched(Vec::new()),
+            labels: Vec::new(),
             web_url: Url::parse("https://example.com/group/project/-/issues/1").unwrap(),
         }
     }

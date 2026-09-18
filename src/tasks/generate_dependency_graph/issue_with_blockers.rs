@@ -175,7 +175,7 @@ mod tests {
     use url::Url;
 
     use super::IssueWithBlockers;
-    use crate::vcs_service::{Issue, IssueState, Project};
+    use crate::vcs_service::{Issue, IssueState, LinkedIssues, Project};
 
     #[test]
     fn single_issue() {
@@ -193,7 +193,8 @@ mod tests {
             short_reference: "project#93".to_string(),
             description: Some("This is the issue description".to_string()),
             state: IssueState::Opened,
-            linked_issues: vec![],
+            linked_issues: LinkedIssues::NotFetched,
+            labels: vec![],
             web_url: base_url
                 .join("my/project/-/issues/0")
                 .expect("base url must be joinable with project path"),
@@ -237,7 +238,8 @@ my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_bla
             short_reference: "project_a#93".to_string(),
             description: Some("This is the issue description".to_string()),
             state: IssueState::Closed,
-            linked_issues: vec![],
+            linked_issues: LinkedIssues::NotFetched,
+            labels: vec![],
             web_url: base_url
                 .join("my/project/-/issues/0")
                 .expect("base url must be joinable with project path"),
@@ -251,7 +253,8 @@ my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_bla
             short_reference: "project_b#55".to_string(),
             description: Some("This is the issue description".to_string()),
             state: IssueState::Closed,
-            linked_issues: vec![],
+            linked_issues: LinkedIssues::NotFetched,
+            labels: vec![],
             web_url: base_url
                 .join("my/project/-/issues/1")
                 .expect("base url must be joinable with project path"),
@@ -265,7 +268,8 @@ my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_bla
             short_reference: "project_b#42".to_string(),
             description: Some("This is the issue description".to_string()),
             state: IssueState::Closed,
-            linked_issues: vec![],
+            linked_issues: LinkedIssues::NotFetched,
+            labels: vec![],
             web_url: base_url
                 .join("my/project/-/issues/3")
                 .expect("base url must be joinable with project path"),
@@ -279,7 +283,8 @@ my_project_93[<a href=https://git.example.com/my/project/-/issues/93 target=_bla
             short_reference: "project_a#133".to_string(),
             description: Some("This is the issue description".to_string()),
             state: IssueState::Opened,
-            linked_issues: vec![],
+            linked_issues: LinkedIssues::NotFetched,
+            labels: vec![],
             web_url: base_url
                 .join("my/project/-/issues/4")
                 .expect("base url must be joinable with project path"),

@@ -10,3 +10,14 @@ pub struct ProductTicket {
     web_url: String,
     labels: Vec<String>,
 }
+
+impl ProductTicket {
+    pub fn new(title: String, iid: u64, web_url: String, labels: Vec<String>) -> Self {
+        Self {
+            title,
+            iid,
+            web_url,
+            labels,
+        }
+    }
+}
