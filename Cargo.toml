@@ -11,41 +11,41 @@ version = "0.16.0-alpha"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.86"
-clap = { version = "4.5.7", features = ["derive", "env"] }
-config = { version = "0.15.22", default-features = false, features = ["toml"] }
-derive_builder = "0.20.0"
-derive_more = { version = "2.0.0", features = ["display", "from", "into"] }
-gitlab = "0.1902.0"
-http = "1.1.0"
+anyhow = "1.0"
+clap = { version = "4.5", features = ["derive", "env"] }
+config = { version = "0.15", default-features = false, features = ["toml"] }
+derive_builder = "0.20"
+derive_more = { version = "2.0", features = ["display", "from", "into"] }
+gitlab = "0.1903"
+http = "1.1"
 indexmap = { version = "2.2.6", features = ["serde"] }
-indicatif = { version = "0.18.0", features = ["rayon"] }
-itertools = "0.14.0"
-owo-colors = "4.0.0"
-pulldown-cmark = { version = "0.13.4", default-features = false }
-rayon = "1.10.0"
-semver = { version = "1.0.23", features = ["serde"] }
-serde = { version = "1.0.203", features = ["derive"] }
-serde_json = { version = "1.0.118" }
-serde_yaml = "0.9.34"
-similar = { version = "3.1.2", features = ["inline", "unicode"] }
-tabled = "0.21.0"
-tera = "2.0.0"
-thiserror = "2.0.18"
-time = { version = "0.3.36", features = [
+indicatif = { version = "0.18", features = ["rayon"] }
+itertools = "0.15"
+owo-colors = "4.0"
+pulldown-cmark = { version = "0.13", default-features = false }
+rayon = "1.10"
+semver = { version = "1.0", features = ["serde"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0" }
+serde_yaml = "0.9"
+similar = { version = "3.1", features = ["inline", "unicode"] }
+tabled = "0.22"
+tera = "2.0"
+thiserror = "2.0"
+time = { version = "0.3", features = [
   "macros",
   "serde",
   "serde-human-readable",
   "serde-well-known",
 ] }
-tracing = "0.1.41"
-tracing-indicatif = "0.3.14"
-tracing-subscriber = { version = "0.3.19", features = ["env-filter", "fmt"] }
-unicode-width = "0.2.2"
-url = { version = "2.5.2", features = ["serde"] }
+tracing = "0.1"
+tracing-indicatif = "0.3"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+unicode-width = "0.2"
+url = { version = "2.5", features = ["serde"] }
 
 [dev-dependencies]
-insta = { version = "1.40.0", features = ["glob", "yaml"] }
-mockall = "0.15.0"
-pretty_assertions = "1.4.0"
-tempfile = "3.12.0"
+insta = { version = "1.40", features = ["glob", "yaml"] }
+mockall = "0.15"
+pretty_assertions = "1.4"
+tempfile = "3.12"
