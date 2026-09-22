@@ -20,7 +20,7 @@ gitlab = "0.1903"
 http = "1.1"
 indexmap = { version = "2.2.6", features = ["serde"] }
 indicatif = { version = "0.18", features = ["rayon"] }
-itertools = "0.14"
+itertools = "0.15"
 owo-colors = "4.0"
 pulldown-cmark = { version = "0.13", default-features = false }
 rayon = "1.10"
