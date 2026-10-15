@@ -26,7 +26,13 @@ db-urls = ["https://github.com/rustsec/advisory-db"]
 yanked = "deny"
 # A list of advisory IDs to ignore. Note that ignored advisories will still
 # output a note when they are encountered.
-ignore = []
+ignore = [
+  # unsafe-libyaml is unmaintained
+  # This is pulled in by the also unmaintained serde_yaml.
+  # We need to migrate away from serde_yaml, see
+  # https://git.opentalk.dev/opentalk/tools/retoki/-/work_items/54
+  "RUSTSEC-2024-0449",
+]
 # Threshold for security vulnerabilities, any vulnerability with a CVSS score
 # lower than the range specified will be ignored. Note that ignored advisories
 # will still output a note when they are encountered.

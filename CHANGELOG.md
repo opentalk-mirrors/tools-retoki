@@ -5,6 +5,80 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0] - 2026-10-15
+
+[0.16.0]: https://git.opentalk.dev/opentalk/tools/retoki/-/compare/v0.15.0...v0.16.0
+
+### 🚀 New features
+
+- Announcement email/message rendering ([!484](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/484))
+- Remove obsolete `release show` subcommand ([!492](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/492))
+- Remove obsolete `component` command ([!492](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/492))
+- Format table output in a terminal friendly format ([!493](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/493))
+- (generate) Limit output to single release series ([!494](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/494), [#46](https://git.opentalk.dev/opentalk/tools/retoki/-/issues/46))
+- Use a single source for the profile path ([!497](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/497))
+- Change default profile to `gitlab` ([!497](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/497))
+- Ensure we don't invalidate existing releases ([!477](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/477), [#43](https://git.opentalk.dev/opentalk/tools/retoki/-/issues/43))
+- Optionally group services ([!496](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/496), [#46](https://git.opentalk.dev/opentalk/tools/retoki/-/issues/46))
+- Include dependency graph when updating product release ticket ([!501](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/501))
+- Include all changelogs and component versions in announcement ([!505](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/505))
+- Change output type of `announcement` from MarkDown to plain text ([!505](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/505))
+- Add link to online release documentation ([!505](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/505))
+
+### 🐛 Bug fixes
+
+- (test) Don't try to run doc shell command as doctest ([!497](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/497))
+- (ci) Remove the testcontainers tag from the cargo_test job ([!507](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/507))
+- Fetch changelogs of component version not part of a product release ([!509](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/509))
+- Don't include already released component versions in announcement ([!505](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/505))
+- (fetch-product-ticket) Fetch all tickets instead of the first page ([!502](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/502))
+
+### 📚 Documentation
+
+- Document profiles ([!496](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/496))
+- List required gitlab token permissions ([!508](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/508))
+
+### 🔨 Refactor
+
+- Add `as_str()` functions to `ComponentIdentifier` and `GroupIdentifier` ([!496](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/496))
+- Use a single function to fetch issues ([!502](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/502))
+- Introduce `LinkedIssues` enum to encode `NotFetched` state ([!502](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/502))
+- Use VCS service in fetch-product-ticket ([!502](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/502))
+- Use gitlab issue builder ([!502](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/502))
+
+### 📦 Dependencies
+
+- (deps) Update rust crate similar to v3.2.0 ([!485](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/485))
+- (deps) Update rust crate tera to v2.2.0 ([!482](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/482))
+- (deps) Lock file maintenance ([!486](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/486))
+- (deps) Update git.opentalk.dev:5050/opentalk/backend/containers/rust docker tag to v1.98.0 ([!488](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/488))
+- (deps) Lock file maintenance ([!491](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/491))
+- (deps) Lock file maintenance ([!500](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/500))
+- (deps) Lock file maintenance ([!504](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/504))
+- (deps) Update git.opentalk.dev:5050/opentalk/backend/containers/rust docker tag to v1.98.1 ([!506](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/506))
+- (deps) Lock file maintenance ([!512](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/512))
+- (deps) Update pre-commit hook davidanson/markdownlint-cli2 to v0.23.3 ([!510](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/510))
+- (deps) Update pre-commit hook alessandrojcm/commitlint-pre-commit-hook to v9.27.0 ([!511](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/511))
+- (deps) Don't specify patch versions ([!514](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/514))
+- (deps) Lock file maintenance ([!514](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/514))
+- (deps) Update gitlab crate ([!514](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/514))
+- (deps) Update itertools crate ([!514](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/514))
+- (deps) Update tabled crate ([!514](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/514))
+- (deps) Lock file maintenance ([!516](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/516))
+- (deps) Update rust crate config to v0.15.27 ([!517](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/517))
+- (deps) Lock file maintenance ([!519](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/519))
+- (deps) Lock file maintenance ([!521](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/521))
+- (deps) Update git.opentalk.dev:5050/opentalk/backend/containers/rust docker tag to v1.99.0 ([!522](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/522))
+- (deps) Update rustls to 0.23.46 ([!523](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/523))
+
+### ⚙ Miscellaneous
+
+- Document RUSTSEC-2024-0449 ([!523](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/523))
+
+### Ci
+
+- Allow duplicate dependencies ([!504](https://git.opentalk.dev/opentalk/tools/retoki/-/merge_requests/504))
+
 ## [0.15.0] - 2026-08-12
 
 [0.15.0]: https://git.opentalk.dev/opentalk/tools/retoki/-/compare/v0.14.0...v0.15.0
