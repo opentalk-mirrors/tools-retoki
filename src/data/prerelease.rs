@@ -41,7 +41,7 @@ pub fn is_prerelease(version: &Version) -> bool {
     pre_kind(&version.pre) == PreKind::Real
 }
 
-/// Compare two [`Version`]s using [`PreKind`]-aware ordering.
+/// Compare two [`Version`]s using PreKind-aware ordering.
 pub fn cmp(a: &Version, b: &Version) -> Ordering {
     (a.major, a.minor, a.patch)
         .cmp(&(b.major, b.minor, b.patch))

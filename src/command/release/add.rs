@@ -28,7 +28,7 @@ pub struct AddArgs {
     component_or_group: String,
 
     /// Planned version of the component for this release.
-    #[arg(long, short = 'c')]
+    #[arg(long, short = 'c', add = ArgValueCandidates::new(crate::completion::component_version_candidates))]
     component_version: Version,
 
     /// Update the component even if a component that must be released after it

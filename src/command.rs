@@ -28,6 +28,12 @@ pub mod utils;
 pub const RELEASE_FILE_FLAG: &str = "release-file";
 /// Default file name used for the `release_file` argument.
 pub const DEFAULT_RELEASE_FILE: &str = "releases.yml";
+/// Long flag name (without leading `--`) of the `profile` argument.
+pub const PROFILE_FLAG: &str = "profile";
+/// Environment variable of the `profile` argument.
+pub const PROFILE_ENV: &str = "RETOKI_PROFILE_PATH";
+/// Default path used for the `profile` argument.
+pub const DEFAULT_PROFILE_PATH: &str = "retoki-profiles/gitlab.yml";
 
 #[derive(Clone, Debug, PartialEq, Eq, Parser)]
 #[command(author, version, about)]
@@ -284,10 +290,6 @@ fn home_dir() -> Result<PathBuf> {
 #[derive(Clone, Debug, PartialEq, Eq, Args)]
 pub struct ProfileArgs {
     /// Path to the profile to use
-    #[clap(long, env = "RETOKI_PROFILE_PATH", default_value_os_t = default_profile_path(), add = ArgValueCandidates::new(crate::completion::profile_candidates))]
+    #[clap(long = PROFILE_FLAG, env = PROFILE_ENV, default_value = DEFAULT_PROFILE_PATH, add = ArgValueCandidates::new(crate::completion::profile_candidates))]
     pub profile: PathBuf,
-}
-
-fn default_profile_path() -> PathBuf {
-    PathBuf::from("retoki-profiles/gitlab.yml")
 }
