@@ -4,6 +4,7 @@ use std::io::stdout;
 
 use anyhow::{Context as _, Ok};
 use clap::Args;
+use clap_complete::ArgValueCandidates;
 use semver::Version;
 
 use crate::{
@@ -23,6 +24,7 @@ use crate::{
 #[derive(Debug, Clone, PartialEq, Eq, Args)]
 pub struct AddArgs {
     /// Identifier of the component or group to add, i.e. its key in `releases.yml`.
+    #[clap(add = ArgValueCandidates::new(crate::completion::component_candidates))]
     component_or_group: String,
 
     /// Planned version of the component for this release.
@@ -157,7 +159,9 @@ impl AddArgs {
                 })?;
 
             if let Some(url) = component.gitlab_url {
-                let resolved = releases.resolve_component(&self.component_or_group)?;
+                let resolved = releases.resolve_component(&ComponentIdentifier::from(
+                    self.component_or_group.clone(),
+                ))?;
                 self.put_component_issue(
                     &resolved,
                     product_version,
@@ -277,7 +281,11 @@ impl AddArgs {
         linked_issues: &mut Vec<LinkedIssue>,
         gitlab_url: &str,
     ) -> Result<(), anyhow::Error> {
-        let component_project = component_project(vcs, gitlab_url, &self.component_or_group)?;
+        let component_project = component_project(
+            vcs,
+            gitlab_url,
+            &ComponentIdentifier::from(self.component_or_group.clone()),
+        )?;
         let component_title = build_release_title(&component.name.to_string(), component_version);
         let issue = match find_existing_component_issue(
             vcs,
@@ -339,7 +347,11 @@ impl AddArgs {
         linked_issues: &mut Vec<LinkedIssue>,
         gitlab_url: &str,
     ) -> anyhow::Result<()> {
-        let project = component_project(vcs, gitlab_url, &self.component_or_group)?;
+        let project = component_project(
+            vcs,
+            gitlab_url,
+            &ComponentIdentifier::from(self.component_or_group.clone()),
+        )?;
         let title = build_release_title(&group.name, group_version);
         let issue = match find_existing_component_issue(
             vcs,
@@ -362,7 +374,7 @@ impl AddArgs {
                     .components
                     .keys()
                     .map(|id| {
-                        let resolved = releases.resolve_component(id.as_str())?;
+                        let resolved = releases.resolve_component(id)?;
                         let old_version = releases
                             .previous_component_version(product_version, &resolved.id)
                             .map(ComponentVersion::Semver);
@@ -403,11 +415,11 @@ impl AddArgs {
 fn component_project(
     vcs: &dyn VcsService,
     gitlab_url: &str,
-    component: &str,
+    component_id: &ComponentIdentifier,
 ) -> anyhow::Result<String> {
-    let url = gitlab_url
-        .parse()
-        .with_context(|| format!("invalid gitlab_url {gitlab_url:?} for component {component}"))?;
+    let url = gitlab_url.parse().with_context(|| {
+        format!("invalid gitlab_url {gitlab_url:?} for component {component_id}")
+    })?;
     vcs.project_path_from_url(&url)
         .with_context(|| format!("couldn't derive project path from gitlab_url {gitlab_url:?}"))
 }
@@ -533,7 +545,7 @@ groups:
     fn write_sample_with(dir: &Path, profile: &str) -> PathBuf {
         let path = dir.join("releases.yml");
         fs::write(&path, SAMPLE).unwrap();
-        let profile_dir = dir.join("retoki-profiles");
+        let profile_dir = dir.join(crate::data::PROFILE_DIR);
         fs::create_dir_all(&profile_dir).unwrap();
         fs::write(profile_dir.join("gitlab.yml"), profile).unwrap();
         path

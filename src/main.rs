@@ -1,17 +1,17 @@
 // SPDX-FileCopyrightText: OpenTalk GmbH <mail@opentalk.eu>
 // SPDX-License-Identifier: EUPL-1.2
 
-use std::path::PathBuf;
-
 use anyhow::Result;
-use clap::Parser;
-use command::Command;
+use clap::{CommandFactory as _, Parser};
+use clap_complete::env::CompleteEnv;
+use command::Cli;
 use tracing_indicatif::IndicatifLayer;
 use tracing_subscriber::{EnvFilter, layer::SubscriberExt as _, util::SubscriberInitExt as _};
 
 mod bot_config;
 mod bot_templates;
 mod command;
+mod completion;
 mod data;
 mod gitlab_service;
 mod helper;
@@ -23,25 +23,13 @@ mod tasks;
 mod template;
 mod vcs_service;
 
-#[derive(Clone, Debug, PartialEq, Eq, Parser)]
-#[command(author, version, about)]
-struct Cli {
-    /// The YAML file containing the structured release information.
-    #[clap(long, default_value = "releases.yml", env = "RETOKI_RELEASE_FILE")]
-    release_file: PathBuf,
-
-    #[command(subcommand)]
-    command: Command,
-}
-
 fn main() -> Result<()> {
-    init_tracing();
+    // Must run before anything writes to stdout: handles completion requests and exits.
+    CompleteEnv::with_factory(Cli::command).complete();
 
-    let Cli {
-        release_file,
-        command,
-    } = Cli::parse();
-    command.execute(release_file)
+    init_tracing();
+    let cli = Cli::parse();
+    cli.command.execute(cli.release_file)
 }
 
 fn init_tracing() {
