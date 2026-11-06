@@ -35,7 +35,7 @@ pub use file::{
     write_releases_file,
 };
 pub use group_identifier::GroupIdentifier;
-pub use prerelease::is_prerelease;
+pub use prerelease::{cmp as prerelease_cmp, is_prerelease};
 pub use product_name::ProductName;
 pub use product_ticket::ProductTicket;
 pub use profiles::{ComponentGroup, Profile};
